@@ -106,21 +106,79 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   setSession: (session: Session | null) => {
     if (session?.user) {
-      // Fetch user profile data
+      // Fetch user profile data with proper error handling
       setTimeout(async () => {
         try {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('user_id', session.user.id)
             .single();
 
+          if (profileError) {
+            console.error('Error fetching profile:', profileError);
+            // If profile doesn't exist, create one
+            if (profileError.code === 'PGRST116') {
+              const { data: newProfile, error: createError } = await supabase
+                .from('profiles')
+                .insert({
+                  user_id: session.user.id,
+                  display_name: session.user.email,
+                  is_admin: false
+                })
+                .select()
+                .single();
+
+              if (createError) {
+                console.error('Error creating profile:', createError);
+                set({ 
+                  user: null, 
+                  isAuthenticated: false, 
+                  session: null, 
+                  loading: false 
+                });
+                return;
+              }
+              
+              const user: User = {
+                id: session.user.id,
+                email: session.user.email!,
+                name: newProfile.display_name || session.user.email!,
+                avatar: newProfile.avatar_url,
+                isAdmin: newProfile.is_admin || false,
+              };
+
+              set({ 
+                user, 
+                isAuthenticated: true, 
+                session, 
+                loading: false 
+              });
+            } else {
+              set({ 
+                user: null, 
+                isAuthenticated: false, 
+                session: null, 
+                loading: false 
+              });
+            }
+            return;
+          }
+
+          // Verify admin status using the secure database function
+          const { data: isAdminResult, error: adminError } = await supabase
+            .rpc('is_admin', { user_uuid: session.user.id });
+
+          if (adminError) {
+            console.error('Error checking admin status:', adminError);
+          }
+
           const user: User = {
             id: session.user.id,
             email: session.user.email!,
-            name: profile?.display_name || session.user.email!,
-            avatar: profile?.avatar_url,
-            isAdmin: profile?.is_admin || false,
+            name: profile.display_name || session.user.email!,
+            avatar: profile.avatar_url,
+            isAdmin: isAdminResult || false,
           };
 
           set({ 
@@ -130,7 +188,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             loading: false 
           });
         } catch (error) {
-          console.error('Error fetching profile:', error);
+          console.error('Unexpected error during profile fetch:', error);
           set({ 
             user: null, 
             isAuthenticated: false, 

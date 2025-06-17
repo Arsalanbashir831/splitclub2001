@@ -5,9 +5,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuthStore } from '../store/authStore';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Leaf } from 'lucide-react';
+import { Loader2, Leaf, AlertTriangle } from 'lucide-react';
+import { 
+  signInSchema, 
+  signUpSchema, 
+  sanitizeInput, 
+  RateLimiter,
+  type SignInFormData,
+  type SignUpFormData
+} from '../utils/validation';
+
+// Rate limiter for authentication attempts
+const rateLimiter = new RateLimiter(5, 15 * 60 * 1000); // 5 attempts per 15 minutes
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -15,6 +27,9 @@ export const Login = () => {
   const [displayName, setDisplayName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('signin');
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [rateLimitTime, setRateLimitTime] = useState(0);
   const { signIn, signUp, isAuthenticated } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -26,12 +41,88 @@ export const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  // Check rate limiting on component mount and updates
+  useEffect(() => {
+    const checkRateLimit = () => {
+      const clientId = 'auth_attempt'; // Use IP in production
+      const isLimited = rateLimiter.isRateLimited(clientId);
+      setIsRateLimited(isLimited);
+      
+      if (isLimited) {
+        const remaining = rateLimiter.getRemainingTime(clientId);
+        setRateLimitTime(Math.ceil(remaining / 1000 / 60)); // Convert to minutes
+      }
+    };
+
+    checkRateLimit();
+    const interval = setInterval(checkRateLimit, 60000); // Check every minute
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const validateSignInForm = (): boolean => {
+    try {
+      const sanitizedData = {
+        email: sanitizeInput(email),
+        password: password, // Don't sanitize password as it might contain special chars
+      };
+      
+      signInSchema.parse(sanitizedData);
+      setValidationErrors({});
+      return true;
+    } catch (error: any) {
+      const errors: Record<string, string> = {};
+      error.errors?.forEach((err: any) => {
+        errors[err.path[0]] = err.message;
+      });
+      setValidationErrors(errors);
+      return false;
+    }
+  };
+
+  const validateSignUpForm = (): boolean => {
+    try {
+      const sanitizedData = {
+        email: sanitizeInput(email),
+        password: password,
+        displayName: displayName ? sanitizeInput(displayName) : undefined,
+      };
+      
+      signUpSchema.parse(sanitizedData);
+      setValidationErrors({});
+      return true;
+    } catch (error: any) {
+      const errors: Record<string, string> = {};
+      error.errors?.forEach((err: any) => {
+        errors[err.path[0]] = err.message;
+      });
+      setValidationErrors(errors);
+      return false;
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check rate limiting
+    if (isRateLimited) {
+      toast({
+        title: "Too many attempts",
+        description: `Please wait ${rateLimitTime} minutes before trying again.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate form
+    if (!validateSignInForm()) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(sanitizeInput(email), password);
       if (!error) {
         toast({
           title: "Welcome back!",
@@ -58,16 +149,37 @@ export const Login = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check rate limiting
+    if (isRateLimited) {
+      toast({
+        title: "Too many attempts",
+        description: `Please wait ${rateLimitTime} minutes before trying again.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate form
+    if (!validateSignUpForm()) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const { error } = await signUp(email, password, displayName);
+      const sanitizedDisplayName = displayName ? sanitizeInput(displayName) : undefined;
+      const { error } = await signUp(sanitizeInput(email), password, sanitizedDisplayName);
       if (!error) {
         toast({
           title: "Account created!",
           description: "Please check your email to verify your account.",
         });
         setActiveTab('signin');
+        // Clear form
+        setEmail('');
+        setPassword('');
+        setDisplayName('');
       } else {
         toast({
           title: "Sign up failed",
@@ -111,6 +223,16 @@ export const Login = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Rate limiting warning */}
+            {isRateLimited && (
+              <Alert className="mb-4" variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Too many login attempts. Please wait {rateLimitTime} minutes before trying again.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -128,7 +250,11 @@ export const Login = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      className={validationErrors.email ? 'border-destructive' : ''}
                     />
+                    {validationErrors.email && (
+                      <p className="text-sm text-destructive">{validationErrors.email}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signin-password">Password</Label>
@@ -139,9 +265,13 @@ export const Login = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      className={validationErrors.password ? 'border-destructive' : ''}
                     />
+                    {validationErrors.password && (
+                      <p className="text-sm text-destructive">{validationErrors.password}</p>
+                    )}
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full" disabled={isLoading || isRateLimited}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign In
                   </Button>
@@ -158,7 +288,11 @@ export const Login = () => {
                       placeholder="Enter your display name"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
+                      className={validationErrors.displayName ? 'border-destructive' : ''}
                     />
+                    {validationErrors.displayName && (
+                      <p className="text-sm text-destructive">{validationErrors.displayName}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
@@ -169,21 +303,31 @@ export const Login = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      className={validationErrors.email ? 'border-destructive' : ''}
                     />
+                    {validationErrors.email && (
+                      <p className="text-sm text-destructive">{validationErrors.email}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
                     <Input
                       id="signup-password"
                       type="password"
-                      placeholder="Choose a password (min 6 characters)"
+                      placeholder="8+ chars, uppercase, lowercase, number, special char"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      minLength={6}
+                      className={validationErrors.password ? 'border-destructive' : ''}
                     />
+                    {validationErrors.password && (
+                      <p className="text-sm text-destructive">{validationErrors.password}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Password must be at least 8 characters with uppercase, lowercase, number, and special character
+                    </p>
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full" disabled={isLoading || isRateLimited}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create Account
                   </Button>

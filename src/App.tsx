@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import { Login } from "./pages/Login";
 import { DealDetail } from "./pages/DealDetail";
 import { AdminDashboard } from "./pages/AdminDashboard";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import { About } from "./pages/About";
 import { Help } from "./pages/Help";
 import { Contact } from "./pages/Contact";
@@ -41,7 +42,11 @@ const AppContent = () => {
           <Route path="/deals" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/deal/:id" element={<DealDetail />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin" element={
+            <ProtectedRoute requireAdmin={true}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
           <Route path="/about" element={<About />} />
           <Route path="/help" element={<Help />} />
           <Route path="/contact" element={<Contact />} />
