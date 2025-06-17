@@ -13,7 +13,7 @@ import { Search, Plus, User, Settings, LogOut, Sun, Moon, Menu } from 'lucide-re
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Navbar = () => {
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, signOut } = useAuthStore();
   const [isDark, setIsDark] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -24,8 +24,7 @@ export const Navbar = () => {
   };
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    signOut();
   };
 
   return (
