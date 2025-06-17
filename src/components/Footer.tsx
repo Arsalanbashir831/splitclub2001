@@ -2,16 +2,14 @@ import { Link } from 'react-router-dom';
 
 export const Footer = () => {
   const footerLinks = [
+    { title: 'Home', path: '/' },
     { title: 'Online Help', path: '/help' },
     { title: 'Contact us', path: '/contact' },
     { title: 'Press Relations', path: '/press' },
     { title: 'More about us', path: '/about' },
     { title: 'Terms of service', path: '/terms' },
     { title: 'Privacy policy', path: '/privacy' },
-    { title: 'Cookies and Consent Statement', path: '/cookies' },
     { title: 'Who are we?', path: '/who-are-we' },
-    { title: 'Recruiting', path: '/recruiting' },
-    { title: 'Services for business', path: '/business' },
   ];
 
   return (

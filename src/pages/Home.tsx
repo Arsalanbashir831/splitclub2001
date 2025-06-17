@@ -2,8 +2,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Navbar } from '@/components/Navbar';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowRight, Shield, Users, Zap, Star, Play } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { mockDeals } from '@/data/mockData';
 
 export const Home = () => {
   const features = [
@@ -187,6 +189,78 @@ export const Home = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Deals Table Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Latest Deals
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Discover the newest deals and savings opportunities from our community
+            </p>
+          </div>
+          
+          <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border border-border rounded-lg overflow-hidden">
+            <div className="sticky top-16 z-40 bg-background border-b border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[200px]">Title</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Original Price</TableHead>
+                    <TableHead>Share Price</TableHead>
+                    <TableHead>Available</TableHead>
+                    <TableHead>Expires</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+              </Table>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              <Table>
+                <TableBody>
+                  {mockDeals.map((deal) => (
+                    <TableRow key={deal.id}>
+                      <TableCell className="font-medium">
+                        <Link to={`/deal/${deal.id}`} className="hover:text-primary transition-colors">
+                          {deal.title}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="capitalize">
+                          {deal.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>${deal.originalPrice.toFixed(2)}</TableCell>
+                      <TableCell>
+                        {deal.isFree ? (
+                          <Badge variant="outline" className="text-green-600 border-green-600">
+                            Free
+                          </Badge>
+                        ) : (
+                          `$${deal.sharePrice.toFixed(2)}`
+                        )}
+                      </TableCell>
+                      <TableCell>{deal.availableSlots}/{deal.totalSlots}</TableCell>
+                      <TableCell>{new Date(deal.expiryDate).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={deal.status === 'active' ? 'default' : deal.status === 'claimed' ? 'secondary' : 'destructive'}
+                          className="capitalize"
+                        >
+                          {deal.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </div>
       </section>
