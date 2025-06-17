@@ -9,15 +9,25 @@ export const WelcomeTip = () => {
 
   useEffect(() => {
     // Check if user has seen the welcome tip before
-    const hasSeenTip = localStorage.getItem('splitclub-welcome-tip-seen');
-    if (!hasSeenTip) {
+    try {
+      const hasSeenTip = localStorage.getItem('splitclub-welcome-tip-seen');
+      if (!hasSeenTip) {
+        setIsVisible(true);
+      }
+    } catch (error) {
+      // If localStorage is not available (e.g., in iframe), show the tip
       setIsVisible(true);
     }
   }, []);
 
   const handleDismiss = () => {
     setIsVisible(false);
-    localStorage.setItem('splitclub-welcome-tip-seen', 'true');
+    try {
+      localStorage.setItem('splitclub-welcome-tip-seen', 'true');
+    } catch (error) {
+      // If localStorage is not available, just continue without saving
+      console.log('localStorage not available');
+    }
   };
 
   if (!isVisible) return null;
