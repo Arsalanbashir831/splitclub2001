@@ -23,6 +23,7 @@ import { Recruiting } from "./pages/Recruiting";
 import { Business } from "./pages/Business";
 import NotFound from "./pages/NotFound";
 import { Footer } from "./components/Footer";
+import { Profile } from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,11 @@ const AppContent = () => {
           <Route path="/admin" element={
             <ProtectedRoute requireAdmin={true}>
               <AdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           } />
           <Route path="/about" element={<About />} />
