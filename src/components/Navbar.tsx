@@ -49,6 +49,9 @@ export const Navbar = () => {
               <Link to="/my-deals" className="text-muted-foreground hover:text-foreground transition-colors">
                 My Deals
               </Link>
+              <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
+                About
+              </Link>
               {user?.isAdmin && (
                 <Link to="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
                   Dashboard
@@ -160,6 +163,13 @@ export const Navbar = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 My Deals
+              </Link>
+              <Link
+                to="/about"
+                className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                About
               </Link>
               {user?.isAdmin && (
                 <Link
