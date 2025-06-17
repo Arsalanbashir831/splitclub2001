@@ -44,10 +44,10 @@ export const Navbar = () => {
             {/* Desktop nav items */}
             <div className="hidden md:flex ml-10 space-x-8">
               <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-                Browse Deals
+                Home
               </Link>
-              <Link to="/my-deals" className="text-muted-foreground hover:text-foreground transition-colors">
-                My Deals
+              <Link to="/deals" className="text-muted-foreground hover:text-foreground transition-colors">
+                Browse Deals
               </Link>
               <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                 About
@@ -155,14 +155,14 @@ export const Navbar = () => {
                 className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Browse Deals
+                Home
               </Link>
               <Link
-                to="/my-deals"
+                to="/deals"
                 className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                My Deals
+                Browse Deals
               </Link>
               <Link
                 to="/about"
