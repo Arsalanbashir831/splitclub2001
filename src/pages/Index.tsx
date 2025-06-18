@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -11,10 +11,12 @@ import { mockDeals } from '../data/mockData';
 import { useAuthStore } from '../store/authStore';
 import { Search, Leaf, TrendingUp, Users, Gift } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSearchParams } from 'react-router-dom';
 
 const Index = () => {
   const { isAuthenticated } = useAuthStore();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
@@ -25,6 +27,14 @@ const Index = () => {
     expiringWithin: 'any',
     sortBy: 'newest'
   });
+
+  // Handle search from URL parameters
+  useEffect(() => {
+    const searchFromUrl = searchParams.get('search');
+    if (searchFromUrl) {
+      setSearchQuery(searchFromUrl);
+    }
+  }, [searchParams]);
 
   const handleDealClaim = (dealId: string) => {
     if (!isAuthenticated) {

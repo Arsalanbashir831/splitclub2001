@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Navbar } from '../components/Navbar';
 import { Deal } from '../types';
 import { mockDeals } from '../data/mockData';
 import { 
@@ -16,7 +17,11 @@ import {
   Heart,
   MapPin,
   Calendar,
-  Tag
+  Tag,
+  CheckCircle,
+  Shield,
+  Zap,
+  Mail
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '../store/authStore';
@@ -104,13 +109,15 @@ export const DealDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
+      
       {/* Header */}
       <div className="bg-card border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-4">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/deals')}
               className="flex items-center space-x-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -130,79 +137,62 @@ export const DealDetail = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Deal image */}
-            {deal.image && (
-              <div className="relative h-64 md:h-80 rounded-lg overflow-hidden">
-                <img
-                  src={deal.image}
-                  alt={deal.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-4 left-4">
-                  <Badge className={getCategoryColor(deal.category)}>
-                    {deal.category}
-                  </Badge>
-                </div>
-                {isExpiringSoon() && deal.status === 'active' && (
-                  <div className="absolute top-4 right-4 bg-orange-500 text-white text-sm px-3 py-1 rounded-full">
-                    Expires Soon!
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Deal info */}
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-4">{deal.title}</h1>
-              <p className="text-muted-foreground text-lg leading-relaxed">
+        {/* Deal Summary Header */}
+        <div className="mb-8">
+          <div className="flex items-start space-x-4 mb-6">
+            {/* Service Icon/Logo */}
+            <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+              <span className="text-2xl font-bold text-primary-foreground">
+                {deal.title.charAt(0)}
+              </span>
+            </div>
+            
+            <div className="flex-1">
+              {/* Deal Title */}
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                {deal.title}
+              </h1>
+              
+              {/* Short Subtitle */}
+              <p className="text-muted-foreground text-lg mb-4">
                 {deal.description}
               </p>
             </div>
+          </div>
+        </div>
 
-            {/* Tags */}
-            {deal.tags.length > 0 && (
-              <div>
-                <h3 className="font-semibold mb-3 flex items-center">
-                  <Tag className="h-4 w-4 mr-2" />
-                  Tags
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {deal.tags.map((tag) => (
-                    <Badge key={tag} variant="outline">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Deal details */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Offer Details */}
             <Card>
               <CardHeader>
-                <CardTitle>Deal Details</CardTitle>
+                <CardTitle className="flex items-center space-x-2">
+                  <Gift className="h-5 w-5" />
+                  <span>Offer Details</span>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Expires</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDate(deal.expiryDate)}
-                      </p>
-                    </div>
+                  <div>
+                    <p className="font-medium text-sm text-muted-foreground">Type</p>
+                    <p className="font-semibold capitalize">{deal.category}</p>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <Users className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Availability</p>
-                      <p className="text-sm text-muted-foreground">
-                        {deal.availableSlots} of {deal.totalSlots} slots
-                      </p>
-                    </div>
+                  <div>
+                    <p className="font-medium text-sm text-muted-foreground">What's included</p>
+                    <p className="font-semibold">
+                      {deal.category === 'subscription' ? 'Full subscription access' : 'Complete access'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm text-muted-foreground">Remaining duration</p>
+                    <p className="font-semibold">Renews monthly · No long-term contract</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm text-muted-foreground">Availability</p>
+                    <p className="font-semibold">
+                      {deal.availableSlots} of {deal.totalSlots} slots remaining
+                    </p>
                   </div>
                 </div>
 
@@ -223,6 +213,56 @@ export const DealDetail = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Optional Tags */}
+            <div className="flex flex-wrap gap-3">
+              {deal.tags.includes('verified') && (
+                <Badge variant="secondary" className="flex items-center space-x-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                  <CheckCircle className="h-3 w-3" />
+                  <span>Verified sharer</span>
+                </Badge>
+              )}
+              {deal.tags.includes('instant') && (
+                <Badge variant="secondary" className="flex items-center space-x-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                  <Zap className="h-3 w-3" />
+                  <span>Fast responder</span>
+                </Badge>
+              )}
+              <Badge variant="secondary" className="flex items-center space-x-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
+                <Shield className="h-3 w-3" />
+                <span>Buyer protected</span>
+              </Badge>
+            </div>
+
+            {/* Additional Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Additional Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-2">
+                    <Shield className="h-4 w-4 mt-1 text-green-600" />
+                    <p className="text-sm">Backed by SplitClub's 100% Claim Guarantee</p>
+                  </div>
+                  <div className="flex items-start space-x-2">
+                    <Calendar className="h-4 w-4 mt-1 text-blue-600" />
+                    <p className="text-sm">Cancel anytime before next billing</p>
+                  </div>
+                  <div className="flex items-start space-x-2">
+                    <Mail className="h-4 w-4 mt-1 text-purple-600" />
+                    <p className="text-sm">Once accepted, you'll receive the invite by email or in-app</p>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground mb-2">Want to list your own unused slot?</p>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/share-deal')}>
+                    Share Your Deal
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Sidebar */}
@@ -239,15 +279,16 @@ export const DealDetail = () => {
                   ) : (
                     <div>
                       <div className="flex items-center justify-center space-x-2">
-                        <DollarSign className="h-6 w-6 text-muted-foreground" />
-                        <span className="text-3xl font-bold">${deal.sharePrice}</span>
+                        <span className="text-sm text-muted-foreground">£</span>
+                        <span className="text-3xl font-bold">£{deal.sharePrice}</span>
+                        <span className="text-sm text-muted-foreground">/month</span>
                       </div>
                       <div className="flex items-center justify-center space-x-2 mt-2">
                         <span className="text-sm text-muted-foreground line-through">
-                          ${deal.originalPrice}
+                          £{deal.originalPrice}
                         </span>
                         <Badge variant="secondary" className="text-green-600">
-                          Save ${(deal.originalPrice - deal.sharePrice).toFixed(2)}
+                          Save £{(deal.originalPrice - deal.sharePrice).toFixed(2)}
                         </Badge>
                       </div>
                     </div>
@@ -255,7 +296,7 @@ export const DealDetail = () => {
 
                   {deal.status === 'active' && deal.availableSlots > 0 ? (
                     <Button className="w-full" size="lg" onClick={handleClaim}>
-                      {deal.isFree ? 'Claim for Free' : `Claim for $${deal.sharePrice}`}
+                      💸 {deal.isFree ? 'Join for Free' : `Join Now for £${deal.sharePrice}/month`}
                     </Button>
                   ) : deal.status === 'claimed' ? (
                     <Button variant="secondary" className="w-full" size="lg" disabled>
@@ -267,17 +308,18 @@ export const DealDetail = () => {
                     </Button>
                   )}
 
-                  <p className="text-xs text-muted-foreground">
-                    You'll be connected with the deal owner after claiming
-                  </p>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p className="font-medium text-primary">Secure Payment Notice</p>
+                    <p>SplitClub holds your payment until access is confirmed.</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Shared by */}
+            {/* Owner Info */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Shared by</CardTitle>
+                <CardTitle className="text-lg">Owner Info</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-3">
@@ -289,30 +331,48 @@ export const DealDetail = () => {
                   </Avatar>
                   <div>
                     <p className="font-medium">{deal.sharedBy.name}</p>
-                    <p className="text-sm text-muted-foreground">Community member</p>
+                    <div className="flex items-center space-x-2 mt-1">
+                      {deal.tags.includes('verified') && (
+                        <Badge variant="secondary" className="text-xs">Verified</Badge>
+                      )}
+                      {deal.tags.includes('instant') && (
+                        <Badge variant="secondary" className="text-xs">Fast responder</Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <Button variant="outline" className="w-full mt-4">
+                <Button variant="outline" className="w-full mt-4" size="sm">
                   View Profile
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Safety tips */}
+            {/* Safety & Terms */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Safety Tips</CardTitle>
+                <CardTitle className="text-lg">Terms & Safety</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  • Verify deal details before claiming
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  • Communicate through SplitClub messages
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  • Report suspicious activity
-                </p>
+              <CardContent className="space-y-3">
+                <div className="text-sm space-y-2">
+                  <p className="flex items-center space-x-2">
+                    <Shield className="h-3 w-3 text-green-600" />
+                    <span>Buyer protection included</span>
+                  </p>
+                  <p className="flex items-center space-x-2">
+                    <CheckCircle className="h-3 w-3 text-blue-600" />
+                    <span>Cancel anytime</span>
+                  </p>
+                  <p className="flex items-center space-x-2">
+                    <Mail className="h-3 w-3 text-purple-600" />
+                    <span>Instant access via email</span>
+                  </p>
+                </div>
+                
+                <div className="pt-3 border-t border-border">
+                  <Button variant="link" size="sm" className="text-xs p-0 h-auto">
+                    View Terms and Conditions
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
