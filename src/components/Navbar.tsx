@@ -86,7 +86,7 @@ export const Navbar = () => {
             {isAuthenticated ? (
               <>
                 {/* Add deal button */}
-                <Button size="sm" className="hidden sm:flex">
+                <Button size="sm" className="hidden sm:flex" onClick={() => navigate('/share-deal')}>
                   <Plus className="h-4 w-4 mr-2" />
                   Share Deal
                 </Button>

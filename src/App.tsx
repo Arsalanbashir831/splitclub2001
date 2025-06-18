@@ -24,6 +24,7 @@ import { Business } from "./pages/Business";
 import NotFound from "./pages/NotFound";
 import { Footer } from "./components/Footer";
 import { Profile } from "./pages/Profile";
+import { ShareDeal } from "./pages/ShareDeal";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,11 @@ const AppContent = () => {
           <Route path="/profile" element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/share-deal" element={
+            <ProtectedRoute>
+              <ShareDeal />
             </ProtectedRoute>
           } />
           <Route path="/about" element={<About />} />

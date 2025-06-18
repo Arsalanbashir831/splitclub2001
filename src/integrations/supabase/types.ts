@@ -9,6 +9,98 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      deal_claims: {
+        Row: {
+          claimed_at: string
+          deal_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          deal_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          deal_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_claims_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          category: string
+          created_at: string
+          expiry_date: string
+          id: string
+          is_for_sale: boolean | null
+          is_location_bound: boolean | null
+          location_details: string | null
+          original_price: number | null
+          price: number | null
+          redemption_type: string | null
+          source: string | null
+          status: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+          usage_notes: string | null
+          user_id: string
+          voucher_data: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          expiry_date: string
+          id?: string
+          is_for_sale?: boolean | null
+          is_location_bound?: boolean | null
+          location_details?: string | null
+          original_price?: number | null
+          price?: number | null
+          redemption_type?: string | null
+          source?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          usage_notes?: string | null
+          user_id: string
+          voucher_data?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          expiry_date?: string
+          id?: string
+          is_for_sale?: boolean | null
+          is_location_bound?: boolean | null
+          location_details?: string | null
+          original_price?: number | null
+          price?: number | null
+          redemption_type?: string | null
+          source?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          usage_notes?: string | null
+          user_id?: string
+          voucher_data?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
