@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -7,18 +7,16 @@ import { DealCard } from '../components/DealCard';
 import { DealFilters, FilterState } from '../components/DealFilters';
 import { WelcomeTip } from '../components/WelcomeTip';
 import { Deal } from '../types';
+import { mockDeals } from '../data/mockData';
 import { useAuthStore } from '../store/authStore';
 import { Search, Leaf, TrendingUp, Users, Gift } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const { isAuthenticated } = useAuthStore();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [deals, setDeals] = useState<Deal[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     category: [],
     priceRange: [0, 100],
@@ -27,165 +25,6 @@ const Index = () => {
     expiringWithin: 'any',
     sortBy: 'newest'
   });
-
-  // Category mapping from database to UI
-  const categoryMap: Record<string, Deal['category']> = {
-    cinema: 'reward',
-    gym: 'membership',
-    restaurant: 'reward',
-    vouchers: 'reward',
-    discounts: 'other',
-    subscriptions: 'subscription'
-  };
-
-  // Demo deals to show alongside real deals
-  const demoDeals: Deal[] = [
-    {
-      id: 'demo-netflix',
-      title: 'Netflix Premium Family Slot (DEMO)',
-      description: 'Share my Netflix Premium family plan! Only 2 slots left. Perfect for binge-watching your favorite shows.',
-      category: 'subscription',
-      originalPrice: 17.99,
-      sharePrice: 4.50,
-      isFree: false,
-      availableSlots: 2,
-      totalSlots: 4,
-      expiryDate: '2024-07-15',
-      tags: ['streaming', 'entertainment', 'family', 'DEMO'],
-      sharedBy: {
-        id: 'demo-user',
-        name: 'Demo User',
-        email: '',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
-      },
-      status: 'active',
-      createdAt: '2024-06-01T10:00:00Z'
-    },
-    {
-      id: 'demo-gym',
-      title: 'Gym Membership Guest Passes (DEMO)',
-      description: 'I have 5 unused guest passes for EquinoxFit. Free to community members who want to try it out!',
-      category: 'membership',
-      originalPrice: 35.00,
-      sharePrice: 0,
-      isFree: true,
-      availableSlots: 3,
-      totalSlots: 5,
-      expiryDate: '2024-06-30',
-      tags: ['fitness', 'health', 'gym', 'DEMO'],
-      sharedBy: {
-        id: 'demo-user',
-        name: 'Demo User',
-        email: '',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
-      },
-      status: 'active',
-      createdAt: '2024-06-05T14:30:00Z'
-    },
-    {
-      id: 'demo-rewards',
-      title: 'Costco Shopping Rewards (DEMO)',
-      description: 'Earned $50 in Costco cashback rewards but won\'t use them all. Sharing at 20% discount!',
-      category: 'reward',
-      originalPrice: 50.00,
-      sharePrice: 40.00,
-      isFree: false,
-      availableSlots: 1,
-      totalSlots: 1,
-      expiryDate: '2024-06-25',
-      tags: ['shopping', 'cashback', 'grocery', 'DEMO'],
-      sharedBy: {
-        id: 'demo-user',
-        name: 'Demo User',
-        email: '',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
-      },
-      status: 'active',
-      createdAt: '2024-06-08T16:45:00Z'
-    },
-    {
-      id: 'demo-adobe',
-      title: 'Adobe Creative Cloud Team (DEMO)',
-      description: 'Adobe CC for Teams subscription with 2 available licenses. Perfect for creative professionals.',
-      category: 'subscription',
-      originalPrice: 79.99,
-      sharePrice: 25.00,
-      isFree: false,
-      availableSlots: 2,
-      totalSlots: 3,
-      expiryDate: '2024-09-01',
-      tags: ['design', 'creative', 'professional', 'DEMO'],
-      sharedBy: {
-        id: 'demo-user',
-        name: 'Demo User',
-        email: '',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
-      },
-      status: 'active',
-      createdAt: '2024-05-28T11:20:00Z'
-    }
-  ];
-
-  const fetchDeals = async () => {
-    try {
-      const { data: dealsData, error } = await supabase
-        .from('deals')
-        .select(`
-          *,
-          profiles!deals_user_id_fkey (
-            display_name,
-            avatar_url
-          )
-        `)
-        .eq('status', 'active');
-
-      if (error) {
-        console.error('Error fetching deals:', error);
-        return;
-      }
-
-      // Transform database data to match Deal interface
-      const transformedDeals: Deal[] = dealsData?.map((deal: any) => ({
-        id: deal.id,
-        title: deal.title,
-        description: deal.usage_notes || `${deal.source} ${deal.category} deal`,
-        category: categoryMap[deal.category] || 'other',
-        originalPrice: deal.original_price || (deal.price ? deal.price * 1.5 : 50),
-        sharePrice: deal.price || 0,
-        isFree: !deal.is_for_sale,
-        availableSlots: 1, // Default to 1 slot available
-        totalSlots: 1,     // Default to 1 total slot
-        expiryDate: deal.expiry_date,
-        tags: deal.tags || [],
-        sharedBy: {
-          id: deal.user_id,
-          name: deal.profiles?.display_name || 'Anonymous',
-          email: '', // Not exposing email for privacy
-          avatar: deal.profiles?.avatar_url
-        },
-        status: deal.status,
-        createdAt: deal.created_at
-      })) || [];
-
-      // Combine real deals with demo deals
-      setDeals([...transformedDeals, ...demoDeals]);
-    } catch (error) {
-      console.error('Error fetching deals:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load deals. Please try again.",
-        variant: "destructive",
-      });
-      // If there's an error, still show demo deals
-      setDeals(demoDeals);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDeals();
-  }, []);
 
   const handleDealClaim = (dealId: string) => {
     if (!isAuthenticated) {
@@ -205,11 +44,11 @@ const Index = () => {
   };
 
   const filteredDeals = useMemo(() => {
-    let filteredList = [...deals];
+    let deals = [...mockDeals];
 
     // Search filter
     if (searchQuery) {
-      filteredList = filteredList.filter(deal =>
+      deals = deals.filter(deal =>
         deal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         deal.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         deal.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -218,21 +57,21 @@ const Index = () => {
 
     // Category filter
     if (filters.category.length > 0) {
-      filteredList = filteredList.filter(deal => filters.category.includes(deal.category));
+      deals = deals.filter(deal => filters.category.includes(deal.category));
     }
 
     // Price filter
     if (!filters.isFree) {
-      filteredList = filteredList.filter(deal => 
+      deals = deals.filter(deal => 
         deal.isFree || (deal.sharePrice >= filters.priceRange[0] && deal.sharePrice <= filters.priceRange[1])
       );
     } else {
-      filteredList = filteredList.filter(deal => deal.isFree);
+      deals = deals.filter(deal => deal.isFree);
     }
 
     // Available only filter
     if (filters.availableOnly) {
-      filteredList = filteredList.filter(deal => deal.status === 'active' && deal.availableSlots > 0);
+      deals = deals.filter(deal => deal.status === 'active' && deal.availableSlots > 0);
     }
 
     // Expiring within filter
@@ -241,7 +80,7 @@ const Index = () => {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() + days);
       
-      filteredList = filteredList.filter(deal => {
+      deals = deals.filter(deal => {
         const expiryDate = new Date(deal.expiryDate);
         return expiryDate <= cutoffDate;
       });
@@ -250,24 +89,24 @@ const Index = () => {
     // Sort
     switch (filters.sortBy) {
       case 'newest':
-        filteredList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        deals.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
       case 'expiring':
-        filteredList.sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
+        deals.sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
         break;
       case 'price-low':
-        filteredList.sort((a, b) => a.sharePrice - b.sharePrice);
+        deals.sort((a, b) => a.sharePrice - b.sharePrice);
         break;
       case 'price-high':
-        filteredList.sort((a, b) => b.sharePrice - a.sharePrice);
+        deals.sort((a, b) => b.sharePrice - a.sharePrice);
         break;
       case 'popular':
-        filteredList.sort((a, b) => (b.totalSlots - b.availableSlots) - (a.totalSlots - a.availableSlots));
+        deals.sort((a, b) => (b.totalSlots - b.availableSlots) - (a.totalSlots - a.availableSlots));
         break;
     }
 
-    return filteredList;
-  }, [searchQuery, filters, deals]);
+    return deals;
+  }, [searchQuery, filters]);
 
   const clearFilters = () => {
     setFilters({
@@ -282,10 +121,10 @@ const Index = () => {
   };
 
   const stats = {
-    totalDeals: deals.length,
-    activeDeals: deals.filter(d => d.status === 'active').length,
-    totalSavings: deals.reduce((sum, deal) => sum + (deal.originalPrice - deal.sharePrice), 0),
-    freeDeals: deals.filter(d => d.isFree).length
+    totalDeals: mockDeals.length,
+    activeDeals: mockDeals.filter(d => d.status === 'active').length,
+    totalSavings: mockDeals.reduce((sum, deal) => sum + (deal.originalPrice - deal.sharePrice), 0),
+    freeDeals: mockDeals.filter(d => d.isFree).length
   };
 
   return (
