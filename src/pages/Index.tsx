@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -7,16 +7,18 @@ import { DealCard } from '../components/DealCard';
 import { DealFilters, FilterState } from '../components/DealFilters';
 import { WelcomeTip } from '../components/WelcomeTip';
 import { Deal } from '../types';
-import { mockDeals } from '../data/mockData';
 import { useAuthStore } from '../store/authStore';
 import { Search, Leaf, TrendingUp, Users, Gift } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const { isAuthenticated } = useAuthStore();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     category: [],
     priceRange: [0, 100],
@@ -25,6 +27,74 @@ const Index = () => {
     expiringWithin: 'any',
     sortBy: 'newest'
   });
+
+  // Category mapping from database to UI
+  const categoryMap: Record<string, Deal['category']> = {
+    cinema: 'reward',
+    gym: 'membership',
+    restaurant: 'reward',
+    vouchers: 'reward',
+    discounts: 'other',
+    subscriptions: 'subscription'
+  };
+
+  const fetchDeals = async () => {
+    try {
+      const { data: dealsData, error } = await supabase
+        .from('deals')
+        .select(`
+          *,
+          profiles!deals_user_id_fkey (
+            display_name,
+            avatar_url
+          )
+        `)
+        .eq('status', 'active');
+
+      if (error) {
+        console.error('Error fetching deals:', error);
+        return;
+      }
+
+      // Transform database data to match Deal interface
+      const transformedDeals: Deal[] = dealsData?.map((deal: any) => ({
+        id: deal.id,
+        title: deal.title,
+        description: deal.usage_notes || `${deal.source} ${deal.category} deal`,
+        category: categoryMap[deal.category] || 'other',
+        originalPrice: deal.original_price || (deal.price ? deal.price * 1.5 : 50),
+        sharePrice: deal.price || 0,
+        isFree: !deal.is_for_sale,
+        availableSlots: 1, // Default to 1 slot available
+        totalSlots: 1,     // Default to 1 total slot
+        expiryDate: deal.expiry_date,
+        tags: deal.tags || [],
+        sharedBy: {
+          id: deal.user_id,
+          name: deal.profiles?.display_name || 'Anonymous',
+          email: '', // Not exposing email for privacy
+          avatar: deal.profiles?.avatar_url
+        },
+        status: deal.status,
+        createdAt: deal.created_at
+      })) || [];
+
+      setDeals(transformedDeals);
+    } catch (error) {
+      console.error('Error fetching deals:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load deals. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDeals();
+  }, []);
 
   const handleDealClaim = (dealId: string) => {
     if (!isAuthenticated) {
@@ -44,11 +114,11 @@ const Index = () => {
   };
 
   const filteredDeals = useMemo(() => {
-    let deals = [...mockDeals];
+    let filteredList = [...deals];
 
     // Search filter
     if (searchQuery) {
-      deals = deals.filter(deal =>
+      filteredList = filteredList.filter(deal =>
         deal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         deal.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         deal.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -57,21 +127,21 @@ const Index = () => {
 
     // Category filter
     if (filters.category.length > 0) {
-      deals = deals.filter(deal => filters.category.includes(deal.category));
+      filteredList = filteredList.filter(deal => filters.category.includes(deal.category));
     }
 
     // Price filter
     if (!filters.isFree) {
-      deals = deals.filter(deal => 
+      filteredList = filteredList.filter(deal => 
         deal.isFree || (deal.sharePrice >= filters.priceRange[0] && deal.sharePrice <= filters.priceRange[1])
       );
     } else {
-      deals = deals.filter(deal => deal.isFree);
+      filteredList = filteredList.filter(deal => deal.isFree);
     }
 
     // Available only filter
     if (filters.availableOnly) {
-      deals = deals.filter(deal => deal.status === 'active' && deal.availableSlots > 0);
+      filteredList = filteredList.filter(deal => deal.status === 'active' && deal.availableSlots > 0);
     }
 
     // Expiring within filter
@@ -80,7 +150,7 @@ const Index = () => {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() + days);
       
-      deals = deals.filter(deal => {
+      filteredList = filteredList.filter(deal => {
         const expiryDate = new Date(deal.expiryDate);
         return expiryDate <= cutoffDate;
       });
@@ -89,24 +159,24 @@ const Index = () => {
     // Sort
     switch (filters.sortBy) {
       case 'newest':
-        deals.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        filteredList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
       case 'expiring':
-        deals.sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
+        filteredList.sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
         break;
       case 'price-low':
-        deals.sort((a, b) => a.sharePrice - b.sharePrice);
+        filteredList.sort((a, b) => a.sharePrice - b.sharePrice);
         break;
       case 'price-high':
-        deals.sort((a, b) => b.sharePrice - a.sharePrice);
+        filteredList.sort((a, b) => b.sharePrice - a.sharePrice);
         break;
       case 'popular':
-        deals.sort((a, b) => (b.totalSlots - b.availableSlots) - (a.totalSlots - a.availableSlots));
+        filteredList.sort((a, b) => (b.totalSlots - b.availableSlots) - (a.totalSlots - a.availableSlots));
         break;
     }
 
-    return deals;
-  }, [searchQuery, filters]);
+    return filteredList;
+  }, [searchQuery, filters, deals]);
 
   const clearFilters = () => {
     setFilters({
@@ -121,10 +191,10 @@ const Index = () => {
   };
 
   const stats = {
-    totalDeals: mockDeals.length,
-    activeDeals: mockDeals.filter(d => d.status === 'active').length,
-    totalSavings: mockDeals.reduce((sum, deal) => sum + (deal.originalPrice - deal.sharePrice), 0),
-    freeDeals: mockDeals.filter(d => d.isFree).length
+    totalDeals: deals.length,
+    activeDeals: deals.filter(d => d.status === 'active').length,
+    totalSavings: deals.reduce((sum, deal) => sum + (deal.originalPrice - deal.sharePrice), 0),
+    freeDeals: deals.filter(d => d.isFree).length
   };
 
   return (
