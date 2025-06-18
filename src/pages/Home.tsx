@@ -3,11 +3,69 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Navbar } from '@/components/Navbar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowRight, Shield, Users, Zap, Star, Play } from 'lucide-react';
+import { ArrowRight, Shield, Users, Zap, Star, Play, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { mockDeals } from '@/data/mockData';
+import { VideoUploadModal } from '@/components/VideoUploadModal';
+import { VideoPlayer } from '@/components/VideoPlayer';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export const Home = () => {
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [demoVideoUrl, setDemoVideoUrl] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check for existing demo video and user role
+  useEffect(() => {
+    const checkDemoVideo = async () => {
+      try {
+        // Check if user is admin (simplified check - you might want to check auth state)
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('user_id', user.id)
+            .single();
+          
+          setIsAdmin(profile?.is_admin || false);
+        }
+
+        // List files in demo-videos bucket to find existing demo
+        const { data: files } = await supabase.storage
+          .from('demo-videos')
+          .list('demos', { limit: 1 });
+        
+        if (files && files.length > 0) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('demo-videos')
+            .getPublicUrl(`demos/${files[0].name}`);
+          
+          setDemoVideoUrl(publicUrl);
+        }
+      } catch (error) {
+        console.error('Error checking demo video:', error);
+      }
+    };
+
+    checkDemoVideo();
+  }, []);
+
+  const handleVideoUploaded = (videoUrl: string) => {
+    setDemoVideoUrl(videoUrl);
+  };
+
+  const handleWatchDemo = () => {
+    if (demoVideoUrl) {
+      setShowVideoPlayer(true);
+    } else if (isAdmin) {
+      setShowUploadModal(true);
+    }
+  };
+
   const features = [
     {
       icon: <Shield className="w-6 h-6" />,
@@ -62,9 +120,29 @@ export const Home = () => {
                     Get Started <ArrowRight className="w-4 h-4" />
                   </Link>
                 </Button>
-                <Button variant="outline" size="lg" className="gap-2">
-                  <Play className="w-4 h-4" />
-                  Watch Demo
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="gap-2"
+                  onClick={handleWatchDemo}
+                  disabled={!demoVideoUrl && !isAdmin}
+                >
+                  {demoVideoUrl ? (
+                    <>
+                      <Play className="w-4 h-4" />
+                      Watch Demo
+                    </>
+                  ) : isAdmin ? (
+                    <>
+                      <Upload className="w-4 h-4" />
+                      Upload Demo
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4" />
+                      Demo Coming Soon
+                    </>
+                  )}
                 </Button>
               </div>
 
@@ -286,6 +364,22 @@ export const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Video Modals */}
+      <VideoUploadModal
+        open={showUploadModal}
+        onOpenChange={setShowUploadModal}
+        onVideoUploaded={handleVideoUploaded}
+      />
+      
+      {demoVideoUrl && (
+        <VideoPlayer
+          open={showVideoPlayer}
+          onOpenChange={setShowVideoPlayer}
+          videoUrl={demoVideoUrl}
+          title="SplitClub Demo"
+        />
+      )}
     </div>
   );
 };
