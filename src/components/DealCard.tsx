@@ -89,10 +89,15 @@ export const DealCard = ({ deal, onClaim, onView }: DealCardProps) => {
                 />
               </Button>
             </div>
-            <div className="absolute top-2 left-2">
+            <div className="absolute top-2 left-2 flex gap-2">
               <Badge className={getCategoryColor(deal.category)}>
                 {deal.category}
               </Badge>
+              {deal.tags.includes('DEMO') && (
+                <Badge variant="outline" className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 border-orange-300">
+                  DEMO
+                </Badge>
+              )}
             </div>
           </div>
         )}

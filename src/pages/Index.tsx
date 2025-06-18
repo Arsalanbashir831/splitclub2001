@@ -38,6 +38,94 @@ const Index = () => {
     subscriptions: 'subscription'
   };
 
+  // Demo deals to show alongside real deals
+  const demoDeals: Deal[] = [
+    {
+      id: 'demo-netflix',
+      title: 'Netflix Premium Family Slot (DEMO)',
+      description: 'Share my Netflix Premium family plan! Only 2 slots left. Perfect for binge-watching your favorite shows.',
+      category: 'subscription',
+      originalPrice: 17.99,
+      sharePrice: 4.50,
+      isFree: false,
+      availableSlots: 2,
+      totalSlots: 4,
+      expiryDate: '2024-07-15',
+      tags: ['streaming', 'entertainment', 'family', 'DEMO'],
+      sharedBy: {
+        id: 'demo-user',
+        name: 'Demo User',
+        email: '',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+      },
+      status: 'active',
+      createdAt: '2024-06-01T10:00:00Z'
+    },
+    {
+      id: 'demo-gym',
+      title: 'Gym Membership Guest Passes (DEMO)',
+      description: 'I have 5 unused guest passes for EquinoxFit. Free to community members who want to try it out!',
+      category: 'membership',
+      originalPrice: 35.00,
+      sharePrice: 0,
+      isFree: true,
+      availableSlots: 3,
+      totalSlots: 5,
+      expiryDate: '2024-06-30',
+      tags: ['fitness', 'health', 'gym', 'DEMO'],
+      sharedBy: {
+        id: 'demo-user',
+        name: 'Demo User',
+        email: '',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+      },
+      status: 'active',
+      createdAt: '2024-06-05T14:30:00Z'
+    },
+    {
+      id: 'demo-rewards',
+      title: 'Costco Shopping Rewards (DEMO)',
+      description: 'Earned $50 in Costco cashback rewards but won\'t use them all. Sharing at 20% discount!',
+      category: 'reward',
+      originalPrice: 50.00,
+      sharePrice: 40.00,
+      isFree: false,
+      availableSlots: 1,
+      totalSlots: 1,
+      expiryDate: '2024-06-25',
+      tags: ['shopping', 'cashback', 'grocery', 'DEMO'],
+      sharedBy: {
+        id: 'demo-user',
+        name: 'Demo User',
+        email: '',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+      },
+      status: 'active',
+      createdAt: '2024-06-08T16:45:00Z'
+    },
+    {
+      id: 'demo-adobe',
+      title: 'Adobe Creative Cloud Team (DEMO)',
+      description: 'Adobe CC for Teams subscription with 2 available licenses. Perfect for creative professionals.',
+      category: 'subscription',
+      originalPrice: 79.99,
+      sharePrice: 25.00,
+      isFree: false,
+      availableSlots: 2,
+      totalSlots: 3,
+      expiryDate: '2024-09-01',
+      tags: ['design', 'creative', 'professional', 'DEMO'],
+      sharedBy: {
+        id: 'demo-user',
+        name: 'Demo User',
+        email: '',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+      },
+      status: 'active',
+      createdAt: '2024-05-28T11:20:00Z'
+    }
+  ];
+
   const fetchDeals = async () => {
     try {
       const { data: dealsData, error } = await supabase
@@ -79,7 +167,8 @@ const Index = () => {
         createdAt: deal.created_at
       })) || [];
 
-      setDeals(transformedDeals);
+      // Combine real deals with demo deals
+      setDeals([...transformedDeals, ...demoDeals]);
     } catch (error) {
       console.error('Error fetching deals:', error);
       toast({
@@ -87,6 +176,8 @@ const Index = () => {
         description: "Failed to load deals. Please try again.",
         variant: "destructive",
       });
+      // If there's an error, still show demo deals
+      setDeals(demoDeals);
     } finally {
       setLoading(false);
     }
