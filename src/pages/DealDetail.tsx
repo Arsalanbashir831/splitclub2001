@@ -23,8 +23,7 @@ import {
   Shield,
   Zap,
   Mail,
-  Loader2,
-  Edit
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '../store/authStore';
@@ -61,7 +60,7 @@ export const DealDetail = () => {
     if (isOwnDeal) {
       toast({
         title: "Cannot claim own deal",
-        description: "You cannot claim your own deal. You can edit it instead.",
+        description: "You cannot claim your own deal.",
         variant: "destructive",
       });
       return;
@@ -121,19 +120,11 @@ export const DealDetail = () => {
   };
 
   const getClaimButtonText = () => {
-    if (isOwnDeal) return 'Edit Deal';
+    if (isOwnDeal) return 'Your Deal';
     if (hasClaimedThisDeal) return 'Already Claimed';
     if (deal?.availableSlots === 0) return 'Fully Claimed';
     if (deal?.isFree) return 'Join for Free';
     return `Join Now for £${deal?.sharePrice}/month`;
-  };
-
-  const getClaimButtonAction = () => {
-    if (isOwnDeal) {
-      navigate(`/edit-deal/${deal?.id}`);
-    } else {
-      handleClaim();
-    }
   };
 
   if (isLoading) {
@@ -223,7 +214,7 @@ export const DealDetail = () => {
           <div className="flex items-start space-x-4 mb-6">
             {/* Service Icon/Logo */}
             <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
-              {deal.imageUrl ? (
+              {deal?.imageUrl ? (
                 <img 
                   src={deal.imageUrl} 
                   alt={deal.title} 
@@ -231,7 +222,7 @@ export const DealDetail = () => {
                 />
               ) : (
                 <span className="text-2xl font-bold text-primary-foreground">
-                  {deal.title.charAt(0)}
+                  {deal?.title.charAt(0)}
                 </span>
               )}
             </div>
@@ -240,7 +231,7 @@ export const DealDetail = () => {
               {/* Deal Title */}
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                  {deal.title}
+                  {deal?.title}
                 </h1>
                 {isOwnDeal && (
                   <Badge variant="secondary">Your Deal</Badge>
@@ -252,7 +243,7 @@ export const DealDetail = () => {
               
               {/* Short Subtitle */}
               <p className="text-muted-foreground text-lg mb-4">
-                {deal.description}
+                {deal?.description}
               </p>
             </div>
           </div>
@@ -381,7 +372,7 @@ export const DealDetail = () => {
             <Card>
               <CardContent className="p-6">
                 <div className="text-center space-y-4">
-                  {deal.isFree ? (
+                  {deal?.isFree ? (
                     <div className="flex items-center justify-center space-x-2">
                       <Gift className="h-6 w-6 text-green-600" />
                       <span className="text-2xl font-bold text-green-600">FREE</span>
@@ -390,48 +381,46 @@ export const DealDetail = () => {
                     <div>
                       <div className="flex items-center justify-center space-x-2">
                         <span className="text-sm text-muted-foreground">£</span>
-                        <span className="text-3xl font-bold">£{deal.sharePrice}</span>
+                        <span className="text-3xl font-bold">£{deal?.sharePrice}</span>
                         <span className="text-sm text-muted-foreground">/month</span>
                       </div>
                       <div className="flex items-center justify-center space-x-2 mt-2">
                         <span className="text-sm text-muted-foreground line-through">
-                          £{deal.originalPrice}
+                          £{deal?.originalPrice}
                         </span>
                         <Badge variant="secondary" className="text-green-600">
-                          Save £{(deal.originalPrice - deal.sharePrice).toFixed(2)}
+                          Save £{deal ? (deal.originalPrice - deal.sharePrice).toFixed(2) : '0'}
                         </Badge>
                       </div>
                     </div>
                   )}
 
-                  {deal.status === 'active' && deal.availableSlots > 0 && !hasClaimedThisDeal ? (
+                  {deal?.status === 'active' && deal.availableSlots > 0 && !hasClaimedThisDeal && !isOwnDeal ? (
                     <Button 
                       className="w-full" 
                       size="lg" 
-                      onClick={getClaimButtonAction}
+                      onClick={handleClaim}
                       disabled={isClaimLoading}
-                      variant={isOwnDeal ? 'outline' : 'default'}
                     >
                       {isClaimLoading ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           Claiming...
                         </>
-                      ) : isOwnDeal ? (
-                        <>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Deal
-                        </>
                       ) : (
                         <>💸 {getClaimButtonText()}</>
                       )}
+                    </Button>
+                  ) : isOwnDeal ? (
+                    <Button variant="secondary" className="w-full" size="lg" disabled>
+                      Your Deal
                     </Button>
                   ) : hasClaimedThisDeal ? (
                     <Button variant="secondary" className="w-full" size="lg" disabled>
                       <CheckCircle className="h-4 w-4 mr-2" />
                       Already Claimed
                     </Button>
-                  ) : deal.availableSlots === 0 ? (
+                  ) : deal?.availableSlots === 0 ? (
                     <Button variant="secondary" className="w-full" size="lg" disabled>
                       Fully Claimed
                     </Button>

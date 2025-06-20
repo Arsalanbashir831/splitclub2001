@@ -119,7 +119,6 @@ export const DealCard = ({
             isClaimLoading={isClaimLoading}
             isAvailable={deal.availableSlots > 0}
             onClaim={handleClaim}
-            onEdit={() => onView(deal.id)}
           />
           
           <button

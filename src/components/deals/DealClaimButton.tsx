@@ -8,7 +8,6 @@ interface DealClaimButtonProps {
   isClaimLoading: boolean;
   isAvailable: boolean;
   onClaim: () => void;
-  onEdit?: () => void;
 }
 
 export const DealClaimButton = ({
@@ -16,18 +15,17 @@ export const DealClaimButton = ({
   hasClaimedDeal,
   isClaimLoading,
   isAvailable,
-  onClaim,
-  onEdit
+  onClaim
 }: DealClaimButtonProps) => {
   if (isOwnDeal) {
     return (
       <Button 
-        variant="outline" 
+        variant="secondary" 
         size="sm" 
-        onClick={onEdit}
+        disabled 
         className="w-full"
       >
-        Edit Deal
+        Your Deal
       </Button>
     );
   }
