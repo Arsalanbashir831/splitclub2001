@@ -21,7 +21,40 @@ export const useUserDeals = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Deal[];
+      
+      if (!data) return [];
+
+      return data.map(deal => ({
+        id: deal.id,
+        title: deal.title,
+        description: deal.usage_notes || deal.title,
+        category: deal.category as Deal['category'],
+        originalPrice: Number(deal.original_price || 0),
+        sharePrice: Number(deal.price || 0),
+        isFree: !deal.is_for_sale,
+        availableSlots: 5,
+        totalSlots: 5,
+        expiryDate: deal.expiry_date,
+        tags: deal.tags || [],
+        sharedBy: {
+          id: deal.user_id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar
+        },
+        status: deal.status as Deal['status'],
+        createdAt: deal.created_at,
+        image: deal.image_url,
+        imageUrl: deal.image_url,
+        imageFileName: deal.image_file_name,
+        source: deal.source,
+        redemptionType: deal.redemption_type as Deal['redemptionType'],
+        voucherData: deal.voucher_data,
+        isLocationBound: deal.is_location_bound,
+        locationDetails: deal.location_details,
+        isForSale: deal.is_for_sale,
+        usageNotes: deal.usage_notes
+      } as Deal));
     },
     enabled: !!user?.id,
   });

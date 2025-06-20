@@ -69,9 +69,9 @@ export const Home = () => {
               {latestDeals.map((deal) => (
                 <Card key={deal.id} className="group hover:shadow-lg transition-shadow duration-200">
                   <div className="relative overflow-hidden rounded-t-lg">
-                    {deal.image_url && (
+                    {deal.imageUrl && (
                       <img
-                        src={deal.image_url}
+                        src={deal.imageUrl}
                         alt={deal.title}
                         className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
                       />
@@ -83,14 +83,14 @@ export const Home = () => {
                   <CardContent className="p-4">
                     <h3 className="font-semibold text-lg mb-2 line-clamp-2">{deal.title}</h3>
                     <div className="flex items-center justify-between mb-3">
-                      {deal.price && (
+                      {deal.sharePrice && (
                         <div className="flex items-center space-x-2">
                           <span className="text-2xl font-bold text-green-600">
-                            ${deal.price}
+                            ${deal.sharePrice}
                           </span>
-                          {deal.original_price && (
+                          {deal.originalPrice && (
                             <span className="text-sm text-gray-500 line-through">
-                              ${deal.original_price}
+                              ${deal.originalPrice}
                             </span>
                           )}
                         </div>
@@ -98,7 +98,7 @@ export const Home = () => {
                     </div>
                     <div className="flex items-center text-sm text-gray-500 mb-3">
                       <Clock className="h-4 w-4 mr-1" />
-                      Expires {new Date(deal.expiry_date).toLocaleDateString()}
+                      Expires {new Date(deal.expiryDate).toLocaleDateString()}
                     </div>
                     <Button asChild className="w-full">
                       <Link to={`/deal/${deal.id}`}>View Deal</Link>

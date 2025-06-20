@@ -132,16 +132,16 @@ export const Profile = () => {
                           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1" />
-                              Created {formatDate(deal.created_at)}
+                              Created {formatDate(deal.createdAt)}
                             </div>
                             <div className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1" />
-                              Expires {formatDate(deal.expiry_date)}
+                              Expires {formatDate(deal.expiryDate)}
                             </div>
-                            {deal.location_details && (
+                            {deal.locationDetails && (
                               <div className="flex items-center">
                                 <MapPin className="h-4 w-4 mr-1" />
-                                {deal.location_details}
+                                {deal.locationDetails}
                               </div>
                             )}
                           </div>
@@ -163,9 +163,9 @@ export const Profile = () => {
                           <Tag className="h-3 w-3 mr-1" />
                           {deal.category}
                         </Badge>
-                        {deal.price && (
+                        {deal.sharePrice && (
                           <Badge variant="outline" className="text-green-600">
-                            ${deal.price}
+                            ${deal.sharePrice}
                           </Badge>
                         )}
                       </div>
