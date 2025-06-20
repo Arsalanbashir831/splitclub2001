@@ -12,21 +12,29 @@ export const useFavoriteDeals = () => {
     queryFn: async () => {
       if (!user?.id) return [];
       
-      const { data, error } = await supabase
+      // First get the favorite deal IDs
+      const { data: favorites, error: favoritesError } = await supabase
         .from('deal_favorites')
-        .select(`
-          deal_id,
-          deals (*)
-        `)
+        .select('deal_id')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (favoritesError) throw favoritesError;
+      if (!favorites || favorites.length === 0) return [];
+
+      const dealIds = favorites.map(f => f.deal_id);
       
-      if (!data) return [];
+      // Then get the deals data
+      const { data: deals, error: dealsError } = await supabase
+        .from('deals')
+        .select('*')
+        .in('id', dealIds);
+      
+      if (dealsError) throw dealsError;
+      if (!deals) return [];
 
       // Get unique user IDs from deals
-      const userIds = [...new Set(data.map(item => item.deals?.user_id).filter(Boolean))];
+      const userIds = [...new Set(deals.map(deal => deal.user_id).filter(Boolean))];
       
       // Fetch profiles for these users
       const { data: profiles, error: profilesError } = await supabase
@@ -44,10 +52,7 @@ export const useFavoriteDeals = () => {
         profileMap.set(profile.user_id, profile);
       });
 
-      return data.map(item => {
-        const deal = item.deals;
-        if (!deal) return null;
-        
+      return deals.map(deal => {
         const profile = profileMap.get(deal.user_id);
         
         return {
@@ -81,7 +86,7 @@ export const useFavoriteDeals = () => {
           isForSale: deal.is_for_sale,
           usageNotes: deal.usage_notes
         } as Deal;
-      }).filter(Boolean);
+      });
     },
     enabled: !!user?.id,
   });
