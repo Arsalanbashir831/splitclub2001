@@ -17,6 +17,7 @@ export const DealClaimButton = ({
   isAvailable,
   onClaim
 }: DealClaimButtonProps) => {
+  // Check if user owns this deal
   if (isOwnDeal) {
     return (
       <Button 
@@ -30,19 +31,21 @@ export const DealClaimButton = ({
     );
   }
 
+  // Check if user has already claimed this deal
   if (hasClaimedDeal) {
     return (
       <Button 
         variant="secondary" 
         size="sm" 
         disabled 
-        className="w-full"
+        className="w-full bg-green-100 text-green-800 border-green-300"
       >
-        Already Claimed
+        ✓ Already Claimed
       </Button>
     );
   }
 
+  // Check if deal has available slots
   if (!isAvailable) {
     return (
       <Button 
@@ -56,6 +59,7 @@ export const DealClaimButton = ({
     );
   }
 
+  // Show claim button
   return (
     <Button
       size="sm"

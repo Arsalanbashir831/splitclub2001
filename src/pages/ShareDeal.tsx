@@ -1,14 +1,16 @@
-
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { ChooseRewardType } from '@/components/share-deal/ChooseRewardType';
 import { UploadRewardDetails } from '@/components/share-deal/UploadRewardDetails';
-import { SetPriceAvailability } from '@/components/share-deal/SetPriceAvailability';
 import { AddConditions } from '@/components/share-deal/AddConditions';
+import { SetPriceAvailability } from '@/components/share-deal/SetPriceAvailability';
 import { PreviewPublish } from '@/components/share-deal/PreviewPublish';
-import { useAuthStore } from '@/store/authStore';
-import { useEffect } from 'react';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 
 export interface DealFormData {
   category: string;
@@ -29,6 +31,8 @@ export interface DealFormData {
 }
 
 export const ShareDeal = () => {
+  useScrollToTop();
+  
   const { isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -131,9 +135,10 @@ export const ShareDeal = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      
+      <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Progress indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -168,6 +173,8 @@ export const ShareDeal = () => {
         {/* Current step content */}
         {renderStep()}
       </div>
+
+      <Footer />
     </div>
   );
 };
