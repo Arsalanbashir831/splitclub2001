@@ -365,8 +365,6 @@ export const Home = () => {
           </motion.div>
         </div>
       </motion.section>
-
-      <Footer />
     </motion.div>
   );
 };
