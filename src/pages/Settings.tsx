@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuthStore } from '@/store/authStore';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User, Camera, Key, Trash2, Upload, Loader2 } from 'lucide-react';
+import { User, Camera, Key, Trash2, Loader2 } from 'lucide-react';
 
 export const Settings = () => {
   const { user, isAuthenticated } = useAuthStore();
@@ -32,14 +32,21 @@ export const Settings = () => {
   }
 
   const handleProfileUpdate = async () => {
-    if (!user) return;
+    if (!user || !profileData.displayName.trim()) {
+      toast({
+        title: "Error",
+        description: "Display name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .update({
-          display_name: profileData.displayName,
+          display_name: profileData.displayName.trim(),
         })
         .eq('user_id', user.id);
 
@@ -62,7 +69,7 @@ export const Settings = () => {
   };
 
   const handlePasswordUpdate = async () => {
-    if (!profileData.newPassword || !profileData.confirmPassword) {
+    if (!profileData.currentPassword || !profileData.newPassword || !profileData.confirmPassword) {
       toast({
         title: "Error",
         description: "Please fill in all password fields.",
@@ -80,13 +87,38 @@ export const Settings = () => {
       return;
     }
 
+    if (profileData.newPassword.length < 6) {
+      toast({
+        title: "Error",
+        description: "New password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({
+      // First verify current password by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: profileData.currentPassword
+      });
+
+      if (signInError) {
+        toast({
+          title: "Error",
+          description: "Current password is incorrect.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // If verification passes, update password
+      const { error: updateError } = await supabase.auth.updateUser({
         password: profileData.newPassword
       });
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       toast({
         title: "Password updated",
@@ -138,18 +170,17 @@ export const Settings = () => {
     setIsLoading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
       const { error: updateError } = await supabase
         .from('profiles')
@@ -260,7 +291,7 @@ export const Settings = () => {
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    JPG, PNG or GIF. Max size 2MB.
+                    JPG, PNG, GIF or WEBP. Max size 2MB.
                   </p>
                 </div>
                 <input
@@ -315,6 +346,17 @@ export const Settings = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword">Current Password</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={profileData.currentPassword}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                  placeholder="Enter your current password"
+                />
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">New Password</Label>
@@ -323,6 +365,7 @@ export const Settings = () => {
                     type="password"
                     value={profileData.newPassword}
                     onChange={(e) => setProfileData(prev => ({ ...prev, newPassword: e.target.value }))}
+                    placeholder="Enter new password"
                   />
                 </div>
                 <div className="space-y-2">
@@ -332,8 +375,13 @@ export const Settings = () => {
                     type="password"
                     value={profileData.confirmPassword}
                     onChange={(e) => setProfileData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    placeholder="Confirm new password"
                   />
                 </div>
+              </div>
+
+              <div className="text-sm text-muted-foreground">
+                Password must be at least 6 characters long.
               </div>
 
               <Button onClick={handlePasswordUpdate} disabled={isLoading}>

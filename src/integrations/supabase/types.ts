@@ -206,6 +206,10 @@ export type Database = {
         Args: Record<PropertyKey, never> | { user_uuid: string }
         Returns: boolean
       }
+      update_user_password: {
+        Args: { current_password: string; new_password: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
