@@ -51,9 +51,9 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/deals" element={
-          <ProtectedRoute>
+          {/* <ProtectedRoute> */}
             <Deals />
-          </ProtectedRoute>
+          {/* </ProtectedRoute> */}
         } />
         <Route path="/login" element={<Login />} />
         <Route path="/share-deal" element={
