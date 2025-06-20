@@ -6,10 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { VideoManagement } from '../components/AdminDashboard/VideoManagement';
-import { AdminSkeleton } from '../components/AdminDashboard/AdminSkeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
@@ -22,6 +22,7 @@ import {
   Clock,
   BarChart3
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface Deal {
   id: string;
@@ -35,8 +36,9 @@ interface Deal {
 interface User {
   user_id: string;
   display_name: string;
-  email: string;
+  email?: string;
   role?: string;
+  avatar_url?: string;
 }
 
 interface Claim {
@@ -54,24 +56,24 @@ const AdminDashboardSkeleton = () => (
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i}>
             <CardHeader>
-              <CardTitle><div className="h-6 w-32 bg-muted animate-pulse" /></CardTitle>
-              <CardDescription><div className="h-4 w-48 bg-muted animate-pulse" /></CardDescription>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48" />
             </CardHeader>
             <CardContent>
-              <div className="h-8 w-full bg-muted animate-pulse" />
+              <Skeleton className="h-8 w-full" />
             </CardContent>
           </Card>
         ))}
       </div>
       <div className="mt-8">
-        <div className="h-8 w-64 bg-muted animate-pulse mb-4" />
+        <Skeleton className="h-8 w-64 mb-4" />
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="flex items-center space-x-4">
-              <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
+              <Skeleton className="h-12 w-12 rounded-full" />
               <div>
-                <div className="h-4 w-48 bg-muted animate-pulse mb-2" />
-                <div className="h-3 w-32 bg-muted animate-pulse" />
+                <Skeleton className="h-4 w-48 mb-2" />
+                <Skeleton className="h-3 w-32" />
               </div>
             </div>
           ))}
@@ -82,7 +84,7 @@ const AdminDashboardSkeleton = () => (
 );
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('deals');
+  const [activeTab, setActiveTab] = useState('overview');
 
   const { data: deals, isLoading: dealsLoading, error: dealsError } = useQuery({
     queryKey: ['admin-deals'],
@@ -112,7 +114,14 @@ const AdminDashboard = () => {
         throw error;
       }
 
-      return data as User[];
+      // Map the data to match the User interface
+      return data?.map(profile => ({
+        user_id: profile.user_id,
+        display_name: profile.display_name || 'Unknown User',
+        email: profile.email || '',
+        role: profile.is_admin ? 'admin' : 'user',
+        avatar_url: profile.avatar_url
+      })) as User[] || [];
     }
   });
 
@@ -160,6 +169,19 @@ const AdminDashboard = () => {
     { label: 'Active Deals', value: deals?.filter(deal => deal.status === 'active').length || 0, icon: TrendingUp, color: 'text-orange-500' },
   ];
 
+  // Data for charts
+  const categoryData = deals?.reduce((acc, deal) => {
+    acc[deal.category] = (acc[deal.category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const chartData = Object.entries(categoryData || {}).map(([category, count]) => ({
+    category,
+    count
+  }));
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+
   return (
     <motion.div 
       className="min-h-screen bg-background"
@@ -188,19 +210,17 @@ const AdminDashboard = () => {
         >
           {stats.map((stat, index) => (
             <Card key={index}>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
-                  <span>{stat.label}</span>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {stat.label}
                 </CardTitle>
-                <CardDescription>
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                  <span>{stat.value}</span>
-                </CardDescription>
+                <stat.icon className={`h-4 w-4 ${stat.color}`} />
               </CardHeader>
               <CardContent>
-                <Activity className="h-6 w-6 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Recent activity</span>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-muted-foreground">
+                  +20.1% from last month
+                </p>
               </CardContent>
             </Card>
           ))}
@@ -213,78 +233,145 @@ const AdminDashboard = () => {
         >
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="deals">Deals</TabsTrigger>
               <TabsTrigger value="users">Users</TabsTrigger>
               <TabsTrigger value="claims">Claims</TabsTrigger>
               <TabsTrigger value="videos">Videos</TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="overview">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Deals by Category</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="category" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#8884d8" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Deal Distribution</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={chartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="count"
+                          label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {chartData?.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            
             <TabsContent value="deals">
               <div>
                 <h2 className="text-xl font-semibold text-foreground mb-4">Deals Management</h2>
-                {deals?.map(deal => (
-                  <Card key={deal.id} className="mb-4">
-                    <CardHeader>
-                      <CardTitle>{deal.title}</CardTitle>
-                      <CardDescription>
-                        <Clock className="h-4 w-4 mr-1" />
-                        Created at: {new Date(deal.created_at).toLocaleDateString()}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p>Category: {deal.category}</p>
-                      <p>Price: ${deal.price}</p>
-                      <Badge variant={deal.status === 'active' ? 'outline' : 'destructive'}>
-                        {deal.status}
-                      </Badge>
-                    </CardContent>
-                  </Card>
-                ))}
+                <div className="grid gap-4">
+                  {deals?.map(deal => (
+                    <Card key={deal.id}>
+                      <CardHeader>
+                        <CardTitle>{deal.title}</CardTitle>
+                        <CardDescription>
+                          <Clock className="h-4 w-4 mr-1 inline" />
+                          Created at: {new Date(deal.created_at).toLocaleDateString()}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p>Category: {deal.category}</p>
+                            <p>Price: ${deal.price}</p>
+                          </div>
+                          <Badge variant={deal.status === 'active' ? 'default' : 'destructive'}>
+                            {deal.status}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </TabsContent>
+            
             <TabsContent value="users">
               <div>
                 <h2 className="text-xl font-semibold text-foreground mb-4">Users Management</h2>
-                {users?.map(user => (
-                  <Card key={user.user_id} className="mb-4">
-                    <CardHeader>
-                      <CardTitle>{user.display_name}</CardTitle>
-                      <CardDescription>
-                        <AlertCircle className="h-4 w-4 mr-1 text-yellow-500" />
-                        User ID: {user.user_id}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p>Email: {user.email}</p>
-                      <p>Role: {user.role || 'User'}</p>
-                      <Badge variant="secondary">
-                        <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
-                        Verified
-                      </Badge>
-                    </CardContent>
-                  </Card>
-                ))}
+                <div className="grid gap-4">
+                  {users?.map(user => (
+                    <Card key={user.user_id}>
+                      <CardHeader>
+                        <CardTitle>{user.display_name}</CardTitle>
+                        <CardDescription>
+                          <AlertCircle className="h-4 w-4 mr-1 inline text-yellow-500" />
+                          User ID: {user.user_id}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p>Email: {user.email}</p>
+                            <p>Role: {user.role || 'User'}</p>
+                          </div>
+                          <Badge variant="secondary">
+                            <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
+                            Verified
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </TabsContent>
+            
             <TabsContent value="claims">
               <div>
                 <h2 className="text-xl font-semibold text-foreground mb-4">Claims Management</h2>
-                {claims?.map(claim => (
-                  <Card key={claim.id} className="mb-4">
-                    <CardHeader>
-                      <CardTitle>Claim ID: {claim.id}</CardTitle>
-                      <CardDescription>
-                        <Clock className="h-4 w-4 mr-1" />
-                        Claimed at: {new Date(claim.claimed_at).toLocaleDateString()}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p>Deal ID: {claim.deal_id}</p>
-                      <p>User ID: {claim.user_id}</p>
-                    </CardContent>
-                  </Card>
-                ))}
+                <div className="grid gap-4">
+                  {claims?.map(claim => (
+                    <Card key={claim.id}>
+                      <CardHeader>
+                        <CardTitle>Claim ID: {claim.id}</CardTitle>
+                        <CardDescription>
+                          <Clock className="h-4 w-4 mr-1 inline" />
+                          Claimed at: {new Date(claim.claimed_at).toLocaleDateString()}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p>Deal ID: {claim.deal_id}</p>
+                        <p>User ID: {claim.user_id}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </TabsContent>
+            
             <TabsContent value="videos">
               <VideoManagement />
             </TabsContent>

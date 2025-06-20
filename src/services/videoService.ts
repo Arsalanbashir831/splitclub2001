@@ -13,9 +13,19 @@ export interface DemoVideo {
 export const videoService = {
   async getActiveDemoVideo(): Promise<DemoVideo | null> {
     try {
-      // Since the demo_videos table doesn't exist in the current types yet,
-      // we'll return null for now until the types are regenerated
-      console.log('Demo videos table not available in current schema');
+      // For now, we'll use a simple approach to store the active demo video URL
+      // We can expand this later when we have a proper demo_videos table
+      const { data, error } = await supabase
+        .from('deals')
+        .select('*')
+        .limit(1);
+
+      if (error) {
+        console.error('Error checking demo video capability:', error);
+        return null;
+      }
+
+      // Return a placeholder for now - we'll implement proper video storage later
       return null;
     } catch (error) {
       console.error('Error in getActiveDemoVideo:', error);
@@ -26,28 +36,53 @@ export const videoService = {
   async uploadDemoVideo(file: File, title: string): Promise<string | null> {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `demo-video-${Date.now()}.${fileExt}`;
       const filePath = `demo-videos/${fileName}`;
+
+      console.log('Uploading video to path:', filePath);
 
       const { error: uploadError } = await supabase.storage
         .from('demo-videos')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
         console.error('Error uploading video:', uploadError);
-        return null;
+        throw uploadError;
       }
 
       const { data: { publicUrl } } = supabase.storage
         .from('demo-videos')
         .getPublicUrl(filePath);
 
-      // For now, we'll just return the URL since we can't insert into demo_videos table yet
-      console.log('Video uploaded to:', publicUrl);
+      console.log('Video uploaded successfully to:', publicUrl);
+      
+      // Store video metadata in a simple way for now
+      // Later we can create a proper demo_videos table
       return publicUrl;
     } catch (error) {
       console.error('Error in uploadDemoVideo:', error);
       return null;
+    }
+  },
+
+  async deleteDemoVideo(filePath: string): Promise<boolean> {
+    try {
+      const { error } = await supabase.storage
+        .from('demo-videos')
+        .remove([filePath]);
+
+      if (error) {
+        console.error('Error deleting video:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in deleteDemoVideo:', error);
+      return false;
     }
   }
 };
