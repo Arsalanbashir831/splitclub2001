@@ -7,6 +7,7 @@ import { Deal } from '@/types';
 export const useRealtimeDeals = (limit?: number) => {
   const queryClient = useQueryClient();
   const channelRef = useRef<any>(null);
+  const isSubscribedRef = useRef(false);
 
   const { data: deals = [], isLoading, error } = useQuery({
     queryKey: limit ? ['deals', 'latest', limit] : ['deals'],
@@ -84,16 +85,24 @@ export const useRealtimeDeals = (limit?: number) => {
   });
 
   useEffect(() => {
+    // If we already have a subscribed channel, don't create another one
+    if (isSubscribedRef.current && channelRef.current) {
+      return;
+    }
+
     // Clean up existing channel
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
+      isSubscribedRef.current = false;
     }
 
     // Create new channel with unique name
-    const channelName = `deals-realtime-${Date.now()}`;
-    channelRef.current = supabase
-      .channel(channelName)
+    const channelName = `deals-realtime-${Date.now()}-${Math.random()}`;
+    const channel = supabase.channel(channelName);
+    channelRef.current = channel;
+
+    channel
       .on(
         'postgres_changes',
         {
@@ -105,12 +114,17 @@ export const useRealtimeDeals = (limit?: number) => {
           queryClient.invalidateQueries({ queryKey: ['deals'] });
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          isSubscribedRef.current = true;
+        }
+      });
 
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
+        isSubscribedRef.current = false;
       }
     };
   }, [queryClient]);

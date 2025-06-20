@@ -9,6 +9,7 @@ export const useUserDeals = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const channelRef = useRef<any>(null);
+  const isSubscribedRef = useRef(false);
 
   const { data: userDeals = [], isLoading, error } = useQuery({
     queryKey: ['user-deals', user?.id],
@@ -83,16 +84,24 @@ export const useUserDeals = () => {
   useEffect(() => {
     if (!user?.id) return;
 
+    // If we already have a subscribed channel, don't create another one
+    if (isSubscribedRef.current && channelRef.current) {
+      return;
+    }
+
     // Clean up existing channel first
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
+      isSubscribedRef.current = false;
     }
 
     // Create new channel with unique name to prevent multiple subscriptions
-    const channelName = `user-deals-${user.id}-${Date.now()}`;
-    channelRef.current = supabase
-      .channel(channelName)
+    const channelName = `user-deals-${user.id}-${Date.now()}-${Math.random()}`;
+    const channel = supabase.channel(channelName);
+    channelRef.current = channel;
+
+    channel
       .on(
         'postgres_changes',
         {
@@ -117,12 +126,17 @@ export const useUserDeals = () => {
           queryClient.invalidateQueries({ queryKey: ['claimed-deals', user.id] });
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          isSubscribedRef.current = true;
+        }
+      });
 
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
+        isSubscribedRef.current = false;
       }
     };
   }, [user?.id, queryClient]);
