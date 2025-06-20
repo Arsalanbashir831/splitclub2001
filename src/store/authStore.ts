@@ -115,6 +115,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   setSession: (session: Session | null) => {
+    console.log('Setting session:', session);
+    
     if (session?.user) {
       // Fetch user profile data with proper error handling
       setTimeout(async () => {
@@ -190,6 +192,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             avatar: profile.avatar_url,
             isAdmin: isAdminResult || false,
           };
+
+          console.log('User created with admin status:', user.isAdmin);
 
           set({ 
             user, 
