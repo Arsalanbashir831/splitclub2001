@@ -15,9 +15,9 @@ export const VideoManagement = () => {
   const [isVideoPlayerOpen, setIsVideoPlayerOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleVideoUpload = (videoUrl: string, title: string) => {
+  const handleVideoUploaded = (videoUrl: string) => {
     setCurrentVideo(videoUrl);
-    setVideoTitle(title);
+    setVideoTitle('Demo Video'); // Set a default title
     toast({
       title: "Video uploaded successfully",
       description: "Demo video is now active on the platform.",
@@ -100,7 +100,7 @@ export const VideoManagement = () => {
         <VideoUploadModal
           open={isUploadModalOpen}
           onOpenChange={setIsUploadModalOpen}
-          onUpload={handleVideoUpload}
+          onVideoUploaded={handleVideoUploaded}
         />
 
         {currentVideo && (
