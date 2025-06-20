@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/store/authStore';
 import { Menu, X, User, Settings, LogOut, Shield, Plus, Search, Sun, Moon } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/ThemeProvider';
 
 export const Navbar = () => {
   const { user, isAuthenticated, signOut } = useAuthStore();
@@ -31,7 +31,7 @@ export const Navbar = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/deals?search=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
     }
   };

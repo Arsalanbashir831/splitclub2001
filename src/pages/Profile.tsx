@@ -1,272 +1,240 @@
 
+import { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthStore } from '@/store/authStore';
 import { useUserDeals } from '@/hooks/useUserDeals';
-import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Tag, Plus, Settings, Eye } from 'lucide-react';
+import { useFavoriteDeals } from '@/hooks/useFavoriteDeals';
+import { useFavorites } from '@/hooks/useFavorites';
+import { DealCard } from '@/components/DealCard';
+import { Clock, MapPin, User, Package, Heart, HeartOff } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 export const Profile = () => {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user } = useAuthStore();
   const { userDeals, claimedDeals, isLoading } = useUserDeals();
+  const { data: favoriteDeals, isLoading: favoritesLoading } = useFavoriteDeals();
+  const { removeFavorite } = useFavorites();
+  const { toast } = useToast();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('deals');
 
-  if (!isAuthenticated || !user) {
-    navigate('/login');
-    return null;
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+  const handleRemoveFavorite = (dealId: string) => {
+    removeFavorite(dealId);
+    toast({
+      title: "Removed from favorites",
+      description: "Deal removed from your favorites.",
     });
   };
+
+  const handleDealView = (dealId: string) => {
+    navigate(`/deal/${dealId}`);
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <h1 className="text-2xl font-bold">Please log in to view your profile</h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <Card className="mb-8">
+          <CardContent className="pt-6">
             <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
-                {user.name.split(' ').map(n => n[0]).join('')}
+              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center">
+                {user.avatar ? (
+                  <img 
+                    src={user.avatar} 
+                    alt={user.name} 
+                    className="w-20 h-20 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="w-10 h-10 text-primary-foreground" />
+                )}
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-foreground">{user.name}</h1>
                 <p className="text-muted-foreground">{user.email}</p>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Badge variant={user.isAdmin ? "default" : "secondary"}>
-                    {user.isAdmin ? 'Admin' : 'Member'}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">
-                    Joined {formatDate(new Date().toISOString())}
-                  </span>
-                </div>
+                {user.isAdmin && (
+                  <Badge variant="secondary" className="mt-1">Admin</Badge>
+                )}
               </div>
             </div>
-            <div className="flex space-x-2">
-              <Button asChild variant="outline">
-                <Link to="/settings">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Link>
-              </Button>
-              <Button asChild>
-                <Link to="/share-deal">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Share Deal
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary">{userDeals.length}</div>
-                <div className="text-sm text-muted-foreground">Deals Shared</div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">{claimedDeals.length}</div>
-                <div className="text-sm text-muted-foreground">Deals Claimed</div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">
-                  {userDeals.filter(deal => deal.status === 'active').length}
-                </div>
-                <div className="text-sm text-muted-foreground">Active Deals</div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Deals Tabs */}
-        <Tabs defaultValue="shared" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="shared">Deals I've Shared</TabsTrigger>
-            <TabsTrigger value="claimed">Deals I've Claimed</TabsTrigger>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="deals">My Deals ({userDeals.length})</TabsTrigger>
+            <TabsTrigger value="claimed">Claimed ({claimedDeals.length})</TabsTrigger>
+            <TabsTrigger value="favorites">Favorites ({favoriteDeals?.length || 0})</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="shared" className="space-y-4">
+          {/* My Deals Tab */}
+          <TabsContent value="deals" className="mt-6">
             {isLoading ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <Card key={i} className="animate-pulse">
-                    <CardContent className="p-6">
-                      <div className="h-6 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-4 bg-gray-200 rounded mb-4 w-2/3"></div>
-                      <div className="flex space-x-2">
-                        <div className="h-6 bg-gray-200 rounded w-16"></div>
-                        <div className="h-6 bg-gray-200 rounded w-20"></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <div className="text-center py-8">Loading your deals...</div>
             ) : userDeals.length > 0 ? (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {userDeals.map((deal) => (
-                  <Card key={deal.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold mb-2">{deal.title}</h3>
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              Created {formatDate(deal.createdAt)}
-                            </div>
-                            <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              Expires {formatDate(deal.expiryDate)}
-                            </div>
-                            {deal.locationDetails && (
-                              <div className="flex items-center">
-                                <MapPin className="h-4 w-4 mr-1" />
-                                {deal.locationDetails}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end space-y-2">
-                          <Badge variant={deal.status === 'active' ? 'default' : 'secondary'}>
-                            {deal.status}
-                          </Badge>
-                          <Button asChild variant="outline" size="sm">
-                            <Link to={`/deal/${deal.id}`}>
-                              <Eye className="h-4 w-4 mr-1" />
-                              View
-                            </Link>
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="outline">
-                          <Tag className="h-3 w-3 mr-1" />
-                          {deal.category}
+                  <Card key={deal.id} className="overflow-hidden">
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-lg line-clamp-2">{deal.title}</CardTitle>
+                        <Badge variant={deal.status === 'active' ? 'default' : 'secondary'}>
+                          {deal.status}
                         </Badge>
-                        {deal.sharePrice && (
-                          <Badge variant="outline" className="text-green-600">
-                            ${deal.sharePrice}
-                          </Badge>
-                        )}
                       </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline">{deal.category}</Badge>
+                        <div className="text-right">
+                          {deal.isFree ? (
+                            <span className="font-bold text-green-600">FREE</span>
+                          ) : (
+                            <div>
+                              <span className="font-bold text-green-600">${deal.sharePrice}</span>
+                              {deal.originalPrice && (
+                                <span className="text-sm text-muted-foreground line-through ml-1">
+                                  ${deal.originalPrice}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4 mr-1" />
+                        Created: {new Date(deal.createdAt).toLocaleDateString()}
+                      </div>
+                      
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4 mr-1" />
+                        Expires: {new Date(deal.expiryDate).toLocaleDateString()}
+                      </div>
+                      
+                      {deal.isLocationBound && deal.locationDetails && (
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          {deal.locationDetails}
+                        </div>
+                      )}
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => handleDealView(deal.id)}
+                      >
+                        View Details
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
               </div>
             ) : (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <div className="text-muted-foreground mb-4">
-                    You haven't shared any deals yet
-                  </div>
-                  <Button asChild>
-                    <Link to="/share-deal">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Share Your First Deal
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              <div className="text-center py-12">
+                <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No deals yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  You haven't shared any deals yet. Start sharing to help others save!
+                </p>
+                <Button onClick={() => navigate('/share-deal')}>
+                  Share Your First Deal
+                </Button>
+              </div>
             )}
           </TabsContent>
 
-          <TabsContent value="claimed" className="space-y-4">
+          {/* Claimed Deals Tab */}
+          <TabsContent value="claimed" className="mt-6">
             {isLoading ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <Card key={i} className="animate-pulse">
-                    <CardContent className="p-6">
-                      <div className="h-6 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-4 bg-gray-200 rounded mb-4 w-2/3"></div>
-                      <div className="flex space-x-2">
-                        <div className="h-6 bg-gray-200 rounded w-16"></div>
-                        <div className="h-6 bg-gray-200 rounded w-20"></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <div className="text-center py-8">Loading claimed deals...</div>
             ) : claimedDeals.length > 0 ? (
               <div className="space-y-4">
                 {claimedDeals.map((claim: any) => (
-                  <Card key={claim.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold mb-2">{claim.deals.title}</h3>
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              Claimed {formatDate(claim.claimed_at)}
-                            </div>
-                            <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              Expires {formatDate(claim.deals.expiry_date)}
-                            </div>
-                            {claim.deals.location_details && (
-                              <div className="flex items-center">
-                                <MapPin className="h-4 w-4 mr-1" />
-                                {claim.deals.location_details}
-                              </div>
-                            )}
-                          </div>
+                  <Card key={claim.id}>
+                    <CardContent className="pt-6">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold">{claim.deals?.title}</h3>
+                          <p className="text-muted-foreground text-sm">
+                            Claimed on {new Date(claim.claimed_at).toLocaleDateString()}
+                          </p>
                         </div>
-                        <Button asChild variant="outline" size="sm">
-                          <Link to={`/deal/${claim.deals.id}`}>
-                            <Eye className="h-4 w-4 mr-1" />
-                            View Deal
-                          </Link>
-                        </Button>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="outline">
-                          <Tag className="h-3 w-3 mr-1" />
-                          {claim.deals.category}
-                        </Badge>
-                        {claim.deals.price && (
-                          <Badge variant="outline" className="text-green-600">
-                            ${claim.deals.price}
-                          </Badge>
-                        )}
+                        <Badge variant="secondary">Claimed</Badge>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
             ) : (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <div className="text-muted-foreground mb-4">
-                    You haven't claimed any deals yet
+              <div className="text-center py-12">
+                <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No claimed deals</h3>
+                <p className="text-muted-foreground mb-4">
+                  You haven't claimed any deals yet. Browse available deals to get started!
+                </p>
+                <Button onClick={() => navigate('/deals')}>
+                  Browse Deals
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Favorites Tab */}
+          <TabsContent value="favorites" className="mt-6">
+            {favoritesLoading ? (
+              <div className="text-center py-8">Loading favorite deals...</div>
+            ) : favoriteDeals && favoriteDeals.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {favoriteDeals.map((deal) => (
+                  <div key={deal.id} className="relative">
+                    <DealCard
+                      deal={deal}
+                      onClaim={() => {}}
+                      onView={handleDealView}
+                      isClaimLoading={false}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                      onClick={() => handleRemoveFavorite(deal.id)}
+                    >
+                      <HeartOff className="h-4 w-4 text-red-500" />
+                    </Button>
                   </div>
-                  <Button asChild>
-                    <Link to="/deals">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Browse Deals
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Heart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No favorite deals</h3>
+                <p className="text-muted-foreground mb-4">
+                  You haven't added any deals to your favorites yet. Browse deals and click the heart icon to save them!
+                </p>
+                <Button onClick={() => navigate('/deals')}>
+                  Browse Deals
+                </Button>
+              </div>
             )}
           </TabsContent>
         </Tabs>

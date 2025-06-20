@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,9 +10,10 @@ import { DemoVideoSection } from '../components/DemoVideoSection';
 import { useDeals } from '../hooks/useDeals';
 import { useAuthStore } from '../store/authStore';
 import { dealsService } from '../services/dealsService';
-import { Search, Leaf, TrendingUp, Users, Gift, Loader2 } from 'lucide-react';
+import { Search, Leaf, TrendingUp, Users, Gift, Loader2, Heart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useFavorites } from '@/hooks/useFavorites';
 
 const Index = () => {
   const { isAuthenticated, user } = useAuthStore();
@@ -24,6 +24,7 @@ const Index = () => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [claimingDealId, setClaimingDealId] = useState<string | null>(null);
   const { deals, isLoading, error } = useDeals();
+  const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
 
   const [filters, setFilters] = useState<FilterState>({
     category: [],
@@ -44,7 +45,6 @@ const Index = () => {
 
   const handleDealClaim = async (dealId: string) => {
     if (!isAuthenticated) {
-      // Store the current page for redirect after login
       sessionStorage.setItem('redirectAfterLogin', window.location.pathname + window.location.search);
       navigate('/login');
       return;
@@ -54,6 +54,17 @@ const Index = () => {
       toast({
         title: "Error",
         description: "User information not available. Please try logging in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if user is trying to claim their own deal
+    const deal = deals?.find(d => d.id === dealId);
+    if (deal && deal.sharedBy.id === user.id) {
+      toast({
+        title: "Cannot claim your own deal",
+        description: "You cannot claim a deal that you created.",
         variant: "destructive",
       });
       return;
@@ -75,6 +86,27 @@ const Index = () => {
       });
     } finally {
       setClaimingDealId(null);
+    }
+  };
+
+  const handleFavoriteToggle = (dealId: string) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    if (isFavorite(dealId)) {
+      removeFavorite(dealId);
+      toast({
+        title: "Removed from favorites",
+        description: "Deal removed from your favorites.",
+      });
+    } else {
+      addFavorite(dealId);
+      toast({
+        title: "Added to favorites",
+        description: "Deal added to your favorites.",
+      });
     }
   };
 
@@ -321,13 +353,30 @@ const Index = () => {
             {!isLoading && filteredDeals.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredDeals.map((deal) => (
-                  <DealCard
-                    key={deal.id}
-                    deal={deal}
-                    onClaim={handleDealClaim}
-                    onView={handleDealView}
-                    isClaimLoading={claimingDealId === deal.id}
-                  />
+                  <div key={deal.id} className="relative">
+                    <DealCard
+                      deal={deal}
+                      onClaim={handleDealClaim}
+                      onView={handleDealView}
+                      isClaimLoading={claimingDealId === deal.id}
+                    />
+                    {isAuthenticated && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                        onClick={() => handleFavoriteToggle(deal.id)}
+                      >
+                        <Heart 
+                          className={`h-4 w-4 ${
+                            isFavorite(deal.id) 
+                              ? 'fill-red-500 text-red-500' 
+                              : 'text-gray-400'
+                          }`}
+                        />
+                      </Button>
+                    )}
+                  </div>
                 ))}
               </div>
             ) : !isLoading && (
