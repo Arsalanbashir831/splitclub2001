@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -21,6 +22,29 @@ import {
   Clock,
   BarChart3
 } from 'lucide-react';
+
+interface Deal {
+  id: string;
+  title: string;
+  category: string;
+  price: number;
+  status: string;
+  created_at: string;
+}
+
+interface User {
+  user_id: string;
+  display_name: string;
+  email: string;
+  role?: string;
+}
+
+interface Claim {
+  id: string;
+  deal_id: string;
+  user_id: string;
+  claimed_at: string;
+}
 
 const AdminDashboardSkeleton = () => (
   <div className="min-h-screen bg-background">
@@ -60,43 +84,52 @@ const AdminDashboardSkeleton = () => (
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('deals');
 
-  const { data: deals, isLoading: dealsLoading, error: dealsError } = useQuery('admin-deals', async () => {
-    const { data, error } = await supabase
-      .from('deals')
-      .select('*');
+  const { data: deals, isLoading: dealsLoading, error: dealsError } = useQuery({
+    queryKey: ['admin-deals'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('deals')
+        .select('*');
 
-    if (error) {
-      console.error('Error fetching deals:', error);
-      throw error;
+      if (error) {
+        console.error('Error fetching deals:', error);
+        throw error;
+      }
+
+      return data as Deal[];
     }
-
-    return data;
   });
 
-  const { data: users, isLoading: usersLoading, error: usersError } = useQuery('admin-users', async () => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*');
+  const { data: users, isLoading: usersLoading, error: usersError } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*');
 
-    if (error) {
-      console.error('Error fetching users:', error);
-      throw error;
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
+
+      return data as User[];
     }
-
-    return data;
   });
 
-  const { data: claims, isLoading: claimsLoading, error: claimsError } = useQuery('admin-claims', async () => {
-    const { data, error } = await supabase
-      .from('deal_claims')
-      .select('*');
+  const { data: claims, isLoading: claimsLoading, error: claimsError } = useQuery({
+    queryKey: ['admin-claims'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('deal_claims')
+        .select('*');
 
-    if (error) {
-      console.error('Error fetching claims:', error);
-      throw error;
+      if (error) {
+        console.error('Error fetching claims:', error);
+        throw error;
+      }
+
+      return data as Claim[];
     }
-
-    return data;
   });
 
   const totalRevenue = deals?.reduce((sum, deal) => sum + (deal.price || 0), 0) || 0;

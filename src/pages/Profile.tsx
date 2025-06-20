@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -53,6 +54,12 @@ const Profile = () => {
 
   const handleViewDeal = (dealId: string) => {
     navigate(`/deal/${dealId}`);
+  };
+
+  const handleSaveDeal = async (updatedDeal: Deal) => {
+    // Implement save logic here
+    console.log('Saving deal:', updatedDeal);
+    handleCloseEditModal();
   };
 
   if (!isAuthenticated) {
@@ -135,7 +142,7 @@ const Profile = () => {
                   <p className="text-muted-foreground">{user?.email}</p>
                   <Badge variant="secondary">
                     <User className="h-3 w-3 mr-1" />
-                    {user?.role || 'User'}
+                    User
                   </Badge>
                 </div>
               </div>
@@ -165,20 +172,19 @@ const Profile = () => {
           <TabsContent value="deals" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {userDeals.map((deal) => (
-                <div key={deal.id}>
-                  <DealStatusCard deal={deal}>
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="outline" size="icon" onClick={() => handleViewDeal(deal.id)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="icon" onClick={() => handleEditDeal(deal)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="destructive" size="icon" onClick={() => handleDeleteDeal(deal.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </DealStatusCard>
+                <div key={deal.id} className="space-y-2">
+                  <DealStatusCard deal={deal} />
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" size="icon" onClick={() => handleViewDeal(deal.id)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => handleEditDeal(deal)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="destructive" size="icon" onClick={() => handleDeleteDeal(deal.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -198,7 +204,11 @@ const Profile = () => {
           <TabsContent value="claimed" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {claimedDeals.map((claim) => (
-                <ClaimedDealCard key={claim.id} claim={claim} />
+                <ClaimedDealCard 
+                  key={claim.id} 
+                  claim={claim} 
+                  onViewDetails={(dealId) => navigate(`/deal/${dealId}`)}
+                />
               ))}
             </div>
             {claimedDeals.length === 0 && (
@@ -265,7 +275,14 @@ const Profile = () => {
         </Tabs>
       </div>
 
-      <EditDealModal isOpen={isEditModalOpen} onClose={handleCloseEditModal} deal={selectedDeal} />
+      {selectedDeal && (
+        <EditDealModal 
+          isOpen={isEditModalOpen} 
+          onClose={handleCloseEditModal} 
+          deal={selectedDeal}
+          onSave={handleSaveDeal}
+        />
+      )}
       <Footer />
     </motion.div>
   );

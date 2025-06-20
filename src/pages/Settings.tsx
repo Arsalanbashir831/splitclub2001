@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,8 @@ import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { useAuthStore } from '../store/authStore';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   User, 
   Bell, 
@@ -25,7 +28,9 @@ import {
   EyeOff,
   Camera,
   Save,
-  Trash2
+  Trash2,
+  Key,
+  Loader2
 } from 'lucide-react';
 
 export const Settings = () => {
@@ -414,6 +419,7 @@ export const Settings = () => {
           </Card>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
