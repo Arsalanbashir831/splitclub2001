@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import {
   BrowserRouter as Router,
@@ -11,24 +12,24 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { GdprConsent } from './components/GdprConsent';
 import Index from './pages/Index';
 import Deals from './pages/Deals';
-import Login from './pages/Login';
+import { Login } from './pages/Login';
 import ShareDeal from './pages/ShareDeal';
-import DealDetail from './pages/DealDetail';
+import { DealDetail } from './pages/DealDetail';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import AdminDashboard from './pages/AdminDashboard';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import Help from './pages/Help';
-import FAQ from './pages/FAQ';
-import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
-import Cookies from './pages/Cookies';
-import Business from './pages/Business';
-import Careers from './pages/Careers';
-import Press from './pages/Press';
-import Recruiting from './pages/Recruiting';
-import WhoAreWe from './pages/WhoAreWe';
+import { About } from './pages/About';
+import { Contact } from './pages/Contact';
+import { Help } from './pages/Help';
+import { FAQ } from './pages/FAQ';
+import { Terms } from './pages/Terms';
+import { Privacy } from './pages/Privacy';
+import { Cookies } from './pages/Cookies';
+import { Business } from './pages/Business';
+import { Careers } from './pages/Careers';
+import { Press } from './pages/Press';
+import { Recruiting } from './pages/Recruiting';
+import { WhoAreWe } from './pages/WhoAreWe';
 import NotFound from './pages/NotFound';
 
 function useScrollToTop() {
