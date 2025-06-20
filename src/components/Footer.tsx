@@ -100,7 +100,7 @@ export const Footer = () => {
             </div>
           </motion.div>
 
-          {/* Navigation Links */}
+          {/* Company Links */}
           <motion.div className="space-y-4" initial={{
           opacity: 0,
           y: 20
@@ -111,20 +111,17 @@ export const Footer = () => {
           once: true
         }} transition={{
           duration: 0.6,
-          delay: 0.1
+          delay: 0.2
         }}>
-            <h3 className="font-semibold text-foreground">Quick Links</h3>
+            <h3 className="font-semibold text-foreground">Company</h3>
             <ul className="space-y-2">
-              {navItems.map(item => <li key={item.href}>
+              {companyLinks.map(item => <li key={item.href}>
                   <Link to={item.href} className="text-muted-foreground hover:text-primary transition-colors duration-200 text-sm">
                     {item.label}
                   </Link>
                 </li>)}
             </ul>
           </motion.div>
-
-          {/* Company Links */}
-          
 
           {/* Support & Legal */}
           <motion.div className="space-y-4" initial={{
@@ -142,6 +139,29 @@ export const Footer = () => {
             <h3 className="font-semibold text-foreground">Support & Legal</h3>
             <ul className="space-y-2">
               {supportLinks.map(item => <li key={item.href}>
+                  <Link to={item.href} className="text-muted-foreground hover:text-primary transition-colors duration-200 text-sm">
+                    {item.label}
+                  </Link>
+                </li>)}
+            </ul>
+          </motion.div>
+
+          {/* Navigation Links - moved to the right end */}
+          <motion.div className="space-y-4" initial={{
+          opacity: 0,
+          y: 20
+        }} whileInView={{
+          opacity: 1,
+          y: 0
+        }} viewport={{
+          once: true
+        }} transition={{
+          duration: 0.6,
+          delay: 0.1
+        }}>
+            <h3 className="font-semibold text-foreground">Quick Links</h3>
+            <ul className="space-y-2">
+              {navItems.map(item => <li key={item.href}>
                   <Link to={item.href} className="text-muted-foreground hover:text-primary transition-colors duration-200 text-sm">
                     {item.label}
                   </Link>
