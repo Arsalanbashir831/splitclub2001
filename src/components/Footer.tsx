@@ -1,6 +1,9 @@
+
 import { Link } from 'react-router-dom';
 
 export const Footer = () => {
+  const currentYear = new Date().getFullYear();
+  
   const footerLinks = [
     { title: 'Home', path: '/' },
     { title: 'Online Help', path: '/help' },
@@ -10,6 +13,7 @@ export const Footer = () => {
     { title: 'Terms of service', path: '/terms' },
     { title: 'Privacy policy', path: '/privacy' },
     { title: 'Who are we?', path: '/who-are-we' },
+    { title: 'FAQ', path: '/faq' },
   ];
 
   return (
@@ -28,7 +32,7 @@ export const Footer = () => {
         </div>
         <div className="mt-6 pt-4 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            © 2024 SplitClub. All rights reserved.
+            © {currentYear} SplitClub. All rights reserved.
           </p>
         </div>
       </div>

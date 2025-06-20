@@ -1,10 +1,16 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, BookOpen, Video, Mail } from 'lucide-react';
+import { Navbar } from '@/components/Navbar';
+import { useNavigate } from 'react-router-dom';
 
 export const Help = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-4">Online Help</h1>
@@ -25,7 +31,7 @@ export const Help = () => {
               <p className="text-muted-foreground mb-4">
                 Browse our frequently asked questions to find quick answers
               </p>
-              <Button variant="outline">View FAQ</Button>
+              <Button variant="outline" onClick={() => navigate('/faq')}>View FAQ</Button>
             </CardContent>
           </Card>
 
@@ -70,7 +76,7 @@ export const Help = () => {
               <p className="text-muted-foreground mb-4">
                 Send us an email and we'll get back to you within 24 hours
               </p>
-              <Button variant="outline">Send Email</Button>
+              <Button variant="outline" onClick={() => navigate('/contact')}>Send Email</Button>
             </CardContent>
           </Card>
         </div>

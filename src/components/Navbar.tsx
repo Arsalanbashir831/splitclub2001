@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,7 +10,7 @@ import {
   DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '../store/authStore';
-import { Search, Plus, User, Settings, LogOut, Sun, Moon, Menu, X } from 'lucide-react';
+import { Search, Plus, User, Settings, LogOut, Sun, Moon, Menu, X, HelpCircle, Phone } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Navbar = () => {
@@ -75,6 +76,12 @@ export const Navbar = () => {
               </Link>
               <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                 About
+              </Link>
+              <Link to="/help" className="text-muted-foreground hover:text-foreground transition-colors">
+                Help
+              </Link>
+              <Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
+                Contact
               </Link>
               {user?.isAdmin && (
                 <Link to="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -171,9 +178,13 @@ export const Navbar = () => {
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/settings')}>
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/help')}>
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      <span>Help & Support</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
@@ -225,6 +236,20 @@ export const Navbar = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 About
+              </Link>
+              <Link
+                to="/help"
+                className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Help
+              </Link>
+              <Link
+                to="/contact"
+                className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Contact
               </Link>
               {user?.isAdmin && (
                 <Link

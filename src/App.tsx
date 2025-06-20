@@ -25,6 +25,8 @@ import NotFound from "./pages/NotFound";
 import { Footer } from "./components/Footer";
 import { Profile } from "./pages/Profile";
 import { ShareDeal } from "./pages/ShareDeal";
+import { FAQ } from "./pages/FAQ";
+import { Settings } from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +56,11 @@ const AppContent = () => {
               <Profile />
             </ProtectedRoute>
           } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          } />
           <Route path="/share-deal" element={
             <ProtectedRoute>
               <ShareDeal />
@@ -62,6 +69,7 @@ const AppContent = () => {
           <Route path="/about" element={<About />} />
           <Route path="/help" element={<Help />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/faq" element={<FAQ />} />
           <Route path="/press" element={<Press />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
