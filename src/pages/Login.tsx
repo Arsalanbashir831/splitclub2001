@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Navbar } from '@/components/Navbar';
 import { useAuthStore } from '../store/authStore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Leaf, AlertTriangle } from 'lucide-react';
@@ -201,6 +202,7 @@ export const Login = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Navbar />
       <div className="w-full max-w-md space-y-6">
         {/* Logo and branding */}
         <div className="text-center">
