@@ -8,6 +8,7 @@ import { DealFilters, FilterState } from '../components/DealFilters';
 import { WelcomeTip } from '../components/WelcomeTip';
 import { DemoVideoSection } from '../components/DemoVideoSection';
 import { useDeals } from '../hooks/useDeals';
+import { useUserClaims } from '../hooks/useUserClaims';
 import { useAuthStore } from '../store/authStore';
 import { dealsService } from '../services/dealsService';
 import { Search, Leaf, TrendingUp, Users, Gift, Loader2, Heart } from 'lucide-react';
@@ -24,6 +25,7 @@ const Index = () => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [claimingDealId, setClaimingDealId] = useState<string | null>(null);
   const { deals, isLoading, error } = useDeals();
+  const { hasClaimedDeal } = useUserClaims();
   const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
 
   const [filters, setFilters] = useState<FilterState>({
@@ -352,32 +354,39 @@ const Index = () => {
             {/* Deals grid */}
             {!isLoading && filteredDeals.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredDeals.map((deal) => (
-                  <div key={deal.id} className="relative">
-                    <DealCard
-                      deal={deal}
-                      onClaim={handleDealClaim}
-                      onView={handleDealView}
-                      isClaimLoading={claimingDealId === deal.id}
-                    />
-                    {isAuthenticated && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-                        onClick={() => handleFavoriteToggle(deal.id)}
-                      >
-                        <Heart 
-                          className={`h-4 w-4 ${
-                            isFavorite(deal.id) 
-                              ? 'fill-red-500 text-red-500' 
-                              : 'text-gray-400'
-                          }`}
-                        />
-                      </Button>
-                    )}
-                  </div>
-                ))}
+                {filteredDeals.map((deal) => {
+                  const isOwnDeal = user && deal.sharedBy.id === user.id;
+                  const hasClaimedThisDeal = hasClaimedDeal(deal.id);
+                  
+                  return (
+                    <div key={deal.id} className="relative">
+                      <DealCard
+                        deal={deal}
+                        onClaim={handleDealClaim}
+                        onView={handleDealView}
+                        isClaimLoading={claimingDealId === deal.id}
+                        hasClaimedDeal={hasClaimedThisDeal}
+                        isOwnDeal={isOwnDeal}
+                      />
+                      {isAuthenticated && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                          onClick={() => handleFavoriteToggle(deal.id)}
+                        >
+                          <Heart 
+                            className={`h-4 w-4 ${
+                              isFavorite(deal.id) 
+                                ? 'fill-red-500 text-red-500' 
+                                : 'text-gray-400'
+                            }`}
+                          />
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : !isLoading && (
               <div className="text-center py-12">

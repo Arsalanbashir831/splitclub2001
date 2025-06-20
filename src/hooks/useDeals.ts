@@ -1,12 +1,12 @@
 
-import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { dealsService } from '@/services/dealsService';
-import { Deal } from '@/types';
 
 export const useDeals = () => {
   const queryClient = useQueryClient();
+  const channelRef = useRef<any>(null);
 
   const { data: deals = [], isLoading, error } = useQuery({
     queryKey: ['deals'],
@@ -14,8 +14,16 @@ export const useDeals = () => {
   });
 
   useEffect(() => {
-    const channel = supabase
-      .channel('deals-changes')
+    // Clean up existing channel
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    // Create new channel with unique name
+    const channelName = `deals-changes-${Date.now()}`;
+    channelRef.current = supabase
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -30,7 +38,10 @@ export const useDeals = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [queryClient]);
 

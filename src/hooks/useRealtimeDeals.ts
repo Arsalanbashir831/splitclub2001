@@ -1,11 +1,12 @@
 
-import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Deal } from '@/types';
 
 export const useRealtimeDeals = (limit?: number) => {
   const queryClient = useQueryClient();
+  const channelRef = useRef<any>(null);
 
   const { data: deals = [], isLoading, error } = useQuery({
     queryKey: limit ? ['deals', 'latest', limit] : ['deals'],
@@ -55,8 +56,8 @@ export const useRealtimeDeals = (limit?: number) => {
           originalPrice: Number(deal.original_price || 0),
           sharePrice: Number(deal.price || 0),
           isFree: !deal.is_for_sale,
-          availableSlots: 5,
-          totalSlots: 5,
+          availableSlots: Math.max(0, (deal.max_claims || 5)),
+          totalSlots: deal.max_claims || 5,
           expiryDate: deal.expiry_date,
           tags: deal.tags || [],
           sharedBy: {
@@ -83,8 +84,16 @@ export const useRealtimeDeals = (limit?: number) => {
   });
 
   useEffect(() => {
-    const channel = supabase
-      .channel('deals-realtime')
+    // Clean up existing channel
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    // Create new channel with unique name
+    const channelName = `deals-realtime-${Date.now()}`;
+    channelRef.current = supabase
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -99,7 +108,10 @@ export const useRealtimeDeals = (limit?: number) => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [queryClient]);
 

@@ -1,0 +1,78 @@
+
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
+
+interface DealClaimButtonProps {
+  isOwnDeal: boolean;
+  hasClaimedDeal: boolean;
+  isClaimLoading: boolean;
+  isAvailable: boolean;
+  onClaim: () => void;
+  onEdit?: () => void;
+}
+
+export const DealClaimButton = ({
+  isOwnDeal,
+  hasClaimedDeal,
+  isClaimLoading,
+  isAvailable,
+  onClaim,
+  onEdit
+}: DealClaimButtonProps) => {
+  if (isOwnDeal) {
+    return (
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={onEdit}
+        className="w-full"
+      >
+        Edit Deal
+      </Button>
+    );
+  }
+
+  if (hasClaimedDeal) {
+    return (
+      <Button 
+        variant="secondary" 
+        size="sm" 
+        disabled 
+        className="w-full"
+      >
+        Already Claimed
+      </Button>
+    );
+  }
+
+  if (!isAvailable) {
+    return (
+      <Button 
+        variant="secondary" 
+        size="sm" 
+        disabled 
+        className="w-full"
+      >
+        No Slots Available
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      size="sm"
+      onClick={onClaim}
+      disabled={isClaimLoading}
+      className="w-full"
+    >
+      {isClaimLoading ? (
+        <>
+          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+          Claiming...
+        </>
+      ) : (
+        'Claim Deal'
+      )}
+    </Button>
+  );
+};
