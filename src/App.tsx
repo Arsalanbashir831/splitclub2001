@@ -6,6 +6,7 @@ import {
   Route,
   useLocation,
 } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { useAuthStore } from './store/authStore';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -31,6 +32,16 @@ import { Press } from './pages/Press';
 import { Recruiting } from './pages/Recruiting';
 import { WhoAreWe } from './pages/WhoAreWe';
 import NotFound from './pages/NotFound';
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 function useScrollToTop() {
   const { pathname } = useLocation();
@@ -104,9 +115,11 @@ function App() {
   }, [initialize]);
 
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AppContent />
+      </Router>
+    </QueryClientProvider>
   );
 }
 
