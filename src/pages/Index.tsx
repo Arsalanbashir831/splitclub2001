@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -8,11 +9,16 @@ import { DealFilters, FilterState } from '../components/DealFilters';
 import { WelcomeTip } from '../components/WelcomeTip';
 import { DemoVideoSection } from '../components/DemoVideoSection';
 import { Footer } from '../components/Footer';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { StatCard } from '@/components/ui/StatCard';
+import { AnimatedContainer } from '@/components/animations/AnimatedContainer';
+import { StaggeredList, StaggeredItem } from '@/components/animations/StaggeredList';
+import { HoverScale } from '@/components/animations/HoverScale';
 import { useDeals } from '../hooks/useDeals';
 import { useUserClaims } from '../hooks/useUserClaims';
 import { useAuthStore } from '../store/authStore';
 import { dealsService } from '../services/dealsService';
-import { Search, Leaf, TrendingUp, Users, Gift, Loader2, Heart } from 'lucide-react';
+import { Search, Leaf, TrendingUp, Users, Gift, Heart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -62,7 +68,6 @@ const Index = () => {
       return;
     }
 
-    // Check if user is trying to claim their own deal
     const deal = deals?.find(d => d.id === dealId);
     if (deal && deal.sharedBy.id === user.id) {
       toast({
@@ -122,7 +127,6 @@ const Index = () => {
     
     let filteredList = [...deals];
 
-    // Search filter
     if (searchQuery) {
       filteredList = filteredList.filter(deal =>
         deal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -131,12 +135,10 @@ const Index = () => {
       );
     }
 
-    // Category filter
     if (filters.category.length > 0) {
       filteredList = filteredList.filter(deal => filters.category.includes(deal.category));
     }
 
-    // Price filter
     if (!filters.isFree) {
       filteredList = filteredList.filter(deal => 
         deal.isFree || (deal.sharePrice >= filters.priceRange[0] && deal.sharePrice <= filters.priceRange[1])
@@ -145,12 +147,10 @@ const Index = () => {
       filteredList = filteredList.filter(deal => deal.isFree);
     }
 
-    // Available only filter
     if (filters.availableOnly) {
       filteredList = filteredList.filter(deal => deal.status === 'active' && deal.availableSlots > 0);
     }
 
-    // Expiring within filter
     if (filters.expiringWithin !== 'any') {
       const days = parseInt(filters.expiringWithin);
       const cutoffDate = new Date();
@@ -162,7 +162,6 @@ const Index = () => {
       });
     }
 
-    // Sort
     switch (filters.sortBy) {
       case 'newest':
         filteredList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -207,12 +206,12 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <AnimatedContainer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-foreground mb-4">Error loading deals</h2>
             <p className="text-muted-foreground">Please try refreshing the page</p>
           </div>
-        </div>
+        </AnimatedContainer>
       </div>
     );
   }
@@ -223,48 +222,73 @@ const Index = () => {
       <Navbar />
       
       {/* Hero section */}
-      <div className="bg-gradient-to-r from-primary/10 via-background to-accent/10 border-b border-border animate-fade-in">
+      <div className="bg-gradient-to-r from-primary/10 via-background to-accent/10 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
+            <AnimatedContainer variant="scaleIn" className="flex justify-center mb-6">
+              <motion.div 
+                className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center"
+                whileHover={{ rotate: 5, scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
                 <Leaf className="w-8 h-8 text-primary-foreground" />
-              </div>
-            </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
-              Share. Save. Sustain.
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8">
-              Join the community marketplace for unused subscriptions, memberships, and rewards. 
-              Reduce waste while saving money together.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
-              <div className="flex items-center space-x-2 bg-card px-4 py-2 rounded-lg border">
-                <TrendingUp className="h-4 w-4 text-green-600" />
-                <span className="font-medium">${stats.totalSavings.toFixed(0)}+ saved</span>
-              </div>
-              <div className="flex items-center space-x-2 bg-card px-4 py-2 rounded-lg border">
-                <Users className="h-4 w-4 text-blue-600" />
-                <span className="font-medium">{stats.activeDeals} active deals</span>
-              </div>
-              <div className="flex items-center space-x-2 bg-card px-4 py-2 rounded-lg border">
-                <Gift className="h-4 w-4 text-purple-600" />
-                <span className="font-medium">{stats.freeDeals} free offers</span>
-              </div>
-            </div>
+              </motion.div>
+            </AnimatedContainer>
+            
+            <AnimatedContainer variant="slideUp" delay={0.1}>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+                Share. Save. Sustain.
+              </h1>
+            </AnimatedContainer>
+            
+            <AnimatedContainer variant="fadeIn" delay={0.2}>
+              <p className="text-xl md:text-2xl text-muted-foreground mb-8">
+                Join the community marketplace for unused subscriptions, memberships, and rewards. 
+                Reduce waste while saving money together.
+              </p>
+            </AnimatedContainer>
+            
+            <motion.div 
+              className="flex flex-wrap justify-center gap-4 text-sm"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+            >
+              <StatCard 
+                icon={TrendingUp} 
+                label="saved" 
+                value={`$${stats.totalSavings.toFixed(0)}+`} 
+                iconColor="text-green-600"
+                delay={0.5}
+              />
+              <StatCard 
+                icon={Users} 
+                label="active deals" 
+                value={stats.activeDeals} 
+                iconColor="text-blue-600"
+                delay={0.6}
+              />
+              <StatCard 
+                icon={Gift} 
+                label="free offers" 
+                value={stats.freeDeals} 
+                iconColor="text-purple-600"
+                delay={0.7}
+              />
+            </motion.div>
           </div>
         </div>
       </div>
 
       {/* Demo Video Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-scale-in">
+      <AnimatedContainer variant="scaleIn" delay={0.3} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <DemoVideoSection />
-      </div>
+      </AnimatedContainer>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters sidebar */}
-          <div className="lg:col-span-1 animate-slide-in-right">
+          <AnimatedContainer variant="slideRight" className="lg:col-span-1">
             <DealFilters
               filters={filters}
               onFiltersChange={setFilters}
@@ -272,12 +296,12 @@ const Index = () => {
               isOpen={isFiltersOpen}
               onToggle={() => setIsFiltersOpen(!isFiltersOpen)}
             />
-          </div>
+          </AnimatedContainer>
 
           {/* Main content */}
           <div className="lg:col-span-3">
             {/* Search and header */}
-            <div className="mb-6 animate-fade-in">
+            <AnimatedContainer variant="fadeIn" className="mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">Available Deals</h2>
@@ -286,9 +310,11 @@ const Index = () => {
                   </p>
                 </div>
                 {!isAuthenticated && (
-                  <Button size="lg" className="sm:w-auto" onClick={() => navigate('/login')}>
-                    Join SplitClub
-                  </Button>
+                  <HoverScale>
+                    <Button size="lg" className="sm:w-auto" onClick={() => navigate('/login')}>
+                      Join SplitClub
+                    </Button>
+                  </HoverScale>
                 )}
               </div>
 
@@ -306,65 +332,72 @@ const Index = () => {
 
               {/* Active filters */}
               {(searchQuery || filters.category.length > 0 || filters.isFree || filters.availableOnly || filters.expiringWithin !== 'any') && (
-                <div className="flex flex-wrap gap-2 mt-4">
+                <StaggeredList className="flex flex-wrap gap-2 mt-4">
                   {searchQuery && (
-                    <Badge variant="secondary" className="px-3 py-1">
-                      Search: "{searchQuery}"
-                    </Badge>
+                    <StaggeredItem>
+                      <Badge variant="secondary" className="px-3 py-1">
+                        Search: "{searchQuery}"
+                      </Badge>
+                    </StaggeredItem>
                   )}
                   {filters.category.map(category => (
-                    <Badge key={category} variant="secondary" className="px-3 py-1">
-                      {category}
-                    </Badge>
+                    <StaggeredItem key={category}>
+                      <Badge variant="secondary" className="px-3 py-1">
+                        {category}
+                      </Badge>
+                    </StaggeredItem>
                   ))}
                   {filters.isFree && (
-                    <Badge variant="secondary" className="px-3 py-1">
-                      Free only
-                    </Badge>
+                    <StaggeredItem>
+                      <Badge variant="secondary" className="px-3 py-1">
+                        Free only
+                      </Badge>
+                    </StaggeredItem>
                   )}
                   {filters.availableOnly && (
-                    <Badge variant="secondary" className="px-3 py-1">
-                      Available only
-                    </Badge>
+                    <StaggeredItem>
+                      <Badge variant="secondary" className="px-3 py-1">
+                        Available only
+                      </Badge>
+                    </StaggeredItem>
                   )}
                   {filters.expiringWithin !== 'any' && (
-                    <Badge variant="secondary" className="px-3 py-1">
-                      Expires in {filters.expiringWithin} days
-                    </Badge>
+                    <StaggeredItem>
+                      <Badge variant="secondary" className="px-3 py-1">
+                        Expires in {filters.expiringWithin} days
+                      </Badge>
+                    </StaggeredItem>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="h-auto p-1 text-muted-foreground hover:text-foreground"
-                  >
-                    Clear all
-                  </Button>
-                </div>
+                  <HoverScale>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="h-auto p-1 text-muted-foreground hover:text-foreground"
+                    >
+                      Clear all
+                    </Button>
+                  </HoverScale>
+                </StaggeredList>
               )}
-            </div>
+            </AnimatedContainer>
 
             {/* Loading state */}
             {isLoading && (
-              <div className="flex items-center justify-center py-12 animate-pulse">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <span className="ml-2 text-muted-foreground">Loading deals...</span>
+              <div className="flex items-center justify-center py-12">
+                <LoadingSpinner size="lg" text="Loading deals..." />
               </div>
             )}
 
             {/* Deals grid */}
             {!isLoading && filteredDeals.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <StaggeredList className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredDeals.map((deal, index) => {
                   const isOwnDeal = user && deal.sharedBy.id === user.id;
                   const hasClaimedThisDeal = hasClaimedDeal(deal.id);
                   
                   return (
-                    <div 
-                      key={deal.id} 
-                      className="relative animate-fade-in hover-scale" 
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
+                    <StaggeredItem key={deal.id} className="relative">
                       <DealCard
                         deal={deal}
                         onClaim={handleDealClaim}
@@ -372,29 +405,39 @@ const Index = () => {
                         isClaimLoading={claimingDealId === deal.id}
                         hasClaimedDeal={hasClaimedThisDeal}
                         isOwnDeal={isOwnDeal}
+                        index={index}
                       />
                       {isAuthenticated && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-                          onClick={() => handleFavoriteToggle(deal.id)}
+                        <motion.div
+                          className="absolute top-2 right-2"
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.3 + index * 0.05 }}
                         >
-                          <Heart 
-                            className={`h-4 w-4 ${
-                              isFavorite(deal.id) 
-                                ? 'fill-red-500 text-red-500' 
-                                : 'text-gray-400'
-                            }`}
-                          />
-                        </Button>
+                          <HoverScale>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="bg-white/80 hover:bg-white"
+                              onClick={() => handleFavoriteToggle(deal.id)}
+                            >
+                              <Heart 
+                                className={`h-4 w-4 ${
+                                  isFavorite(deal.id) 
+                                    ? 'fill-red-500 text-red-500' 
+                                    : 'text-gray-400'
+                                }`}
+                              />
+                            </Button>
+                          </HoverScale>
+                        </motion.div>
                       )}
-                    </div>
+                    </StaggeredItem>
                   );
                 })}
-              </div>
+              </StaggeredList>
             ) : !isLoading && (
-              <div className="text-center py-12 animate-scale-in">
+              <AnimatedContainer variant="scaleIn" className="text-center py-12">
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                   <Search className="h-8 w-8 text-muted-foreground" />
                 </div>
@@ -402,10 +445,12 @@ const Index = () => {
                 <p className="text-muted-foreground mb-4">
                   Try adjusting your search or filters to find more deals.
                 </p>
-                <Button variant="outline" onClick={clearFilters}>
-                  Clear Filters
-                </Button>
-              </div>
+                <HoverScale>
+                  <Button variant="outline" onClick={clearFilters}>
+                    Clear Filters
+                  </Button>
+                </HoverScale>
+              </AnimatedContainer>
             )}
           </div>
         </div>
