@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Deal } from '../types';
-import { Clock, Users, DollarSign, Gift, Eye, Heart } from 'lucide-react';
+import { Clock, Users, DollarSign, Gift, Eye, Heart, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 
@@ -12,9 +12,10 @@ interface DealCardProps {
   deal: Deal;
   onClaim?: (dealId: string) => void;
   onView?: (dealId: string) => void;
+  isClaimLoading?: boolean;
 }
 
-export const DealCard = ({ deal, onClaim, onView }: DealCardProps) => {
+export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: DealCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const { toast } = useToast();
 
@@ -204,8 +205,16 @@ export const DealCard = ({ deal, onClaim, onView }: DealCardProps) => {
                   e.stopPropagation();
                   handleClaim();
                 }}
+                disabled={isClaimLoading}
               >
-                {deal.isFree ? 'Claim for Free' : `Claim for $${deal.sharePrice}`}
+                {isClaimLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Claiming...
+                  </>
+                ) : (
+                  deal.isFree ? 'Claim for Free' : `Claim for $${deal.sharePrice}`
+                )}
               </Button>
             ) : deal.status === 'claimed' ? (
               <Button variant="secondary" className="w-full" disabled>

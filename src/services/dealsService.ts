@@ -4,16 +4,9 @@ import { Deal } from '@/types';
 
 export const dealsService = {
   async getDeals() {
-    const { data, error } = await supabase
+    const { data: deals, error } = await supabase
       .from('deals')
-      .select(`
-        *,
-        profiles!deals_user_id_fkey (
-          id,
-          display_name,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('status', 'active')
       .order('created_at', { ascending: false });
 
@@ -22,7 +15,90 @@ export const dealsService = {
       throw error;
     }
 
-    return data?.map(deal => ({
+    if (!deals) return [];
+
+    // Get unique user IDs from deals
+    const userIds = [...new Set(deals.map(deal => deal.user_id))];
+    
+    // Fetch profiles for these users
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url')
+      .in('user_id', userIds);
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+    }
+
+    // Create a map of user_id to profile for quick lookup
+    const profileMap = new Map();
+    profiles?.forEach(profile => {
+      profileMap.set(profile.user_id, profile);
+    });
+
+    return deals.map(deal => {
+      const profile = profileMap.get(deal.user_id);
+      
+      return {
+        id: deal.id,
+        title: deal.title,
+        description: deal.category,
+        category: deal.category as Deal['category'],
+        originalPrice: Number(deal.original_price || 0),
+        sharePrice: Number(deal.price || 0),
+        isFree: !deal.is_for_sale,
+        availableSlots: 5, // We'll need to calculate this based on claims
+        totalSlots: 5, // Default for now
+        expiryDate: deal.expiry_date,
+        tags: deal.tags || [],
+        sharedBy: {
+          id: deal.user_id,
+          name: profile?.display_name || 'Unknown User',
+          email: '',
+          avatar: profile?.avatar_url
+        },
+        status: deal.status as Deal['status'],
+        createdAt: deal.created_at,
+        image: deal.image_url,
+        imageUrl: deal.image_url,
+        imageFileName: deal.image_file_name,
+        source: deal.source,
+        redemptionType: deal.redemption_type as Deal['redemptionType'],
+        voucherData: deal.voucher_data,
+        isLocationBound: deal.is_location_bound,
+        locationDetails: deal.location_details,
+        isForSale: deal.is_for_sale,
+        usageNotes: deal.usage_notes
+      };
+    });
+  },
+
+  async getDealById(id: string) {
+    const { data: deal, error } = await supabase
+      .from('deals')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching deal:', error);
+      throw error;
+    }
+
+    if (!deal) return null;
+
+    // Fetch the profile for this deal's user
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url')
+      .eq('user_id', deal.user_id)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+    }
+
+    return {
       id: deal.id,
       title: deal.title,
       description: deal.category,
@@ -30,15 +106,15 @@ export const dealsService = {
       originalPrice: Number(deal.original_price || 0),
       sharePrice: Number(deal.price || 0),
       isFree: !deal.is_for_sale,
-      availableSlots: 5, // We'll need to calculate this based on claims
-      totalSlots: 5, // Default for now
+      availableSlots: 5,
+      totalSlots: 5,
       expiryDate: deal.expiry_date,
       tags: deal.tags || [],
       sharedBy: {
         id: deal.user_id,
-        name: deal.profiles?.display_name || 'Unknown User',
+        name: profile?.display_name || 'Unknown User',
         email: '',
-        avatar: deal.profiles?.avatar_url
+        avatar: profile?.avatar_url
       },
       status: deal.status as Deal['status'],
       createdAt: deal.created_at,
@@ -52,60 +128,6 @@ export const dealsService = {
       locationDetails: deal.location_details,
       isForSale: deal.is_for_sale,
       usageNotes: deal.usage_notes
-    })) || [];
-  },
-
-  async getDealById(id: string) {
-    const { data, error } = await supabase
-      .from('deals')
-      .select(`
-        *,
-        profiles!deals_user_id_fkey (
-          id,
-          display_name,
-          avatar_url
-        )
-      `)
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      console.error('Error fetching deal:', error);
-      throw error;
-    }
-
-    if (!data) return null;
-
-    return {
-      id: data.id,
-      title: data.title,
-      description: data.category,
-      category: data.category as Deal['category'],
-      originalPrice: Number(data.original_price || 0),
-      sharePrice: Number(data.price || 0),
-      isFree: !data.is_for_sale,
-      availableSlots: 5,
-      totalSlots: 5,
-      expiryDate: data.expiry_date,
-      tags: data.tags || [],
-      sharedBy: {
-        id: data.user_id,
-        name: data.profiles?.display_name || 'Unknown User',
-        email: '',
-        avatar: data.profiles?.avatar_url
-      },
-      status: data.status as Deal['status'],
-      createdAt: data.created_at,
-      image: data.image_url,
-      imageUrl: data.image_url,
-      imageFileName: data.image_file_name,
-      source: data.source,
-      redemptionType: data.redemption_type as Deal['redemptionType'],
-      voucherData: data.voucher_data,
-      isLocationBound: data.is_location_bound,
-      locationDetails: data.location_details,
-      isForSale: data.is_for_sale,
-      usageNotes: data.usage_notes
     };
   },
 
