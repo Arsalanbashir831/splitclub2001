@@ -8,7 +8,6 @@ export const useUserClaims = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const channelRef = useRef<any>(null);
-  const subscriptionActiveRef = useRef(false);
 
   const { data: userClaims = [], isLoading, error } = useQuery({
     queryKey: ['user-claims', user?.id],
@@ -28,13 +27,12 @@ export const useUserClaims = () => {
   });
 
   useEffect(() => {
-    if (!user?.id || subscriptionActiveRef.current) return;
+    if (!user?.id) return;
 
     // Clean up existing channel
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
-      subscriptionActiveRef.current = false;
     }
 
     // Create new channel with unique name
@@ -53,17 +51,12 @@ export const useUserClaims = () => {
           queryClient.invalidateQueries({ queryKey: ['user-claims', user.id] });
         }
       )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          subscriptionActiveRef.current = true;
-        }
-      });
+      .subscribe();
 
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
-        subscriptionActiveRef.current = false;
       }
     };
   }, [user?.id, queryClient]);

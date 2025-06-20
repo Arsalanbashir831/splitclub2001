@@ -9,7 +9,6 @@ export const useUserDeals = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const channelRef = useRef<any>(null);
-  const subscriptionActiveRef = useRef(false);
 
   const { data: userDeals = [], isLoading, error } = useQuery({
     queryKey: ['user-deals', user?.id],
@@ -82,13 +81,12 @@ export const useUserDeals = () => {
   });
 
   useEffect(() => {
-    if (!user?.id || subscriptionActiveRef.current) return;
+    if (!user?.id) return;
 
     // Clean up existing channel
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
-      subscriptionActiveRef.current = false;
     }
 
     // Create new channel with unique name
@@ -119,17 +117,12 @@ export const useUserDeals = () => {
           queryClient.invalidateQueries({ queryKey: ['claimed-deals', user.id] });
         }
       )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          subscriptionActiveRef.current = true;
-        }
-      });
+      .subscribe();
 
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
-        subscriptionActiveRef.current = false;
       }
     };
   }, [user?.id, queryClient]);

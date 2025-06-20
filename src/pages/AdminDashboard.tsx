@@ -1,167 +1,202 @@
-
-import React from 'react';
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { VideoManagement } from '@/components/AdminDashboard/VideoManagement';
+import { Navbar } from '@/components/Navbar';
+import { MessageReader } from '@/components/MessageReader';
 import { AdminSkeleton } from '@/components/AdminDashboard/AdminSkeleton';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthStore } from '@/store/authStore';
-import { Users, Package, MessageSquare, DollarSign, Activity } from 'lucide-react';
+import { VideoManagement } from '@/components/AdminDashboard/VideoManagement';
+import { useRealtimeDeals } from '@/hooks/useRealtimeDeals';
+import { useRealtimeContactMessages } from '@/hooks/useRealtimeContactMessages';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line
+} from 'recharts';
+import { 
+  Users, ShoppingCart, MessageSquare, TrendingUp,
+  Clock, DollarSign, AlertTriangle 
+} from 'lucide-react';
 
 export const AdminDashboard = () => {
   useScrollToTop();
-  const { user } = useAuthStore();
+  const { deals, isLoading: dealsLoading } = useRealtimeDeals();
+  const { messages, isLoading: messagesLoading } = useRealtimeContactMessages();
 
-  const { data: usersCount, isLoading: usersLoading } = useQuery({
-    queryKey: ['usersCount'],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact' });
-      if (error) throw error;
-      return count || 0;
-    }
-  });
+  const isLoading = dealsLoading || messagesLoading;
 
-  const { data: dealsCount, isLoading: dealsLoading } = useQuery({
-    queryKey: ['dealsCount'],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('deals')
-        .select('*', { count: 'exact' });
-      if (error) throw error;
-      return count || 0;
-    }
-  });
+  // Calculate statistics
+  const stats = {
+    totalDeals: deals?.length || 0,
+    activeDeals: deals?.filter(d => d.status === 'active').length || 0,
+    totalMessages: messages?.length || 0,
+    unreadMessages: messages?.filter(m => m.status === 'unread').length || 0,
+    totalValue: deals?.reduce((sum, deal) => sum + deal.originalPrice, 0) || 0,
+    totalSavings: deals?.reduce((sum, deal) => sum + (deal.originalPrice - deal.sharePrice), 0) || 0,
+  };
 
-  const { data: messagesCount, isLoading: messagesLoading } = useQuery({
-    queryKey: ['messagesCount'],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('contact_messages')
-        .select('*', { count: 'exact' });
-      if (error) throw error;
-      return count || 0;
-    }
-  });
+  // Process data for charts
+  const categoryData = deals?.reduce((acc: any, deal) => {
+    acc[deal.category] = (acc[deal.category] || 0) + 1;
+    return acc;
+  }, {});
 
-  const { data: totalRevenue, isLoading: revenueLoading } = useQuery({
-    queryKey: ['totalRevenue'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('deals')
-        .select('price')
-        .not('price', 'is', null);
-      if (error) throw error;
-      const total = data?.reduce((acc, deal) => acc + (Number(deal.price) || 0), 0) || 0;
-      return total;
-    }
-  });
+  const chartData = Object.entries(categoryData || {}).map(([category, count]) => ({
+    category,
+    count
+  }));
 
-  const isAdmin = user?.isAdmin;
+  // Recent activity
+  const recentDeals = deals?.slice(0, 5) || [];
+  const recentMessages = messages?.slice(0, 5) || [];
 
-  if (!isAdmin) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h1 className="text-2xl font-bold">Access Denied</h1>
-          <p className="mt-4">You do not have permission to view this page.</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+              <p className="text-muted-foreground">Monitor and manage your platform</p>
+            </div>
+            <MessageReader />
+          </div>
+          <AdminSkeleton />
         </div>
-        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Monitor and manage your platform</p>
+          </div>
+          <MessageReader />
+        </div>
+
+        {/* Video Management Section */}
+        <div className="mb-8">
+          <VideoManagement />
+        </div>
+
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Total Users
-              </CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Deals</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              {usersLoading ? (
-                <AdminSkeleton />
-              ) : (
-                <div className="text-3xl font-bold">{usersCount}</div>
-              )}
+              <div className="text-2xl font-bold">{stats.totalDeals}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.activeDeals} active
+              </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="w-5 h-5" />
-                Total Deals
-              </CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Messages</CardTitle>
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              {dealsLoading ? (
-                <AdminSkeleton />
-              ) : (
-                <div className="text-3xl font-bold">{dealsCount}</div>
-              )}
+              <div className="text-2xl font-bold">{stats.totalMessages}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.unreadMessages} unread
+              </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Contact Messages
-              </CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Value</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              {messagesLoading ? (
-                <AdminSkeleton />
-              ) : (
-                <div className="text-3xl font-bold">{messagesCount}</div>
-              )}
+              <div className="text-2xl font-bold">${stats.totalValue.toFixed(0)}</div>
+              <p className="text-xs text-muted-foreground">
+                Original value of all deals
+              </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
-                Total Revenue
-              </CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Savings</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              {revenueLoading ? (
-                <AdminSkeleton />
-              ) : (
-                <div className="text-3xl font-bold">${Number(totalRevenue).toFixed(2)}</div>
-              )}
+              <div className="text-2xl font-bold">${stats.totalSavings.toFixed(0)}</div>
+              <p className="text-xs text-muted-foreground">
+                Community savings
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="w-5 h-5" />
-              Demo Video Management
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <VideoManagement />
-          </CardContent>
-        </Card>
-      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* Deals by Category Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Deals by Category</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="category" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-      <Footer />
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Latest Deals</h4>
+                  <div className="space-y-2">
+                    {recentDeals.map((deal) => (
+                      <div key={deal.id} className="flex items-center justify-between text-sm">
+                        <span className="truncate">{deal.title}</span>
+                        <span className="text-muted-foreground">
+                          {new Date(deal.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">Recent Messages</h4>
+                  <div className="space-y-2">
+                    {recentMessages.map((message) => (
+                      <div key={message.id} className="flex items-center justify-between text-sm">
+                        <span className="truncate">{message.name}</span>
+                        <span className="text-muted-foreground">
+                          {new Date(message.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

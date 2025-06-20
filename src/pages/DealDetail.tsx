@@ -1,38 +1,33 @@
-import React, { useState, useEffect } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Calendar, Users, MapPin, Tag, Clock, ExternalLink, Heart, HeartOff, Share2, AlertCircle, FileText } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
+import { Navbar } from '@/components/Navbar';
+import { 
+  ArrowLeft, Clock, MapPin, Users, Heart, 
+  Calendar, DollarSign, Tag, FileText 
+} from 'lucide-react';
+import { Deal } from '@/types';
+import { dealsService } from '@/services/dealsService';
 import { useAuthStore } from '@/store/authStore';
-import { useUserClaims } from '@/hooks/useUserClaims';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useToast } from '@/hooks/use-toast';
-import { Deal } from '@/types';
-import { format } from 'date-fns';
-import { motion } from 'framer-motion';
-import { DealClaimButton } from '@/components/deals/DealClaimButton';
-import { useScrollToTop } from '@/hooks/useScrollToTop';
-import { dealsService } from '@/services/dealsService';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 export const DealDetail = () => {
   useScrollToTop();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
-  const { hasClaimedDeal } = useUserClaims();
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-
+  
   const [deal, setDeal] = useState<Deal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isClaimLoading, setIsClaimLoading] = useState(false);
@@ -110,9 +105,9 @@ export const DealDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="space-y-6">
             <Skeleton className="h-8 w-32" />
             <Card>
@@ -131,16 +126,15 @@ export const DealDetail = () => {
             </Card>
           </div>
         </div>
-        <Footer />
       </div>
     );
   }
 
   if (!deal) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Deal not found</h1>
             <Button onClick={() => navigate('/deals')}>
@@ -149,16 +143,20 @@ export const DealDetail = () => {
             </Button>
           </div>
         </div>
-        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <motion.div 
+      className="min-h-screen bg-background"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       <Navbar />
       
-      <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -392,8 +390,6 @@ export const DealDetail = () => {
           </Card>
         </motion.div>
       </div>
-
-      <Footer />
-    </div>
+    </motion.div>
   );
 };
