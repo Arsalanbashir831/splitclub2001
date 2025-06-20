@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { VideoUploadModal } from '@/components/VideoUploadModal';
 import { VideoPlayer } from '@/components/VideoPlayer';
@@ -13,6 +12,7 @@ export const VideoManagement = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [currentVideo, setCurrentVideo] = useState<string | null>(null);
   const [videoTitle, setVideoTitle] = useState('');
+  const [isVideoPlayerOpen, setIsVideoPlayerOpen] = useState(false);
   const { toast } = useToast();
 
   const handleVideoUpload = (videoUrl: string, title: string) => {
@@ -49,7 +49,21 @@ export const VideoManagement = () => {
               <p className="text-sm text-muted-foreground">{videoTitle}</p>
             </div>
             
-            <VideoPlayer videoUrl={currentVideo} />
+            <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
+              <video
+                src={currentVideo}
+                className="w-full h-full object-cover cursor-pointer"
+                onClick={() => setIsVideoPlayerOpen(true)}
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                <Button
+                  variant="secondary"
+                  onClick={() => setIsVideoPlayerOpen(true)}
+                >
+                  Play Video
+                </Button>
+              </div>
+            </div>
             
             <div className="flex gap-2">
               <Button
@@ -84,10 +98,18 @@ export const VideoManagement = () => {
         )}
 
         <VideoUploadModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
+          open={isUploadModalOpen}
+          onOpenChange={setIsUploadModalOpen}
           onUpload={handleVideoUpload}
         />
+
+        {currentVideo && (
+          <VideoPlayer
+            videoUrl={currentVideo}
+            open={isVideoPlayerOpen}
+            onOpenChange={setIsVideoPlayerOpen}
+          />
+        )}
       </CardContent>
     </Card>
   );

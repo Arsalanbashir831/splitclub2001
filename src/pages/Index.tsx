@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -459,7 +460,6 @@ const Index = () => {
                         onClaim={handleDealClaim}
                         onView={handleDealView}
                         isClaimLoading={claimingDealId === deal.id}
-                        hasClaimedDeal={hasClaimedThisDeal}
                         isOwnDeal={isOwnDeal}
                         index={index}
                       />

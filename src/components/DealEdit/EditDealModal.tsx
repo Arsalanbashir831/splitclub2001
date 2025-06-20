@@ -20,10 +20,12 @@ interface EditDealModalProps {
   onSave: (updatedDeal: Deal) => void;
 }
 
+type DealCategory = Deal['category'];
+
 export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalProps) => {
   const [formData, setFormData] = useState({
     title: deal.title,
-    category: deal.category,
+    category: deal.category as DealCategory,
     originalPrice: deal.originalPrice.toString(),
     sharePrice: deal.sharePrice.toString(),
     isForSale: deal.isForSale,
@@ -40,7 +42,7 @@ export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalPr
   useEffect(() => {
     setFormData({
       title: deal.title,
-      category: deal.category,
+      category: deal.category as DealCategory,
       originalPrice: deal.originalPrice.toString(),
       sharePrice: deal.sharePrice.toString(),
       isForSale: deal.isForSale,
@@ -123,7 +125,7 @@ export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalPr
       const updatedDeal: Deal = {
         ...deal,
         title: formData.title,
-        category: formData.category as Deal['category'],
+        category: formData.category,
         originalPrice: Number(formData.originalPrice),
         sharePrice: formData.isForSale ? Number(formData.sharePrice) : 0,
         isForSale: formData.isForSale,
@@ -175,7 +177,7 @@ export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalPr
             <Label htmlFor="category">Category</Label>
             <Select
               value={formData.category}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+              onValueChange={(value: DealCategory) => setFormData(prev => ({ ...prev, category: value }))}
             >
               <SelectTrigger>
                 <SelectValue />

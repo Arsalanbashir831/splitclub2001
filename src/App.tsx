@@ -8,7 +8,7 @@ import { useScrollToTop } from '@/hooks/useScrollToTop';
 
 // Import pages
 import { Home } from '@/pages/Home';
-import { Index } from '@/pages/Index';
+import Index from '@/pages/Index';
 import { Login } from '@/pages/Login';
 import { ShareDeal } from '@/pages/ShareDeal';
 import { Profile } from '@/pages/Profile';
@@ -27,7 +27,7 @@ import { Careers } from '@/pages/Careers';
 import { Privacy } from '@/pages/Privacy';
 import { Terms } from '@/pages/Terms';
 import { Cookies } from '@/pages/Cookies';
-import { NotFound } from '@/pages/NotFound';
+import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
 
