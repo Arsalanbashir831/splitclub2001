@@ -300,7 +300,7 @@ export const DealDetail = () => {
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
 
               {/* Usage Notes */}
               {deal.usageNotes && (
