@@ -238,7 +238,7 @@ export const Home = () => {
                       Loading...
                     </> : demoVideoUrl ? <>
                       <Play className="w-4 h-4" />
-                      Private Demo
+                      Watch Demo
                     </> : isAdmin ? <>
                       <Upload className="w-4 h-4" />
                       Upload Demo
