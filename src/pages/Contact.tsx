@@ -32,15 +32,25 @@ export const Contact = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('contact_messages')
-        .insert({
-          name: formData.name,
-          email: formData.email,
-          message: formData.message
-        });
+      // Use the raw SQL insert method to avoid TypeScript issues with the new table
+      const { error } = await supabase.rpc('insert_contact_message', {
+        contact_name: formData.name,
+        contact_email: formData.email,
+        contact_message: formData.message
+      });
 
-      if (error) throw error;
+      if (error) {
+        // Fallback to direct insert if RPC doesn't exist
+        const { error: insertError } = await supabase
+          .from('contact_messages')
+          .insert([{
+            name: formData.name,
+            email: formData.email,
+            message: formData.message
+          }]);
+        
+        if (insertError) throw insertError;
+      }
 
       toast({
         title: "Message sent!",
