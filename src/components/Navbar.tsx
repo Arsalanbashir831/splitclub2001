@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/store/authStore';
-import { Menu, X, User, Settings, LogOut, Shield, Plus, Search, Sun, Moon } from 'lucide-react';
+import { Menu, X, User, Settings, LogOut, Shield, Plus, Search, Sun, Moon, Info } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 
 export const Navbar = () => {
@@ -126,6 +126,14 @@ export const Navbar = () => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    {user.isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin">
+                          <Shield className="mr-2 h-4 w-4" />
+                          <span>Admin Dashboard</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem asChild>
                       <Link to="/profile">
                         <User className="mr-2 h-4 w-4" />
@@ -138,14 +146,12 @@ export const Navbar = () => {
                         <span>Settings</span>
                       </Link>
                     </DropdownMenuItem>
-                    {user.isAdmin && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/admin">
-                          <Shield className="mr-2 h-4 w-4" />
-                          <span>Admin Dashboard</span>
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem asChild>
+                      <Link to="/help">
+                        <Info className="mr-2 h-4 w-4" />
+                        <span>Help</span>
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
