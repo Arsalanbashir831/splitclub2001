@@ -259,23 +259,34 @@ export const Home = () => {
               delay: 0.7,
               duration: 0.6
             }}>
-                <div className="flex -space-x-2">
-                  {[1, 2, 3, 4, 5].map(i => <motion.div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent border-2 border-background flex items-center justify-center text-xs font-semibold text-white" initial={{
-                  opacity: 0,
-                  scale: 0
-                }} animate={{
-                  opacity: 1,
-                  scale: 1
-                }} transition={{
-                  delay: 0.8 + i * 0.1,
-                  duration: 0.3
-                }}>
-                      {i === 1 && '$'}
-                      {i === 2 && '€'}
-                      {i === 3 && '£'}
-                      {i === 4 && '¥'}
-                      {i === 5 && '₿'}
-                    </motion.div>)}
+                <div className="flex -space-x-3">
+                  {[
+                    { name: 'Goldman Sachs', bg: 'bg-blue-900', text: 'GS' },
+                    { name: 'JP Morgan', bg: 'bg-slate-800', text: 'JPM' },
+                    { name: 'BlackRock', bg: 'bg-gray-900', text: 'BR' },
+                    { name: 'Morgan Stanley', bg: 'bg-blue-800', text: 'MS' },
+                    { name: 'Citadel', bg: 'bg-indigo-900', text: 'C' }
+                  ].map((company, i) => 
+                    <motion.div 
+                      key={company.name} 
+                      className={`w-12 h-12 rounded-full ${company.bg} border-3 border-white dark:border-slate-800 flex items-center justify-center text-xs font-bold text-white shadow-lg`}
+                      initial={{
+                        opacity: 0,
+                        scale: 0
+                      }} 
+                      animate={{
+                        opacity: 1,
+                        scale: 1
+                      }} 
+                      transition={{
+                        delay: 0.8 + i * 0.1,
+                        duration: 0.3
+                      }}
+                      title={company.name}
+                    >
+                      {company.text}
+                    </motion.div>
+                  )}
                 </div>
                 <div className="text-sm">
                   <div className="flex items-center gap-1 mb-1">
@@ -292,7 +303,7 @@ export const Home = () => {
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                       </motion.div>)}
                   </div>
-                  <p className="text-muted-foreground font-medium">Rated #1 by institutional investors</p>
+                  <p className="text-muted-foreground font-medium">Trusted by leading financial institutions</p>
                 </div>
               </motion.div>
             </motion.div>
