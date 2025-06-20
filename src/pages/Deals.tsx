@@ -428,12 +428,12 @@ const Deals = () => {
                       viewport={{ once: true }}
                       transition={{ delay: index * 0.1, duration: 0.5 }}
                     >
-                      {/* <DealCard
+                      <DealCard
                         deal={deal}
                         onClaim={handleDealClaim}
                         onView={handleDealView}
                         isClaimLoading={claimingDealId === deal.id}
-                      /> */}
+                      />
                       <motion.div
                         className="absolute top-2 right-2"
                         initial={{ opacity: 0, scale: 0.8 }}
