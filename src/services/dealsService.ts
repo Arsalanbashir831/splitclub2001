@@ -30,6 +30,24 @@ export const dealsService = {
       console.error('Error fetching profiles:', profilesError);
     }
 
+    // Get claims count for each deal
+    const dealIds = deals.map(deal => deal.id);
+    const { data: claims, error: claimsError } = await supabase
+      .from('deal_claims')
+      .select('deal_id')
+      .in('deal_id', dealIds);
+
+    if (claimsError) {
+      console.error('Error fetching claims:', claimsError);
+    }
+
+    // Create a map of deal_id to claims count
+    const claimsMap = new Map();
+    claims?.forEach(claim => {
+      const count = claimsMap.get(claim.deal_id) || 0;
+      claimsMap.set(claim.deal_id, count + 1);
+    });
+
     // Create a map of user_id to profile for quick lookup
     const profileMap = new Map();
     profiles?.forEach(profile => {
@@ -38,6 +56,8 @@ export const dealsService = {
 
     return deals.map(deal => {
       const profile = profileMap.get(deal.user_id);
+      const claimsCount = claimsMap.get(deal.id) || 0;
+      const maxClaims = deal.max_claims || 5;
       
       return {
         id: deal.id,
@@ -47,8 +67,8 @@ export const dealsService = {
         originalPrice: Number(deal.original_price || 0),
         sharePrice: Number(deal.price || 0),
         isFree: !deal.is_for_sale,
-        availableSlots: 5, // We'll need to calculate this based on claims
-        totalSlots: 5, // Default for now
+        availableSlots: Math.max(0, maxClaims - claimsCount),
+        totalSlots: maxClaims,
         expiryDate: deal.expiry_date,
         tags: deal.tags || [],
         sharedBy: {
@@ -98,6 +118,19 @@ export const dealsService = {
       console.error('Error fetching profile:', profileError);
     }
 
+    // Get claims count for this deal
+    const { data: claims, error: claimsError } = await supabase
+      .from('deal_claims')
+      .select('deal_id')
+      .eq('deal_id', deal.id);
+
+    if (claimsError) {
+      console.error('Error fetching claims:', claimsError);
+    }
+
+    const claimsCount = claims?.length || 0;
+    const maxClaims = deal.max_claims || 5;
+
     return {
       id: deal.id,
       title: deal.title,
@@ -106,8 +139,8 @@ export const dealsService = {
       originalPrice: Number(deal.original_price || 0),
       sharePrice: Number(deal.price || 0),
       isFree: !deal.is_for_sale,
-      availableSlots: 5,
-      totalSlots: 5,
+      availableSlots: Math.max(0, maxClaims - claimsCount),
+      totalSlots: maxClaims,
       expiryDate: deal.expiry_date,
       tags: deal.tags || [],
       sharedBy: {

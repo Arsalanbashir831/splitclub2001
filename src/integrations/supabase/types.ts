@@ -106,6 +106,7 @@ export type Database = {
           is_for_sale: boolean | null
           is_location_bound: boolean | null
           location_details: string | null
+          max_claims: number | null
           original_price: number | null
           price: number | null
           redemption_type: string | null
@@ -128,6 +129,7 @@ export type Database = {
           is_for_sale?: boolean | null
           is_location_bound?: boolean | null
           location_details?: string | null
+          max_claims?: number | null
           original_price?: number | null
           price?: number | null
           redemption_type?: string | null
@@ -150,6 +152,7 @@ export type Database = {
           is_for_sale?: boolean | null
           is_location_bound?: boolean | null
           location_details?: string | null
+          max_claims?: number | null
           original_price?: number | null
           price?: number | null
           redemption_type?: string | null
@@ -229,6 +232,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_available_slots: {
+        Args: { deal_id_param: string }
+        Returns: number
+      }
       is_admin: {
         Args: Record<PropertyKey, never> | { user_uuid: string }
         Returns: boolean

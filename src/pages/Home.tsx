@@ -1,25 +1,34 @@
-
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Navbar } from '@/components/Navbar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowRight, Shield, Users, Zap, Star, Play, Upload } from 'lucide-react';
+import { ArrowRight, Shield, Users, Zap, Star, Play, Upload, Loader2 } from 'lucide-react';
 import { VideoUploadModal } from '@/components/VideoUploadModal';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useRealtimeDeals } from '@/hooks/useRealtimeDeals';
+import { useDeals } from '@/hooks/useDeals';
+import { useUserClaims } from '@/hooks/useUserClaims';
+import { useAuthStore } from '@/store/authStore';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import { dealsService } from '@/services/dealsService';
 
 export const Home = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [demoVideoUrl, setDemoVideoUrl] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  
+  const [claimingDeals, setClaimingDeals] = useState<Set<string>>(new Set());
+
   // Get real deals from backend
-  const { deals: latestDeals, isLoading } = useRealtimeDeals(10);
+  const { deals, isLoading: dealsLoading } = useDeals();
+  const { hasClaimedDeal } = useUserClaims();
+  const { user, isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Check for existing demo video and user role
   useEffect(() => {
@@ -57,6 +66,66 @@ export const Home = () => {
 
     checkDemoVideo();
   }, []);
+
+  const handleClaimDeal = async (dealId: string) => {
+    if (!isAuthenticated) {
+      sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
+      navigate('/login');
+      return;
+    }
+
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "User information not available. Please try logging in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const deal = deals.find(d => d.id === dealId);
+    if (!deal) return;
+
+    if (deal.sharedBy.id === user.id) {
+      toast({
+        title: "Cannot claim own deal",
+        description: "You cannot claim your own deal.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (hasClaimedDeal(dealId)) {
+      toast({
+        title: "Already claimed",
+        description: "You have already claimed this deal.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setClaimingDeals(prev => new Set(prev).add(dealId));
+    try {
+      await dealsService.claimDeal(dealId, user.id);
+      toast({
+        title: "Deal claimed!",
+        description: `You've successfully claimed "${deal.title}". The owner will be notified.`,
+      });
+    } catch (error) {
+      console.error('Error claiming deal:', error);
+      toast({
+        title: "Error claiming deal",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setClaimingDeals(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(dealId);
+        return newSet;
+      });
+    }
+  };
 
   const handleVideoUploaded = (videoUrl: string) => {
     setDemoVideoUrl(videoUrl);
@@ -300,68 +369,112 @@ export const Home = () => {
                     <TableHead>Available</TableHead>
                     <TableHead>Expires</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
               </Table>
             </div>
-            
             <div className="max-h-96 overflow-y-auto">
               <Table>
                 <TableBody>
-                  {isLoading ? (
-                    // Loading skeleton
-                    [...Array(5)].map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell><div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div></TableCell>
-                        <TableCell><div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div></TableCell>
-                        <TableCell><div className="h-4 bg-muted rounded w-1/3 animate-pulse"></div></TableCell>
-                        <TableCell><div className="h-4 bg-muted rounded w-1/3 animate-pulse"></div></TableCell>
-                        <TableCell><div className="h-4 bg-muted rounded w-1/4 animate-pulse"></div></TableCell>
-                        <TableCell><div className="h-4 bg-muted rounded w-1/3 animate-pulse"></div></TableCell>
-                        <TableCell><div className="h-4 bg-muted rounded w-1/4 animate-pulse"></div></TableCell>
-                      </TableRow>
-                    ))
-                  ) : latestDeals.length > 0 ? (
-                    latestDeals.map((deal) => (
-                      <TableRow key={deal.id}>
-                        <TableCell className="font-medium">
-                          <Link to={`/deal/${deal.id}`} className="hover:text-primary transition-colors">
-                            {deal.title}
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="capitalize">
-                            {deal.category}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>${deal.originalPrice.toFixed(2)}</TableCell>
-                        <TableCell>
-                          {deal.isFree ? (
-                            <Badge variant="outline" className="text-green-600 border-green-600">
-                              Free
-                            </Badge>
-                          ) : (
-                            `$${deal.sharePrice.toFixed(2)}`
-                          )}
-                        </TableCell>
-                        <TableCell>{deal.availableSlots}/{deal.totalSlots}</TableCell>
-                        <TableCell>{new Date(deal.expiryDate).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={deal.status === 'active' ? 'default' : deal.status === 'claimed' ? 'secondary' : 'destructive'}
-                            className="capitalize"
-                          >
-                            {deal.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
+                  {dealsLoading ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8">
-                        <div className="text-muted-foreground">No deals available yet.</div>
+                      <TableCell colSpan={8} className="text-center py-8">
+                        <div className="flex items-center justify-center space-x-2">
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          <span>Loading deals...</span>
+                        </div>
                       </TableCell>
                     </TableRow>
+                  ) : deals.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8">
+                        <p className="text-muted-foreground">No deals available at the moment.</p>
+                        <Button asChild className="mt-4">
+                          <Link to="/share-deal">Share Your First Deal</Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    deals.slice(0, 10).map((deal) => {
+                      const isOwnDeal = user && deal.sharedBy.id === user.id;
+                      const hasClaimedThisDeal = hasClaimedDeal(deal.id);
+                      const isClaimingThisDeal = claimingDeals.has(deal.id);
+
+                      return (
+                        <TableRow key={deal.id}>
+                          <TableCell className="font-medium">
+                            <Link to={`/deal/${deal.id}`} className="hover:text-primary transition-colors">
+                              {deal.title}
+                            </Link>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="capitalize">
+                              {deal.category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>${deal.originalPrice.toFixed(2)}</TableCell>
+                          <TableCell>
+                            {deal.isFree ? (
+                              <Badge variant="outline" className="text-green-600 border-green-600">
+                                Free
+                              </Badge>
+                            ) : (
+                              `$${deal.sharePrice.toFixed(2)}`
+                            )}
+                          </TableCell>
+                          <TableCell>{deal.availableSlots}/{deal.totalSlots}</TableCell>
+                          <TableCell>{new Date(deal.expiryDate).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant={deal.status === 'active' ? 'default' : deal.status === 'claimed' ? 'secondary' : 'destructive'}
+                                className="capitalize"
+                              >
+                                {deal.status}
+                              </Badge>
+                              {hasClaimedThisDeal && !isOwnDeal && (
+                                <Badge variant="default" className="bg-green-600 text-xs">
+                                  Claimed
+                                </Badge>
+                              )}
+                              {isOwnDeal && (
+                                <Badge variant="secondary" className="text-xs">
+                                  Yours
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {deal.status === 'active' && deal.availableSlots > 0 ? (
+                              <Button
+                                size="sm"
+                                onClick={() => handleClaimDeal(deal.id)}
+                                disabled={isClaimingThisDeal || hasClaimedThisDeal || isOwnDeal}
+                                variant={isOwnDeal ? 'outline' : hasClaimedThisDeal ? 'secondary' : 'default'}
+                              >
+                                {isClaimingThisDeal ? (
+                                  <>
+                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                    Claiming...
+                                  </>
+                                ) : isOwnDeal ? (
+                                  'Edit'
+                                ) : hasClaimedThisDeal ? (
+                                  'Claimed'
+                                ) : (
+                                  'Claim'
+                                )}
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="secondary" disabled>
+                                {deal.availableSlots === 0 ? 'Full' : 'Expired'}
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>

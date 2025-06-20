@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
-import { Share, Calendar, MapPin, DollarSign, Tag, FileText } from 'lucide-react';
+import { Share, Calendar, MapPin, DollarSign, Tag, FileText, Users } from 'lucide-react';
 import { DealFormData } from '@/pages/ShareDeal';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/store/authStore';
@@ -52,7 +52,7 @@ export const PreviewPublish = ({
         category: formData.category,
         source: formData.source,
         redemption_type: formData.redemptionType,
-        voucher_data: formData.voucherFile ? 'file_uploaded' : null, // In real implementation, upload file to storage
+        voucher_data: formData.voucherFile ? 'file_uploaded' : null,
         expiry_date: formData.expiryDate?.toISOString(),
         is_location_bound: formData.isLocationBound,
         location_details: formData.locationDetails || null,
@@ -61,6 +61,7 @@ export const PreviewPublish = ({
         original_price: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
         usage_notes: formData.usageNotes || null,
         tags: formData.tags.length > 0 ? formData.tags : null,
+        max_claims: formData.maxClaims,
         status: 'active'
       };
 
@@ -131,6 +132,13 @@ export const PreviewPublish = ({
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex items-center gap-2 text-sm">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span>
+                {formData.maxClaims} {formData.maxClaims === 1 ? 'person' : 'people'} can claim this deal
+              </span>
+            </div>
+
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span>
@@ -206,6 +214,10 @@ export const PreviewPublish = ({
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Source:</span>
                 <span>{formData.source}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Available Claims:</span>
+                <span>{formData.maxClaims}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Type:</span>

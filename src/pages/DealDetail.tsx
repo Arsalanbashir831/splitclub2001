@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Navbar } from '../components/Navbar';
 import { useDeal } from '../hooks/useDeals';
 import { dealsService } from '../services/dealsService';
+import { useUserClaims } from '../hooks/useUserClaims';
 import { 
   Clock, 
   Users, 
@@ -22,7 +23,8 @@ import {
   Shield,
   Zap,
   Mail,
-  Loader2
+  Loader2,
+  Edit
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '../store/authStore';
@@ -33,12 +35,15 @@ export const DealDetail = () => {
   const { toast } = useToast();
   const { isAuthenticated, user } = useAuthStore();
   const { deal, isLoading, error } = useDeal(id || '');
+  const { hasClaimedDeal } = useUserClaims();
   const [isLiked, setIsLiked] = useState(false);
   const [isClaimLoading, setIsClaimLoading] = useState(false);
 
+  const isOwnDeal = user && deal && deal.sharedBy.id === user.id;
+  const hasClaimedThisDeal = deal ? hasClaimedDeal(deal.id) : false;
+
   const handleClaim = async () => {
     if (!isAuthenticated) {
-      // Store the current page for redirect after login
       sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
       navigate('/login');
       return;
@@ -48,6 +53,33 @@ export const DealDetail = () => {
       toast({
         title: "Error",
         description: "User information not available. Please try logging in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isOwnDeal) {
+      toast({
+        title: "Cannot claim own deal",
+        description: "You cannot claim your own deal. You can edit it instead.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (hasClaimedThisDeal) {
+      toast({
+        title: "Already claimed",
+        description: "You have already claimed this deal.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (deal.availableSlots <= 0) {
+      toast({
+        title: "Deal fully claimed",
+        description: "This deal has been fully claimed by other users.",
         variant: "destructive",
       });
       return;
@@ -86,6 +118,22 @@ export const DealDetail = () => {
       title: isLiked ? "Removed from favorites" : "Added to favorites",
       description: isLiked ? "Deal removed from your favorites" : "Deal saved to your favorites",
     });
+  };
+
+  const getClaimButtonText = () => {
+    if (isOwnDeal) return 'Edit Deal';
+    if (hasClaimedThisDeal) return 'Already Claimed';
+    if (deal?.availableSlots === 0) return 'Fully Claimed';
+    if (deal?.isFree) return 'Join for Free';
+    return `Join Now for £${deal?.sharePrice}/month`;
+  };
+
+  const getClaimButtonAction = () => {
+    if (isOwnDeal) {
+      navigate(`/edit-deal/${deal?.id}`);
+    } else {
+      handleClaim();
+    }
   };
 
   if (isLoading) {
@@ -190,9 +238,17 @@ export const DealDetail = () => {
             
             <div className="flex-1">
               {/* Deal Title */}
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                {deal.title}
-              </h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+                  {deal.title}
+                </h1>
+                {isOwnDeal && (
+                  <Badge variant="secondary">Your Deal</Badge>
+                )}
+                {hasClaimedThisDeal && !isOwnDeal && (
+                  <Badge variant="default" className="bg-green-600">Claimed</Badge>
+                )}
+              </div>
               
               {/* Short Subtitle */}
               <p className="text-muted-foreground text-lg mb-4">
@@ -348,23 +404,34 @@ export const DealDetail = () => {
                     </div>
                   )}
 
-                  {deal.status === 'active' && deal.availableSlots > 0 ? (
+                  {deal.status === 'active' && deal.availableSlots > 0 && !hasClaimedThisDeal ? (
                     <Button 
                       className="w-full" 
                       size="lg" 
-                      onClick={handleClaim}
+                      onClick={getClaimButtonAction}
                       disabled={isClaimLoading}
+                      variant={isOwnDeal ? 'outline' : 'default'}
                     >
                       {isClaimLoading ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           Claiming...
                         </>
+                      ) : isOwnDeal ? (
+                        <>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Deal
+                        </>
                       ) : (
-                        <>💸 {deal.isFree ? 'Join for Free' : `Join Now for £${deal.sharePrice}/month`}</>
+                        <>💸 {getClaimButtonText()}</>
                       )}
                     </Button>
-                  ) : deal.status === 'claimed' ? (
+                  ) : hasClaimedThisDeal ? (
+                    <Button variant="secondary" className="w-full" size="lg" disabled>
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Already Claimed
+                    </Button>
+                  ) : deal.availableSlots === 0 ? (
                     <Button variant="secondary" className="w-full" size="lg" disabled>
                       Fully Claimed
                     </Button>

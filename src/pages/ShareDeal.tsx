@@ -25,6 +25,7 @@ export interface DealFormData {
   originalPrice: string;
   usageNotes: string;
   tags: string[];
+  maxClaims: number;
 }
 
 export const ShareDeal = () => {
@@ -43,7 +44,8 @@ export const ShareDeal = () => {
     price: '',
     originalPrice: '',
     usageNotes: '',
-    tags: []
+    tags: [],
+    maxClaims: 5
   });
 
   useEffect(() => {
@@ -115,7 +117,6 @@ export const ShareDeal = () => {
             formData={formData}
             onPrev={prevStep}
             onPublish={() => {
-              // Handle publish logic
               navigate('/deals');
             }}
           />

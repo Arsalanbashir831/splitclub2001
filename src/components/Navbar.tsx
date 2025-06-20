@@ -33,6 +33,7 @@ export const Navbar = () => {
     if (searchQuery.trim()) {
       navigate(`/deals?search=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
+      setIsMenuOpen(false); // Close mobile menu on search
     }
   };
 
@@ -46,18 +47,19 @@ export const Navbar = () => {
   return (
     <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <div className="flex items-center flex-shrink-0">
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-sm">SC</span>
               </div>
-              <span className="font-bold text-xl text-foreground">SplitClub</span>
+              <span className="font-bold text-xl text-foreground hidden sm:block">SplitClub</span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-8">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -69,8 +71,8 @@ export const Navbar = () => {
             ))}
           </div>
 
-          {/* Search Bar */}
-          <div className="hidden md:flex items-center flex-1 max-w-lg mx-8">
+          {/* Desktop Search Bar */}
+          <div className="hidden lg:flex items-center flex-1 max-w-lg mx-8">
             <form onSubmit={handleSearch} className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -83,13 +85,14 @@ export const Navbar = () => {
             </form>
           </div>
 
-          {/* User Menu / Auth Buttons */}
-          <div className="flex items-center space-x-4">
+          {/* Right side controls */}
+          <div className="flex items-center space-x-2 sm:space-x-4">
             {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="hidden sm:flex"
             >
               <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -98,13 +101,15 @@ export const Navbar = () => {
 
             {isAuthenticated && user ? (
               <>
-                <Button asChild variant="outline" size="sm">
+                {/* Share Deal Button - Hidden on small screens */}
+                <Button asChild variant="outline" size="sm" className="hidden md:flex">
                   <Link to="/share-deal">
                     <Plus className="h-4 w-4 mr-2" />
                     Share Deal
                   </Link>
                 </Button>
                 
+                {/* User Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -126,6 +131,13 @@ export const Navbar = () => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    {/* Mobile-only Share Deal option */}
+                    <DropdownMenuItem asChild className="md:hidden">
+                      <Link to="/share-deal">
+                        <Plus className="mr-2 h-4 w-4" />
+                        <span>Share Deal</span>
+                      </Link>
+                    </DropdownMenuItem>
                     {user.isAdmin && (
                       <DropdownMenuItem asChild>
                         <Link to="/admin">
@@ -152,6 +164,23 @@ export const Navbar = () => {
                         <span>Help</span>
                       </Link>
                     </DropdownMenuItem>
+                    {/* Mobile-only theme toggle */}
+                    <DropdownMenuItem 
+                      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                      className="sm:hidden"
+                    >
+                      {theme === 'dark' ? (
+                        <>
+                          <Sun className="mr-2 h-4 w-4" />
+                          <span>Light Mode</span>
+                        </>
+                      ) : (
+                        <>
+                          <Moon className="mr-2 h-4 w-4" />
+                          <span>Dark Mode</span>
+                        </>
+                      )}
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
@@ -161,7 +190,7 @@ export const Navbar = () => {
                 </DropdownMenu>
               </>
             ) : (
-              <Button asChild>
+              <Button asChild size="sm">
                 <Link to="/login">Sign In</Link>
               </Button>
             )}
@@ -169,7 +198,7 @@ export const Navbar = () => {
             {/* Mobile menu button */}
             <Button
               variant="ghost"
-              className="md:hidden"
+              className="lg:hidden"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -179,7 +208,7 @@ export const Navbar = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200 dark:border-gray-700">
               {/* Mobile Search */}
               <form onSubmit={handleSearch} className="relative mb-4">
@@ -193,6 +222,7 @@ export const Navbar = () => {
                 />
               </form>
               
+              {/* Mobile Navigation Links */}
               {navItems.map((item) => (
                 <Link
                   key={item.href}
