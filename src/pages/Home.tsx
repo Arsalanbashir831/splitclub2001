@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -23,6 +22,7 @@ export const Home = () => {
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [demoVideoUrl, setDemoVideoUrl] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoadingVideo, setIsLoadingVideo] = useState(true);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -34,13 +34,18 @@ export const Home = () => {
     };
 
     const loadDemoVideo = async () => {
+      setIsLoadingVideo(true);
       try {
+        console.log('Loading demo video...');
         const video = await videoService.getActiveDemoVideo();
+        console.log('Demo video loaded:', video);
         if (video) {
           setDemoVideoUrl(video.url);
         }
       } catch (error) {
         console.error('Error loading demo video:', error);
+      } finally {
+        setIsLoadingVideo(false);
       }
     };
 
@@ -49,20 +54,36 @@ export const Home = () => {
   }, [user]);
 
   const handleWatchDemo = () => {
+    console.log('Watch demo clicked, video URL:', demoVideoUrl);
     if (demoVideoUrl) {
       setShowVideoPlayer(true);
     } else if (isAdmin) {
       setShowUploadModal(true);
+    } else {
+      toast({
+        title: "Demo Coming Soon",
+        description: "The demo video is not available yet.",
+      });
     }
   };
 
-  const handleVideoUploaded = (videoUrl: string) => {
+  const handleVideoUploaded = async (videoUrl: string) => {
     setDemoVideoUrl(videoUrl);
     setShowUploadModal(false);
     toast({
       title: "Video uploaded successfully!",
       description: "The demo video has been uploaded and is now active.",
     });
+    
+    // Reload the demo video to ensure we have the latest
+    try {
+      const video = await videoService.getActiveDemoVideo();
+      if (video) {
+        setDemoVideoUrl(video.url);
+      }
+    } catch (error) {
+      console.error('Error reloading demo video:', error);
+    }
   };
 
   return (
@@ -136,9 +157,13 @@ export const Home = () => {
                   size="lg" 
                   className="gap-2"
                   onClick={handleWatchDemo}
-                  disabled={!demoVideoUrl && !isAdmin}
+                  disabled={isLoadingVideo}
                 >
-                  {demoVideoUrl ? (
+                  {isLoadingVideo ? (
+                    <>
+                      Loading...
+                    </>
+                  ) : demoVideoUrl ? (
                     <>
                       <Play className="w-4 h-4" />
                       Watch Demo

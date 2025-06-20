@@ -13,20 +13,42 @@ export interface DemoVideo {
 export const videoService = {
   async getActiveDemoVideo(): Promise<DemoVideo | null> {
     try {
-      // For now, we'll use a simple approach to store the active demo video URL
-      // We can expand this later when we have a proper demo_videos table
-      const { data, error } = await supabase
-        .from('deals')
-        .select('*')
-        .limit(1);
+      // Get the most recent demo video from storage
+      const { data: files, error } = await supabase.storage
+        .from('demo-videos')
+        .list('demos', {
+          limit: 1,
+          sortBy: { column: 'created_at', order: 'desc' }
+        });
 
       if (error) {
-        console.error('Error checking demo video capability:', error);
+        console.error('Error fetching demo videos:', error);
         return null;
       }
 
-      // Return a placeholder for now - we'll implement proper video storage later
-      return null;
+      if (!files || files.length === 0) {
+        console.log('No demo videos found');
+        return null;
+      }
+
+      const latestFile = files[0];
+      const filePath = `demos/${latestFile.name}`;
+      
+      // Get the public URL for the video
+      const { data: { publicUrl } } = supabase.storage
+        .from('demo-videos')
+        .getPublicUrl(filePath);
+
+      console.log('Found demo video:', publicUrl);
+
+      return {
+        id: latestFile.id || 'demo-video',
+        title: 'Demo Video',
+        url: publicUrl,
+        is_active: true,
+        created_at: latestFile.created_at || new Date().toISOString(),
+        updated_at: latestFile.updated_at || new Date().toISOString()
+      };
     } catch (error) {
       console.error('Error in getActiveDemoVideo:', error);
       return null;
@@ -36,8 +58,8 @@ export const videoService = {
   async uploadDemoVideo(file: File, title: string): Promise<string | null> {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `demo-video-${Date.now()}.${fileExt}`;
-      const filePath = `demo-videos/${fileName}`;
+      const fileName = `demo-${Date.now()}.${fileExt}`;
+      const filePath = `demos/${fileName}`;
 
       console.log('Uploading video to path:', filePath);
 
@@ -59,8 +81,6 @@ export const videoService = {
 
       console.log('Video uploaded successfully to:', publicUrl);
       
-      // Store video metadata in a simple way for now
-      // Later we can create a proper demo_videos table
       return publicUrl;
     } catch (error) {
       console.error('Error in uploadDemoVideo:', error);
