@@ -169,7 +169,7 @@ export const Home = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden animate-fade-in">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -304,7 +304,7 @@ export const Home = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-16 bg-muted/30 animate-fade-in">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
@@ -318,10 +318,10 @@ export const Home = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20">
+      <section className="py-20 animate-fade-in">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 animate-scale-in">
               Why Choose SplitClub?
             </h2>
             <p className="text-xl text-muted-foreground">
@@ -346,30 +346,30 @@ export const Home = () => {
       </section>
 
       {/* Deals Table Section */}
-      <section className="py-20">
+      <section className="py-20 animate-fade-in">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 animate-scale-in">
               Latest Deals
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-xl text-muted-foreground animate-fade-in">
               Discover the newest deals and savings opportunities from our community
             </p>
           </div>
           
-          <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border border-border rounded-lg overflow-hidden">
+          <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border border-border rounded-lg overflow-hidden animate-scale-in">
             <div className="sticky top-16 z-40 bg-background border-b border-border">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[200px]">Title</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Original Price</TableHead>
-                    <TableHead>Share Price</TableHead>
-                    <TableHead>Available</TableHead>
-                    <TableHead>Expires</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Action</TableHead>
+                    <TableHead className="w-[120px]">Category</TableHead>
+                    <TableHead className="w-[120px] text-right">Original Price</TableHead>
+                    <TableHead className="w-[120px] text-right">Share Price</TableHead>
+                    <TableHead className="w-[100px] text-center">Available</TableHead>
+                    <TableHead className="w-[120px]">Expires</TableHead>
+                    <TableHead className="w-[120px]">Status</TableHead>
+                    <TableHead className="w-[120px] text-center">Action</TableHead>
                   </TableRow>
                 </TableHeader>
               </Table>
@@ -396,25 +396,25 @@ export const Home = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    deals.slice(0, 10).map((deal) => {
+                    deals.slice(0, 10).map((deal, index) => {
                       const isOwnDeal = user && deal.sharedBy.id === user.id;
                       const hasClaimedThisDeal = hasClaimedDeal(deal.id);
                       const isClaimingThisDeal = claimingDeals.has(deal.id);
 
                       return (
-                        <TableRow key={deal.id}>
-                          <TableCell className="font-medium">
-                            <Link to={`/deal/${deal.id}`} className="hover:text-primary transition-colors">
+                        <TableRow key={deal.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                          <TableCell className="font-medium w-[200px]">
+                            <Link to={`/deal/${deal.id}`} className="hover:text-primary transition-colors truncate block">
                               {deal.title}
                             </Link>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="w-[120px]">
                             <Badge variant="secondary" className="capitalize">
                               {deal.category}
                             </Badge>
                           </TableCell>
-                          <TableCell>${deal.originalPrice.toFixed(2)}</TableCell>
-                          <TableCell>
+                          <TableCell className="w-[120px] text-right">${deal.originalPrice.toFixed(2)}</TableCell>
+                          <TableCell className="w-[120px] text-right">
                             {deal.isFree ? (
                               <Badge variant="outline" className="text-green-600 border-green-600">
                                 Free
@@ -423,9 +423,9 @@ export const Home = () => {
                               `$${deal.sharePrice.toFixed(2)}`
                             )}
                           </TableCell>
-                          <TableCell>{deal.availableSlots}/{deal.totalSlots}</TableCell>
-                          <TableCell>{new Date(deal.expiryDate).toLocaleDateString()}</TableCell>
-                          <TableCell>
+                          <TableCell className="w-[100px] text-center">{deal.availableSlots}/{deal.totalSlots}</TableCell>
+                          <TableCell className="w-[120px]">{new Date(deal.expiryDate).toLocaleDateString()}</TableCell>
+                          <TableCell className="w-[120px]">
                             <div className="flex items-center gap-2">
                               <Badge 
                                 variant={deal.status === 'active' ? 'default' : deal.status === 'claimed' ? 'secondary' : 'destructive'}
@@ -445,7 +445,7 @@ export const Home = () => {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="w-[120px] text-center">
                             {deal.status === 'active' && deal.availableSlots > 0 ? (
                               <Button
                                 size="sm"
@@ -459,7 +459,7 @@ export const Home = () => {
                                     Claiming...
                                   </>
                                 ) : isOwnDeal ? (
-                                  'Edit'
+                                  'Your Deal'
                                 ) : hasClaimedThisDeal ? (
                                   'Claimed'
                                 ) : (
@@ -484,7 +484,7 @@ export const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary/10 via-background to-accent/10">
+      <section className="py-20 bg-gradient-to-r from-primary/10 via-background to-accent/10 animate-fade-in">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Ready to Start Saving?

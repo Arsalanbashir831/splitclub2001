@@ -32,16 +32,16 @@ export const DealCard = ({
   };
 
   return (
-    <Card className="h-full hover:shadow-lg transition-shadow duration-200 cursor-pointer group">
+    <Card className="h-full hover:shadow-lg transition-all duration-300 cursor-pointer group hover-scale animate-fade-in">
       <div onClick={handleView}>
         {deal.image && (
           <div className="relative h-48 overflow-hidden rounded-t-lg">
             <img 
               src={deal.image} 
               alt={deal.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
-            <div className="absolute top-2 left-2">
+            <div className="absolute top-2 left-2 animate-slide-in-right">
               <Badge variant="secondary" className="capitalize">
                 {deal.category}
               </Badge>
@@ -51,7 +51,9 @@ export const DealCard = ({
       </div>
       
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg line-clamp-2">{deal.title}</CardTitle>
+        <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors duration-200">
+          {deal.title}
+        </CardTitle>
         <p className="text-sm text-muted-foreground line-clamp-2">
           {deal.description}
         </p>
@@ -59,7 +61,7 @@ export const DealCard = ({
       
       <CardContent className="space-y-4">
         {/* Price information */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-fade-in" style={{ animationDelay: '0.1s' }}>
           {deal.originalPrice > 0 && (
             <div className="text-sm">
               <span className="text-muted-foreground line-through">
@@ -73,15 +75,17 @@ export const DealCard = ({
         </div>
 
         {/* Availability info */}
-        <DealAvailabilityInfo
-          availableSlots={deal.availableSlots}
-          totalSlots={deal.totalSlots}
-          isFree={deal.isFree}
-          sharePrice={deal.sharePrice}
-        />
+        <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <DealAvailabilityInfo
+            availableSlots={deal.availableSlots}
+            totalSlots={deal.totalSlots}
+            isFree={deal.isFree}
+            sharePrice={deal.sharePrice}
+          />
+        </div>
 
         {/* Deal details */}
-        <div className="space-y-2 text-sm text-muted-foreground">
+        <div className="space-y-2 text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: '0.3s' }}>
           <div className="flex items-center space-x-2">
             <Calendar className="h-4 w-4" />
             <span>Expires: {new Date(deal.expiryDate).toLocaleDateString()}</span>
@@ -97,14 +101,19 @@ export const DealCard = ({
 
         {/* Tags */}
         {deal.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 animate-fade-in" style={{ animationDelay: '0.4s' }}>
             {deal.tags.slice(0, 3).map((tag, index) => (
-              <Badge key={index} variant="outline" className="text-xs">
+              <Badge 
+                key={index} 
+                variant="outline" 
+                className="text-xs animate-scale-in" 
+                style={{ animationDelay: `${0.5 + index * 0.1}s` }}
+              >
                 {tag}
               </Badge>
             ))}
             {deal.tags.length > 3 && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs animate-scale-in" style={{ animationDelay: '0.8s' }}>
                 +{deal.tags.length - 3} more
               </Badge>
             )}
@@ -112,7 +121,7 @@ export const DealCard = ({
         )}
 
         {/* Action buttons */}
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-2 animate-fade-in" style={{ animationDelay: '0.6s' }}>
           <DealClaimButton
             isOwnDeal={isOwnDeal}
             hasClaimedDeal={hasClaimedDeal}
@@ -123,7 +132,7 @@ export const DealCard = ({
           
           <button
             onClick={handleView}
-            className="flex items-center justify-center px-3 py-2 text-sm border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+            className="flex items-center justify-center px-3 py-2 text-sm border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md transition-all duration-200 hover-scale"
           >
             <Eye className="h-4 w-4" />
           </button>

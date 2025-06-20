@@ -7,6 +7,7 @@ import { DealCard } from '../components/DealCard';
 import { DealFilters, FilterState } from '../components/DealFilters';
 import { WelcomeTip } from '../components/WelcomeTip';
 import { DemoVideoSection } from '../components/DemoVideoSection';
+import { Footer } from '../components/Footer';
 import { useDeals } from '../hooks/useDeals';
 import { useUserClaims } from '../hooks/useUserClaims';
 import { useAuthStore } from '../store/authStore';
@@ -222,7 +223,7 @@ const Index = () => {
       <Navbar />
       
       {/* Hero section */}
-      <div className="bg-gradient-to-r from-primary/10 via-background to-accent/10 border-b border-border">
+      <div className="bg-gradient-to-r from-primary/10 via-background to-accent/10 border-b border-border animate-fade-in">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
           <div className="text-center max-w-3xl mx-auto">
             <div className="flex justify-center mb-6">
@@ -256,14 +257,14 @@ const Index = () => {
       </div>
 
       {/* Demo Video Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-scale-in">
         <DemoVideoSection />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters sidebar */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 animate-slide-in-right">
             <DealFilters
               filters={filters}
               onFiltersChange={setFilters}
@@ -276,7 +277,7 @@ const Index = () => {
           {/* Main content */}
           <div className="lg:col-span-3">
             {/* Search and header */}
-            <div className="mb-6">
+            <div className="mb-6 animate-fade-in">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">Available Deals</h2>
@@ -345,7 +346,7 @@ const Index = () => {
 
             {/* Loading state */}
             {isLoading && (
-              <div className="flex items-center justify-center py-12">
+              <div className="flex items-center justify-center py-12 animate-pulse">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <span className="ml-2 text-muted-foreground">Loading deals...</span>
               </div>
@@ -354,12 +355,16 @@ const Index = () => {
             {/* Deals grid */}
             {!isLoading && filteredDeals.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredDeals.map((deal) => {
+                {filteredDeals.map((deal, index) => {
                   const isOwnDeal = user && deal.sharedBy.id === user.id;
                   const hasClaimedThisDeal = hasClaimedDeal(deal.id);
                   
                   return (
-                    <div key={deal.id} className="relative">
+                    <div 
+                      key={deal.id} 
+                      className="relative animate-fade-in hover-scale" 
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
                       <DealCard
                         deal={deal}
                         onClaim={handleDealClaim}
@@ -389,7 +394,7 @@ const Index = () => {
                 })}
               </div>
             ) : !isLoading && (
-              <div className="text-center py-12">
+              <div className="text-center py-12 animate-scale-in">
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                   <Search className="h-8 w-8 text-muted-foreground" />
                 </div>
@@ -407,23 +412,7 @@ const Index = () => {
       </div>
 
       {/* Footer */}
-      <footer className="bg-card border-t border-border mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              This app was created with the help of{' '}
-              <a 
-                href="https://launchmd.ingenious.agency" 
-                className="text-primary hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                LaunchMD
-              </a>
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
