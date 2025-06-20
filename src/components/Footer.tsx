@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Leaf, Mail, Phone, MapPin, Github, Twitter, Linkedin, Instagram } from 'lucide-react';
@@ -63,7 +64,7 @@ export const Footer = () => {
   }];
   return <footer className="bg-background border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
           <motion.div className="space-y-4" initial={{
           opacity: 0,
@@ -101,10 +102,50 @@ export const Footer = () => {
           </motion.div>
 
           {/* Navigation Links */}
-          
+          <motion.div className="space-y-4" initial={{
+          opacity: 0,
+          y: 20
+        }} whileInView={{
+          opacity: 1,
+          y: 0
+        }} viewport={{
+          once: true
+        }} transition={{
+          duration: 0.6,
+          delay: 0.1
+        }}>
+            <h3 className="font-semibold text-foreground">Navigation</h3>
+            <ul className="space-y-2">
+              {navItems.map(item => <li key={item.href}>
+                  <Link to={item.href} className="text-muted-foreground hover:text-primary transition-colors duration-200 text-sm">
+                    {item.label}
+                  </Link>
+                </li>)}
+            </ul>
+          </motion.div>
 
           {/* Company Links */}
-          
+          <motion.div className="space-y-4" initial={{
+          opacity: 0,
+          y: 20
+        }} whileInView={{
+          opacity: 1,
+          y: 0
+        }} viewport={{
+          once: true
+        }} transition={{
+          duration: 0.6,
+          delay: 0.2
+        }}>
+            <h3 className="font-semibold text-foreground">Company</h3>
+            <ul className="space-y-2">
+              {companyLinks.map(item => <li key={item.href}>
+                  <Link to={item.href} className="text-muted-foreground hover:text-primary transition-colors duration-200 text-sm">
+                    {item.label}
+                  </Link>
+                </li>)}
+            </ul>
+          </motion.div>
 
           {/* Support & Legal */}
           <motion.div className="space-y-4" initial={{
