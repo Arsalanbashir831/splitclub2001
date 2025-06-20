@@ -308,7 +308,7 @@ export const Home = () => {
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                       </motion.div>)}
                   </div>
-                  <p className="text-muted-foreground font-medium">Trusted by leading Community Part</p>
+                  <p className="text-muted-foreground font-medium">Trusted by leading Community Partners</p>
                 </div>
               </motion.div>
             </motion.div>
