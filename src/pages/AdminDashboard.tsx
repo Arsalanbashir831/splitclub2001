@@ -1,10 +1,12 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Navbar } from '../components/Navbar';
-import { mockDeals, mockUsers, mockLogs } from '../data/mockData';
+import { useRealtimeDeals } from '@/hooks/useRealtimeDeals';
+import { useRealtimeContactMessages } from '@/hooks/useRealtimeContactMessages';
 import { 
   BarChart, 
   Bar, 
@@ -27,57 +29,92 @@ import {
   Eye, 
   Activity,
   Calendar,
-  AlertTriangle
+  AlertTriangle,
+  MessageSquare
 } from 'lucide-react';
+import { useMemo } from 'react';
 
 export const AdminDashboard = () => {
-  // Calculate statistics
-  const totalDeals = mockDeals.length;
-  const activeDeals = mockDeals.filter(d => d.status === 'active').length;
-  const totalUsers = mockUsers.length;
-  const totalSavings = mockDeals.reduce((sum, deal) => sum + (deal.originalPrice - deal.sharePrice), 0);
+  const { deals, isLoading: dealsLoading } = useRealtimeDeals();
+  const { messages, isLoading: messagesLoading } = useRealtimeContactMessages();
 
-  // Category distribution
-  const categoryData = [
-    { name: 'Subscriptions', value: mockDeals.filter(d => d.category === 'subscription').length, color: '#3b82f6' },
-    { name: 'Memberships', value: mockDeals.filter(d => d.category === 'membership').length, color: '#10b981' },
-    { name: 'Rewards', value: mockDeals.filter(d => d.category === 'reward').length, color: '#8b5cf6' },
-    { name: 'Other', value: mockDeals.filter(d => d.category === 'other').length, color: '#f59e0b' }
-  ];
+  // Calculate statistics from real data
+  const stats = useMemo(() => {
+    if (!deals) return { totalDeals: 0, activeDeals: 0, totalSavings: 0, freeDeals: 0 };
+    
+    const totalDeals = deals.length;
+    const activeDeals = deals.filter(d => d.status === 'active').length;
+    const totalSavings = deals.reduce((sum, deal) => sum + (deal.originalPrice - deal.sharePrice), 0);
+    const freeDeals = deals.filter(d => d.isFree).length;
+    
+    return { totalDeals, activeDeals, totalSavings, freeDeals };
+  }, [deals]);
 
-  // Activity over time (mock data)
+  // Category distribution from real data
+  const categoryData = useMemo(() => {
+    if (!deals) return [];
+    
+    const categories = deals.reduce((acc, deal) => {
+      acc[deal.category] = (acc[deal.category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'];
+    
+    return Object.entries(categories).map(([name, value], index) => ({
+      name,
+      value,
+      color: colors[index % colors.length]
+    }));
+  }, [deals]);
+
+  // Price distribution from real data
+  const priceData = useMemo(() => {
+    if (!deals) return [];
+    
+    return [
+      { range: 'Free', count: deals.filter(d => d.isFree).length },
+      { range: '$1-10', count: deals.filter(d => !d.isFree && d.sharePrice <= 10).length },
+      { range: '$11-25', count: deals.filter(d => !d.isFree && d.sharePrice > 10 && d.sharePrice <= 25).length },
+      { range: '$26-50', count: deals.filter(d => !d.isFree && d.sharePrice > 25 && d.sharePrice <= 50).length },
+      { range: '$50+', count: deals.filter(d => !d.isFree && d.sharePrice > 50).length }
+    ];
+  }, [deals]);
+
+  // Activity over time (mock data for now)
   const activityData = [
-    { date: '2024-06-01', claims: 5, views: 23 },
-    { date: '2024-06-02', claims: 8, views: 31 },
-    { date: '2024-06-03', claims: 12, views: 45 },
-    { date: '2024-06-04', claims: 7, views: 28 },
-    { date: '2024-06-05', claims: 15, views: 52 },
-    { date: '2024-06-06', claims: 11, views: 38 },
-    { date: '2024-06-07', claims: 9, views: 33 }
+    { date: '2024-06-01', deals: 5, messages: 8 },
+    { date: '2024-06-02', deals: 8, messages: 12 },
+    { date: '2024-06-03', deals: 12, messages: 15 },
+    { date: '2024-06-04', deals: 7, messages: 9 },
+    { date: '2024-06-05', deals: 15, messages: 18 },
+    { date: '2024-06-06', deals: 11, messages: 14 },
+    { date: '2024-06-07', deals: 9, messages: 11 }
   ];
 
-  // Price distribution
-  const priceData = [
-    { range: 'Free', count: mockDeals.filter(d => d.isFree).length },
-    { range: '$1-10', count: mockDeals.filter(d => !d.isFree && d.sharePrice <= 10).length },
-    { range: '$11-25', count: mockDeals.filter(d => !d.isFree && d.sharePrice > 10 && d.sharePrice <= 25).length },
-    { range: '$26-50', count: mockDeals.filter(d => !d.isFree && d.sharePrice > 25 && d.sharePrice <= 50).length },
-    { range: '$50+', count: mockDeals.filter(d => !d.isFree && d.sharePrice > 50).length }
-  ];
+  // Expiring deals from real data
+  const expiringDeals = useMemo(() => {
+    if (!deals) return [];
+    
+    return deals.filter(deal => {
+      const expiryDate = new Date(deal.expiryDate);
+      const today = new Date();
+      const diffTime = expiryDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays <= 7 && deal.status === 'active';
+    });
+  }, [deals]);
 
-  // Recent activity
-  const recentActivity = mockLogs.sort((a, b) => 
-    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  ).slice(0, 10);
-
-  // Expiring deals
-  const expiringDeals = mockDeals.filter(deal => {
-    const expiryDate = new Date(deal.expiryDate);
-    const today = new Date();
-    const diffTime = expiryDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 7 && deal.status === 'active';
-  });
+  if (dealsLoading || messagesLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">Loading dashboard data...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -99,22 +136,22 @@ export const AdminDashboard = () => {
               <Gift className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalDeals}</div>
+              <div className="text-2xl font-bold">{stats.totalDeals}</div>
               <p className="text-xs text-muted-foreground">
-                {activeDeals} active
+                {stats.activeDeals} active
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Contact Messages</CardTitle>
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalUsers}</div>
+              <div className="text-2xl font-bold">{messages?.length || 0}</div>
               <p className="text-xs text-muted-foreground">
-                Community members
+                {messages?.filter(m => m.status === 'unread').length || 0} unread
               </p>
             </CardContent>
           </Card>
@@ -125,7 +162,7 @@ export const AdminDashboard = () => {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${totalSavings.toFixed(0)}</div>
+              <div className="text-2xl font-bold">${stats.totalSavings.toFixed(0)}</div>
               <p className="text-xs text-muted-foreground">
                 Community impact
               </p>
@@ -134,13 +171,13 @@ export const AdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Activity</CardTitle>
+              <CardTitle className="text-sm font-medium">Free Deals</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{mockLogs.length}</div>
+              <div className="text-2xl font-bold">{stats.freeDeals}</div>
               <p className="text-xs text-muted-foreground">
-                Total actions
+                Available for free
               </p>
             </CardContent>
           </Card>
@@ -150,75 +187,79 @@ export const AdminDashboard = () => {
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="deals">Deals</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
           <TabsContent value="analytics" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Category Distribution */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Deal Categories</CardTitle>
-                  <CardDescription>Distribution of deals by category</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={120}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="flex flex-wrap justify-center gap-4 mt-4">
-                    {categoryData.map((entry) => (
-                      <div key={entry.name} className="flex items-center space-x-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: entry.color }}
-                        />
-                        <span className="text-sm">{entry.name}: {entry.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              {categoryData.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Deal Categories</CardTitle>
+                    <CardDescription>Distribution of deals by category</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={categoryData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={120}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {categoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="flex flex-wrap justify-center gap-4 mt-4">
+                      {categoryData.map((entry) => (
+                        <div key={entry.name} className="flex items-center space-x-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: entry.color }}
+                          />
+                          <span className="text-sm">{entry.name}: {entry.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Price Distribution */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Price Distribution</CardTitle>
-                  <CardDescription>Deals by price range</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={priceData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="range" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="count" fill="#3b82f6" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+              {priceData.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Price Distribution</CardTitle>
+                    <CardDescription>Deals by price range</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={priceData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="range" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#3b82f6" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Activity Over Time */}
               <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle>Activity Trends</CardTitle>
-                  <CardDescription>Claims and views over the past week</CardDescription>
+                  <CardDescription>Platform activity over time</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -227,8 +268,8 @@ export const AdminDashboard = () => {
                       <XAxis dataKey="date" />
                       <YAxis />
                       <Tooltip />
-                      <Line type="monotone" dataKey="claims" stroke="#3b82f6" strokeWidth={2} />
-                      <Line type="monotone" dataKey="views" stroke="#10b981" strokeWidth={2} />
+                      <Line type="monotone" dataKey="deals" stroke="#3b82f6" strokeWidth={2} />
+                      <Line type="monotone" dataKey="messages" stroke="#10b981" strokeWidth={2} />
                     </LineChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -249,14 +290,14 @@ export const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {mockDeals.filter(d => d.status === 'active').slice(0, 5).map((deal) => (
+                    {deals?.filter(d => d.status === 'active').slice(0, 5).map((deal) => (
                       <div key={deal.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex-1">
                           <h4 className="font-medium">{deal.title}</h4>
                           <div className="flex items-center space-x-2 mt-1">
                             <Badge variant="outline">{deal.category}</Badge>
                             <span className="text-sm text-muted-foreground">
-                              {deal.availableSlots} slots left
+                              by {deal.sharedBy.name}
                             </span>
                           </div>
                         </div>
@@ -301,9 +342,9 @@ export const AdminDashboard = () => {
                               </span>
                             </div>
                           </div>
-                          <Button size="sm" variant="outline">
-                            Extend
-                          </Button>
+                          <div className="font-bold">
+                            {deal.isFree ? 'FREE' : `$${deal.sharePrice}`}
+                          </div>
                         </div>
                       );
                     })}
@@ -313,48 +354,31 @@ export const AdminDashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="users" className="space-y-6">
+          <TabsContent value="messages" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Community Members</CardTitle>
-                <CardDescription>Platform users and their activity</CardDescription>
+                <CardTitle>Contact Messages</CardTitle>
+                <CardDescription>Messages from users</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockUsers.map((user) => {
-                    const userDeals = mockDeals.filter(d => d.sharedBy.id === user.id);
-                    const userClaims = mockLogs.filter(l => l.userId === user.id && l.action === 'claimed');
-                    
-                    return (
-                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <Avatar>
-                            <AvatarImage src={user.avatar} alt={user.name} />
-                            <AvatarFallback>
-                              {user.name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <h4 className="font-medium">{user.name}</h4>
-                              {user.isAdmin && (
-                                <Badge variant="secondary">Admin</Badge>
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                          </div>
+                  {messages?.slice(0, 10).map((message) => (
+                    <div key={message.id} className="flex items-start justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <h4 className="font-medium">{message.name}</h4>
+                          <Badge variant={message.status === 'unread' ? 'default' : 'secondary'}>
+                            {message.status}
+                          </Badge>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm font-medium">
-                            {userDeals.length} deals shared
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {userClaims.length} deals claimed
-                          </div>
-                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{message.email}</p>
+                        <p className="text-sm">{message.message}</p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {new Date(message.created_at).toLocaleString()}
+                        </p>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -367,44 +391,35 @@ export const AdminDashboard = () => {
                   <Activity className="h-5 w-5" />
                   <span>Recent Activity</span>
                 </CardTitle>
-                <CardDescription>Latest user actions on the platform</CardDescription>
+                <CardDescription>Latest platform activity</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentActivity.map((log) => {
-                    const user = mockUsers.find(u => u.id === log.userId);
-                    const deal = mockDeals.find(d => d.id === log.dealId);
-                    
-                    return (
-                      <div key={log.id} className="flex items-center space-x-3 p-3 border rounded-lg">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={user?.avatar} alt={user?.name} />
-                          <AvatarFallback>
-                            {user?.name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className="text-sm">
-                            <span className="font-medium">{user?.name}</span>
-                            {' '}
-                            <span className="text-muted-foreground">
-                              {log.action === 'claimed' ? 'claimed' : 
-                               log.action === 'viewed' ? 'viewed' :
-                               log.action === 'shared' ? 'shared' : 'reviewed'}
-                            </span>
-                            {' '}
-                            <span className="font-medium">{deal?.title}</span>
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(log.timestamp).toLocaleString()}
-                          </p>
-                        </div>
-                        <Badge variant="outline" className="text-xs">
-                          {log.action}
-                        </Badge>
+                  {deals?.slice(0, 10).map((deal) => (
+                    <div key={deal.id} className="flex items-center space-x-3 p-3 border rounded-lg">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={deal.sharedBy.avatar} alt={deal.sharedBy.name} />
+                        <AvatarFallback>
+                          {deal.sharedBy.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="text-sm">
+                          <span className="font-medium">{deal.sharedBy.name}</span>
+                          {' '}
+                          <span className="text-muted-foreground">shared</span>
+                          {' '}
+                          <span className="font-medium">{deal.title}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(deal.createdAt).toLocaleString()}
+                        </p>
                       </div>
-                    );
-                  })}
+                      <Badge variant="outline" className="text-xs">
+                        {deal.category}
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
