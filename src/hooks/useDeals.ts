@@ -7,7 +7,6 @@ import { dealsService } from '@/services/dealsService';
 export const useDeals = () => {
   const queryClient = useQueryClient();
   const channelRef = useRef<any>(null);
-  const isSubscribedRef = useRef(false);
 
   const { data: deals = [], isLoading, error } = useQuery({
     queryKey: ['deals'],
@@ -15,12 +14,16 @@ export const useDeals = () => {
   });
 
   useEffect(() => {
-    // Prevent multiple subscriptions
-    if (isSubscribedRef.current || channelRef.current) return;
+    // Clean up existing channel first
+    if (channelRef.current) {
+      console.log('Cleaning up existing channel');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
 
     // Create new channel with unique name
-    const channelName = `deals-changes-${Date.now()}-${Math.random()}`;
-    console.log('Creating channel:', channelName);
+    const channelName = `deals-${Date.now()}`;
+    console.log('Creating new channel:', channelName);
     
     channelRef.current = supabase
       .channel(channelName)
@@ -35,23 +38,17 @@ export const useDeals = () => {
           console.log('Deals change detected:', payload);
           queryClient.invalidateQueries({ queryKey: ['deals'] });
         }
-      );
-
-    // Subscribe only once
-    channelRef.current.subscribe((status: string) => {
-      console.log('Subscription status:', status);
-      if (status === 'SUBSCRIBED') {
-        isSubscribedRef.current = true;
-      }
-    });
+      )
+      .subscribe((status: string) => {
+        console.log('Channel subscription status:', status);
+      });
 
     return () => {
-      console.log('Cleaning up channel');
+      console.log('Cleaning up channel on unmount');
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
-      isSubscribedRef.current = false;
     };
   }, [queryClient]);
 

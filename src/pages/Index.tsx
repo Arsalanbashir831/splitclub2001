@@ -49,9 +49,13 @@ const Index = () => {
   // Load demo video
   useEffect(() => {
     const loadDemoVideo = async () => {
-      const video = await videoService.getActiveDemoVideo();
-      if (video) {
-        setDemoVideoUrl(video.url);
+      try {
+        const video = await videoService.getActiveDemoVideo();
+        if (video) {
+          setDemoVideoUrl(video.url);
+        }
+      } catch (error) {
+        console.error('Error loading demo video:', error);
       }
     };
     loadDemoVideo();
@@ -138,6 +142,7 @@ const Index = () => {
   const filteredDeals = useMemo(() => {
     if (!deals) return [];
     
+    console.log('Filtering deals, total:', deals.length);
     let filteredList = [...deals];
 
     // Filter out current user's own deals
@@ -175,6 +180,7 @@ const Index = () => {
       cutoffDate.setDate(cutoffDate.getDate() + days);
       
       filteredList = filteredList.filter(deal => {
+        if (!deal.expiryDate) return false;
         const expiryDate = new Date(deal.expiryDate);
         return expiryDate <= cutoffDate;
       });
@@ -185,7 +191,11 @@ const Index = () => {
         filteredList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
       case 'expiring':
-        filteredList.sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
+        filteredList.sort((a, b) => {
+          if (!a.expiryDate) return 1;
+          if (!b.expiryDate) return -1;
+          return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+        });
         break;
       case 'price-low':
         filteredList.sort((a, b) => a.sharePrice - b.sharePrice);
@@ -198,6 +208,7 @@ const Index = () => {
         break;
     }
 
+    console.log('Filtered deals count:', filteredList.length);
     return filteredList;
   }, [deals, searchQuery, filters, user]);
 
@@ -221,6 +232,7 @@ const Index = () => {
   };
 
   if (error) {
+    console.error('Error loading deals:', error);
     return (
       <motion.div 
         className="min-h-screen bg-background"
@@ -232,7 +244,12 @@ const Index = () => {
         <AnimatedContainer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-foreground mb-4">Error loading deals</h2>
-            <p className="text-muted-foreground">Please try refreshing the page</p>
+            <p className="text-muted-foreground mb-4">
+              {error?.message || 'Please try refreshing the page'}
+            </p>
+            <Button onClick={() => window.location.reload()}>
+              Refresh Page
+            </Button>
           </div>
         </AnimatedContainer>
       </motion.div>

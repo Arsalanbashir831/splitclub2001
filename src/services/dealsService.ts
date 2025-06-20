@@ -4,6 +4,7 @@ import { Deal } from '@/types';
 export const dealsService = {
   async getDeals() {
     try {
+      console.log('Fetching deals...');
       const { data: deals, error } = await supabase
         .from('deals')
         .select('*')
@@ -15,7 +16,12 @@ export const dealsService = {
         throw error;
       }
 
-      if (!deals || deals.length === 0) return [];
+      if (!deals || deals.length === 0) {
+        console.log('No deals found');
+        return [];
+      }
+
+      console.log('Found', deals.length, 'deals');
 
       // Get unique user IDs from deals
       const userIds = [...new Set(deals.map(deal => deal.user_id).filter(Boolean))];
@@ -64,15 +70,15 @@ export const dealsService = {
         profileMap.set(profile.user_id, profile);
       });
 
-      return deals.map(deal => {
+      const transformedDeals = deals.map(deal => {
         const profile = profileMap.get(deal.user_id);
         const claimsCount = claimsMap.get(deal.id) || 0;
         const maxClaims = deal.max_claims || 5;
         
         return {
           id: deal.id,
-          title: deal.title,
-          description: deal.category,
+          title: deal.title || 'Untitled Deal',
+          description: deal.usage_notes || deal.category || 'No description',
           category: deal.category as Deal['category'],
           originalPrice: Number(deal.original_price || 0),
           sharePrice: Number(deal.price || 0),
@@ -101,6 +107,9 @@ export const dealsService = {
           usageNotes: deal.usage_notes
         };
       });
+
+      console.log('Transformed deals:', transformedDeals);
+      return transformedDeals;
     } catch (error) {
       console.error('Error in getDeals:', error);
       return [];
@@ -148,8 +157,8 @@ export const dealsService = {
 
       return {
         id: deal.id,
-        title: deal.title,
-        description: deal.category,
+        title: deal.title || 'Untitled Deal',
+        description: deal.usage_notes || deal.category || 'No description',
         category: deal.category as Deal['category'],
         originalPrice: Number(deal.original_price || 0),
         sharePrice: Number(deal.price || 0),

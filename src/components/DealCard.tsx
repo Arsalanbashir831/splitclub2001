@@ -18,19 +18,37 @@ interface DealCardProps {
 }
 
 export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: DealCardProps) => {
-  const { addFavorite, removeFavorite, isFavorite } = useFavorites();
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const isFav = isFavorite(deal.id);
-
-  const handleFavoriteToggle = (e: React.MouseEvent) => {
+  
+  // Safely handle favorites with error boundary
+  let isFav = false;
+  let handleFavoriteToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isFav) {
-      removeFavorite(deal.id);
-    } else {
-      addFavorite(deal.id);
-    }
+    console.log('Favorites not available');
   };
+
+  try {
+    const { addFavorite, removeFavorite, isFavorite } = useFavorites();
+    isFav = isFavorite(deal.id);
+    handleFavoriteToggle = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (isFav) {
+        removeFavorite(deal.id);
+      } else {
+        addFavorite(deal.id);
+      }
+    };
+  } catch (error) {
+    console.error('Error with favorites hook:', error);
+  }
+
+  // Safely handle deal data
+  const safeExpiryDate = deal.expiryDate ? new Date(deal.expiryDate).toLocaleDateString() : 'No expiry';
+  const safeAvailableSlots = deal.availableSlots || 0;
+  const safeTotalSlots = deal.totalSlots || 5;
+  const safeSharedByName = deal.sharedBy?.name || 'Unknown User';
+  const safeSharedByAvatar = deal.sharedBy?.avatar;
 
   return (
     <motion.div
@@ -109,24 +127,24 @@ export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: Deal
           {/* User info */}
           <div className="flex items-center space-x-2">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={deal.sharedBy.avatar} />
+              <AvatarImage src={safeSharedByAvatar} />
               <AvatarFallback className="text-xs">
-                {deal.sharedBy.name.slice(0, 2).toUpperCase()}
+                {safeSharedByName.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <span className="text-sm text-muted-foreground truncate">{deal.sharedBy.name}</span>
+            <span className="text-sm text-muted-foreground truncate">{safeSharedByName}</span>
           </div>
 
           {/* Deal details - flex-1 to push buttons to bottom */}
           <div className="flex-1 space-y-2 text-sm text-muted-foreground">
             <div className="flex items-center">
               <Users className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>{deal.availableSlots} of {deal.totalSlots} slots available</span>
+              <span>{safeAvailableSlots} of {safeTotalSlots} slots available</span>
             </div>
             
             <div className="flex items-center">
               <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>Expires {new Date(deal.expiryDate).toLocaleDateString()}</span>
+              <span>Expires {safeExpiryDate}</span>
             </div>
             
             {deal.isLocationBound && deal.locationDetails && (
@@ -158,7 +176,7 @@ export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: Deal
                 e.stopPropagation();
                 onClaim(deal.id);
               }}
-              disabled={deal.availableSlots === 0 || isClaimLoading}
+              disabled={safeAvailableSlots === 0 || isClaimLoading}
             >
               {isClaimLoading ? 'Claiming...' : 'Claim'}
             </Button>
