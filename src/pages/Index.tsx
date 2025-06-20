@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +7,7 @@ import { Navbar } from '../components/Navbar';
 import { DealCard } from '../components/DealCard';
 import { DealFilters, FilterState } from '../components/DealFilters';
 import { WelcomeTip } from '../components/WelcomeTip';
+import { DemoVideoSection } from '../components/DemoVideoSection';
 import { Deal } from '../types';
 import { mockDeals } from '../data/mockData';
 import { useAuthStore } from '../store/authStore';
@@ -144,17 +146,17 @@ const Index = () => {
       
       {/* Hero section */}
       <div className="bg-gradient-to-r from-primary/10 via-background to-accent/10 border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
           <div className="text-center max-w-3xl mx-auto">
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
                 <Leaf className="w-8 h-8 text-primary-foreground" />
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
               Share. Save. Sustain.
             </h1>
-            <p className="text-xl text-muted-foreground mb-8">
+            <p className="text-xl md:text-2xl text-muted-foreground mb-8">
               Join the community marketplace for unused subscriptions, memberships, and rewards. 
               Reduce waste while saving money together.
             </p>
@@ -174,6 +176,11 @@ const Index = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Demo Video Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <DemoVideoSection />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

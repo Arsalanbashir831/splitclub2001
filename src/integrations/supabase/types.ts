@@ -44,6 +44,8 @@ export type Database = {
           created_at: string
           expiry_date: string
           id: string
+          image_file_name: string | null
+          image_url: string | null
           is_for_sale: boolean | null
           is_location_bound: boolean | null
           location_details: string | null
@@ -64,6 +66,8 @@ export type Database = {
           created_at?: string
           expiry_date: string
           id?: string
+          image_file_name?: string | null
+          image_url?: string | null
           is_for_sale?: boolean | null
           is_location_bound?: boolean | null
           location_details?: string | null
@@ -84,6 +88,8 @@ export type Database = {
           created_at?: string
           expiry_date?: string
           id?: string
+          image_file_name?: string | null
+          image_url?: string | null
           is_for_sale?: boolean | null
           is_location_bound?: boolean | null
           location_details?: string | null
@@ -127,6 +133,36 @@ export type Database = {
           id?: string
           is_admin?: boolean | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_consents: {
+        Row: {
+          consent_date: string
+          consent_given: boolean
+          consent_type: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          consent_date?: string
+          consent_given?: boolean
+          consent_type: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          consent_date?: string
+          consent_given?: boolean
+          consent_type?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []

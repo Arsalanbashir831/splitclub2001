@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
@@ -15,6 +16,7 @@ export interface DealFormData {
   source: string;
   redemptionType: string;
   voucherFile?: File;
+  dealImage?: File;
   expiryDate: Date | undefined;
   isLocationBound: boolean;
   locationDetails: string;

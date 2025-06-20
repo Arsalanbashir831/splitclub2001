@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { CalendarIcon, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DealFormData } from '@/pages/ShareDeal';
+import { ImageUpload } from '@/components/ImageUpload';
 
 const categoryTitles = {
   cinema: 'Cinema Ticket',
@@ -45,30 +47,16 @@ export const UploadRewardDetails = ({
   onNext,
   onPrev
 }: UploadRewardDetailsProps) => {
-  const [dragActive, setDragActive] = useState(false);
+  const [dealImage, setDealImage] = useState<File | undefined>();
 
-  const handleFileUpload = (file: File) => {
-    onUpdateFormData({ voucherFile: file });
+  const handleImageSelected = (file: File) => {
+    setDealImage(file);
+    onUpdateFormData({ dealImage: file });
   };
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileUpload(e.dataTransfer.files[0]);
-    }
+  const handleImageRemoved = () => {
+    setDealImage(undefined);
+    onUpdateFormData({ dealImage: undefined });
   };
 
   const isFormValid = formData.title && formData.source && formData.redemptionType && formData.expiryDate;
@@ -134,17 +122,21 @@ export const UploadRewardDetails = ({
           </div>
 
           <div className="space-y-2">
+            <Label>Deal Image (Optional)</Label>
+            <ImageUpload
+              onImageSelected={handleImageSelected}
+              onImageRemoved={handleImageRemoved}
+              selectedImage={dealImage}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label>Upload Voucher</Label>
             <div
               className={cn(
                 "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
-                dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25",
-                "hover:border-primary hover:bg-primary/5"
+                "border-muted-foreground/25 hover:border-primary hover:bg-primary/5"
               )}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
             >
               <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <div className="space-y-2">
@@ -159,7 +151,7 @@ export const UploadRewardDetails = ({
                 type="file"
                 className="hidden"
                 accept=".png,.jpg,.jpeg,.pdf"
-                onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                onChange={(e) => e.target.files?.[0] && onUpdateFormData({ voucherFile: e.target.files[0] })}
                 id="file-upload"
               />
               <Button
