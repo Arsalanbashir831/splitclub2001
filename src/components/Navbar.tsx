@@ -273,7 +273,7 @@ export const Navbar = () => {
                 </AnimatePresence>
               </Button>
             </HoverScale>
-          </div>
+          </motion.div>
         </div>
 
         {/* Mobile Navigation */}
