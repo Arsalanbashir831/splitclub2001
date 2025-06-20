@@ -12,6 +12,8 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
   const { user, isAuthenticated, loading } = useAuthStore();
   const navigate = useNavigate();
 
+  console.log(user);
+
   useEffect(() => {
     if (!loading) {
       if (!isAuthenticated) {
