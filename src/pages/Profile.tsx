@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -89,10 +88,10 @@ const DealCard = ({ deal, onEdit, onDelete, onView, showActions = true }: {
     transition={{ duration: 0.2 }}
     className="h-full"
   >
-    <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-slate-50 h-full">
+    <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-card h-full">
       <CardContent className="p-0 h-full flex flex-col">
         {/* Image Section */}
-        <div className="relative h-48 bg-gradient-to-br from-blue-500 to-purple-600 overflow-hidden">
+        <div className="relative h-48 bg-gradient-to-br from-primary to-purple-600 overflow-hidden">
           {deal.imageUrl ? (
             <img
               src={deal.imageUrl}
@@ -101,11 +100,11 @@ const DealCard = ({ deal, onEdit, onDelete, onView, showActions = true }: {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Gift className="w-16 h-16 text-white/80" />
+              <Gift className="w-16 h-16 text-primary-foreground/80" />
             </div>
           )}
           <div className="absolute top-3 left-3">
-            <Badge variant="secondary" className="bg-white/90 text-slate-700">
+            <Badge variant="secondary" className="bg-background/90 text-foreground">
               {deal.category}
             </Badge>
           </div>
@@ -119,28 +118,28 @@ const DealCard = ({ deal, onEdit, onDelete, onView, showActions = true }: {
         {/* Content Section */}
         <div className="p-6 flex-1 flex flex-col">
           <div className="flex-1">
-            <h3 className="font-bold text-lg mb-3 line-clamp-2 text-slate-900">
+            <h3 className="font-bold text-lg mb-3 line-clamp-2 text-foreground">
               {deal.title}
             </h3>
 
             <div className="space-y-3 mb-4">
-              <div className="flex items-center text-sm text-slate-600">
-                <Calendar className="h-4 w-4 mr-2 text-blue-500" />
+              <div className="flex items-center text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4 mr-2 text-primary" />
                 <span>Created: {new Date(deal.createdAt).toLocaleDateString()}</span>
               </div>
               
-              <div className="flex items-center text-sm text-slate-600">
+              <div className="flex items-center text-sm text-muted-foreground">
                 <Users className="h-4 w-4 mr-2 text-green-500" />
                 <span>{deal.availableSlots} of {deal.totalSlots} slots available</span>
               </div>
               
-              <div className="flex items-center text-sm text-slate-600">
+              <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 mr-2 text-orange-500" />
                 <span>Expires: {new Date(deal.expiryDate).toLocaleDateString()}</span>
               </div>
               
               {deal.isLocationBound && deal.locationDetails && (
-                <div className="flex items-center text-sm text-slate-600">
+                <div className="flex items-center text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4 mr-2 text-red-500" />
                   <span className="truncate">{deal.locationDetails}</span>
                 </div>
@@ -148,17 +147,17 @@ const DealCard = ({ deal, onEdit, onDelete, onView, showActions = true }: {
             </div>
 
             {/* Price Section */}
-            <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+            <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-green-700 font-medium">Price</span>
+                <span className="text-sm text-green-700 dark:text-green-400 font-medium">Price</span>
                 <div className="text-right">
                   {deal.isFree ? (
-                    <span className="font-bold text-green-600 text-lg">FREE</span>
+                    <span className="font-bold text-green-600 dark:text-green-400 text-lg">FREE</span>
                   ) : (
                     <div>
-                      <span className="font-bold text-green-600 text-lg">${deal.sharePrice}</span>
+                      <span className="font-bold text-green-600 dark:text-green-400 text-lg">${deal.sharePrice}</span>
                       {deal.originalPrice > deal.sharePrice && (
-                        <div className="text-sm text-slate-500 line-through">
+                        <div className="text-sm text-muted-foreground line-through">
                           ${deal.originalPrice}
                         </div>
                       )}
@@ -245,13 +244,13 @@ const Profile = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <div className="max-w-4xl mx-auto px-4 py-8">
-          <Card className="border-0 shadow-xl bg-red-50 border-red-200">
+          <Card className="border-0 shadow-xl bg-destructive/10 border-destructive/20">
             <CardContent className="text-center p-12">
-              <h1 className="text-2xl font-bold text-red-700">Error loading profile</h1>
-              <p className="text-red-600 mt-2">{error.message}</p>
+              <h1 className="text-2xl font-bold text-destructive">Error loading profile</h1>
+              <p className="text-destructive/80 mt-2">{error.message}</p>
             </CardContent>
           </Card>
         </div>
@@ -267,7 +266,7 @@ const Profile = () => {
 
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50"
+      className="min-h-screen bg-background"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -276,24 +275,24 @@ const Profile = () => {
 
       {/* Hero Section */}
       <motion.div 
-        className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 text-white relative overflow-hidden"
+        className="bg-gradient-to-r from-primary via-primary/80 to-primary/60 text-primary-foreground relative overflow-hidden"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.3 }}
       >
-        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0 bg-black/20 dark:bg-black/40"></div>
         <div className="relative max-w-6xl mx-auto px-4 py-16">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center space-x-6 mb-8 md:mb-0">
               <Avatar className="h-24 w-24 border-4 border-white/20 shadow-xl">
                 <AvatarImage src={user?.avatar} alt={user?.name} />
-                <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-500 to-purple-600">
+                <AvatarFallback className="text-2xl bg-gradient-to-br from-primary to-primary/80">
                   {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <h1 className="text-4xl font-bold mb-2">{user?.name}</h1>
-                <p className="text-blue-100 text-lg">{user?.email}</p>
+                <p className="text-primary-foreground/80 text-lg">{user?.email}</p>
                 <div className="flex items-center mt-3">
                   <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                     <User className="h-4 w-4 mr-1" />
@@ -303,11 +302,11 @@ const Profile = () => {
               </div>
             </div>
             <div className="flex space-x-3">
-              <Button variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-slate-900" onClick={() => navigate('/settings')}>
+              <Button variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-foreground" onClick={() => navigate('/settings')}>
                 <Settings className="h-4 w-4 mr-2" />
                 Edit Profile
               </Button>
-              <Button variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-slate-900" onClick={() => signOut()}>
+              <Button variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-foreground" onClick={() => signOut()}>
                 Sign Out
               </Button>
             </div>
@@ -323,43 +322,43 @@ const Profile = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.3 }}
         >
-          <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-blue-50">
+          <Card className="border-0 shadow-xl bg-card">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <Gift className="h-8 w-8 text-blue-600" />
+                <div className="p-3 bg-primary/10 rounded-xl">
+                  <Gift className="h-8 w-8 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Deals Created</p>
-                  <p className="text-3xl font-bold text-slate-900">{totalDealsCreated}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Deals Created</p>
+                  <p className="text-3xl font-bold text-foreground">{totalDealsCreated}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-green-50">
+          <Card className="border-0 shadow-xl bg-card">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-green-100 rounded-xl">
-                  <TrendingUp className="h-8 w-8 text-green-600" />
+                <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-xl">
+                  <TrendingUp className="h-8 w-8 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Deals Claimed</p>
-                  <p className="text-3xl font-bold text-slate-900">{totalDealsClaimed}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Deals Claimed</p>
+                  <p className="text-3xl font-bold text-foreground">{totalDealsClaimed}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-purple-50">
+          <Card className="border-0 shadow-xl bg-card">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-purple-100 rounded-xl">
-                  <Heart className="h-8 w-8 text-purple-600" />
+                <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-xl">
+                  <Heart className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Favorites</p>
-                  <p className="text-3xl font-bold text-slate-900">{totalFavorites}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Favorites</p>
+                  <p className="text-3xl font-bold text-foreground">{totalFavorites}</p>
                 </div>
               </div>
             </CardContent>
@@ -369,16 +368,16 @@ const Profile = () => {
         {/* Tabs Section */}
         <Tabs defaultValue="deals" className="space-y-6">
           <div className="flex justify-center">
-            <TabsList className="grid grid-cols-3 w-fit bg-white shadow-lg border-0 p-1">
-              <TabsTrigger value="deals" className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+            <TabsList className="grid grid-cols-3 w-fit bg-card shadow-lg border-0 p-1">
+              <TabsTrigger value="deals" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Gift className="h-4 w-4" />
                 Your Deals ({totalDealsCreated})
               </TabsTrigger>
-              <TabsTrigger value="claimed" className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+              <TabsTrigger value="claimed" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <TrendingUp className="h-4 w-4" />
                 Claimed ({totalDealsClaimed})
               </TabsTrigger>
-              <TabsTrigger value="favorites" className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+              <TabsTrigger value="favorites" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Heart className="h-4 w-4" />
                 Favorites ({totalFavorites})
               </TabsTrigger>
@@ -402,16 +401,16 @@ const Profile = () => {
                 ))}
                 {(!userDeals || userDeals.length === 0) && (
                   <div className="col-span-full">
-                    <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-blue-50">
+                    <Card className="border-0 shadow-xl bg-card">
                       <CardContent className="text-center py-16">
-                        <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                          <Gift className="h-10 w-10 text-blue-600" />
+                        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                          <Gift className="h-10 w-10 text-primary" />
                         </div>
-                        <h3 className="text-2xl font-bold mb-4 text-slate-900">No deals created yet</h3>
-                        <p className="text-slate-600 mb-8 max-w-md mx-auto">
+                        <h3 className="text-2xl font-bold mb-4 text-foreground">No deals created yet</h3>
+                        <p className="text-muted-foreground mb-8 max-w-md mx-auto">
                           Start sharing your unused subscriptions, memberships, and rewards to help others save money while reducing waste.
                         </p>
-                        <Button onClick={() => navigate('/share-deal')} size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+                        <Button onClick={() => navigate('/share-deal')} size="lg" className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
                           <Plus className="h-5 w-5 mr-2" />
                           Share Your First Deal
                         </Button>
@@ -437,16 +436,16 @@ const Profile = () => {
                 ))}
                 {(!claimedDeals || claimedDeals.length === 0) && (
                   <div className="col-span-full">
-                    <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-green-50">
+                    <Card className="border-0 shadow-xl bg-card">
                       <CardContent className="text-center py-16">
-                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                          <TrendingUp className="h-10 w-10 text-green-600" />
+                        <div className="w-20 h-20 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                          <TrendingUp className="h-10 w-10 text-green-600 dark:text-green-400" />
                         </div>
-                        <h3 className="text-2xl font-bold mb-4 text-slate-900">No deals claimed yet</h3>
-                        <p className="text-slate-600 mb-8 max-w-md mx-auto">
+                        <h3 className="text-2xl font-bold mb-4 text-foreground">No deals claimed yet</h3>
+                        <p className="text-muted-foreground mb-8 max-w-md mx-auto">
                           Browse amazing deals from the community and start saving money on subscriptions and memberships.
                         </p>
-                        <Button onClick={() => navigate('/deals')} size="lg" className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700">
+                        <Button onClick={() => navigate('/deals')} size="lg" className="bg-gradient-to-r from-green-500 to-primary hover:from-green-600 hover:to-primary/80">
                           <Gift className="h-5 w-5 mr-2" />
                           Browse Available Deals
                         </Button>
@@ -473,13 +472,13 @@ const Profile = () => {
                 ))}
                 {(!favoriteDeals || favoriteDeals.length === 0) && (
                   <div className="col-span-full">
-                    <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-purple-50">
+                    <Card className="border-0 shadow-xl bg-card">
                       <CardContent className="text-center py-16">
-                        <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                          <Heart className="h-10 w-10 text-purple-600" />
+                        <div className="w-20 h-20 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                          <Heart className="h-10 w-10 text-purple-600 dark:text-purple-400" />
                         </div>
-                        <h3 className="text-2xl font-bold mb-4 text-slate-900">No favorite deals yet</h3>
-                        <p className="text-slate-600 mb-8 max-w-md mx-auto">
+                        <h3 className="text-2xl font-bold mb-4 text-foreground">No favorite deals yet</h3>
+                        <p className="text-muted-foreground mb-8 max-w-md mx-auto">
                           Mark deals as favorites to easily find them later and get notified about similar offers.
                         </p>
                         <Button onClick={() => navigate('/deals')} size="lg" className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700">

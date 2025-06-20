@@ -16,16 +16,12 @@ export const useDeals = () => {
 
   useEffect(() => {
     // Prevent multiple subscriptions
-    if (isSubscribedRef.current) return;
-
-    // Clean up existing channel
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
-    }
+    if (isSubscribedRef.current || channelRef.current) return;
 
     // Create new channel with unique name
     const channelName = `deals-changes-${Date.now()}-${Math.random()}`;
+    console.log('Creating channel:', channelName);
+    
     channelRef.current = supabase
       .channel(channelName)
       .on(
@@ -35,19 +31,22 @@ export const useDeals = () => {
           schema: 'public',
           table: 'deals'
         },
-        () => {
+        (payload) => {
+          console.log('Deals change detected:', payload);
           queryClient.invalidateQueries({ queryKey: ['deals'] });
         }
       );
 
     // Subscribe only once
     channelRef.current.subscribe((status: string) => {
+      console.log('Subscription status:', status);
       if (status === 'SUBSCRIBED') {
         isSubscribedRef.current = true;
       }
     });
 
     return () => {
+      console.log('Cleaning up channel');
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;

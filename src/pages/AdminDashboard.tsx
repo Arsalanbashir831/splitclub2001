@@ -49,7 +49,7 @@ interface Claim {
 }
 
 const AdminDashboardSkeleton = () => (
-  <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+  <div className="min-h-screen bg-background">
     <Navbar />
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -152,14 +152,14 @@ const AdminDashboard = () => {
 
   if (dealsError || usersError || claimsError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card className="border-0 shadow-xl bg-red-50 border-red-200">
+          <Card className="border-0 shadow-xl bg-destructive/10 border-destructive/20">
             <CardContent className="text-center p-12">
-              <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-red-700 mb-4">Error loading dashboard data</h2>
-              <p className="text-red-600">Please try refreshing the page</p>
+              <AlertCircle className="h-16 w-16 text-destructive mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-destructive mb-4">Error loading dashboard data</h2>
+              <p className="text-destructive/80">Please try refreshing the page</p>
               <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
                 Refresh Page
               </Button>
@@ -176,32 +176,32 @@ const AdminDashboard = () => {
       label: 'Total Users', 
       value: users?.length || 0, 
       icon: Users, 
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-50',
+      color: 'text-primary',
+      bgColor: 'bg-primary/10',
       change: '+12.5%'
     },
     { 
       label: 'Total Deals', 
       value: deals?.length || 0, 
       icon: Gift, 
-      color: 'text-green-500',
-      bgColor: 'bg-green-50',
+      color: 'text-green-500 dark:text-green-400',
+      bgColor: 'bg-green-100 dark:bg-green-900/20',
       change: '+8.1%'
     },
     { 
       label: 'Total Revenue', 
       value: `$${totalRevenue.toFixed(2)}`, 
       icon: DollarSign, 
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-50',
+      color: 'text-purple-500 dark:text-purple-400',
+      bgColor: 'bg-purple-100 dark:bg-purple-900/20',
       change: '+23.4%'
     },
     { 
       label: 'Active Deals', 
       value: deals?.filter(deal => deal.status === 'active').length || 0, 
       icon: TrendingUp, 
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-50',
+      color: 'text-orange-500 dark:text-orange-400',
+      bgColor: 'bg-orange-100 dark:bg-orange-900/20',
       change: '+5.7%'
     },
   ];
@@ -221,7 +221,7 @@ const AdminDashboard = () => {
 
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50"
+      className="min-h-screen bg-background"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -236,10 +236,10 @@ const AdminDashboard = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent mb-4">
               Admin Dashboard
             </h1>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Comprehensive overview of platform statistics, user management, and performance metrics.
             </p>
           </div>
@@ -257,7 +257,7 @@ const AdminDashboard = () => {
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden bg-card">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className={`p-3 rounded-xl ${stat.bgColor}`}>
@@ -268,8 +268,8 @@ const AdminDashboard = () => {
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-600 mb-1">{stat.label}</p>
-                    <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">{stat.label}</p>
+                    <p className="text-3xl font-bold text-foreground">{stat.value}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -284,24 +284,24 @@ const AdminDashboard = () => {
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <div className="flex justify-center">
-              <TabsList className="grid grid-cols-5 w-fit bg-white shadow-lg border-0 p-1">
-                <TabsTrigger value="overview" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+              <TabsList className="grid grid-cols-5 w-fit bg-card shadow-lg border-0 p-1">
+                <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Overview
                 </TabsTrigger>
-                <TabsTrigger value="deals" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                <TabsTrigger value="deals" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <Gift className="h-4 w-4 mr-2" />
                   Deals
                 </TabsTrigger>
-                <TabsTrigger value="users" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                <TabsTrigger value="users" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <Users className="h-4 w-4 mr-2" />
                   Users
                 </TabsTrigger>
-                <TabsTrigger value="claims" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                <TabsTrigger value="claims" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <Activity className="h-4 w-4 mr-2" />
                   Claims
                 </TabsTrigger>
-                <TabsTrigger value="videos" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                <TabsTrigger value="videos" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <TrendingUp className="h-4 w-4 mr-2" />
                   Videos
                 </TabsTrigger>
@@ -310,8 +310,8 @@ const AdminDashboard = () => {
             
             <TabsContent value="overview">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card className="border-0 shadow-lg">
-                  <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+                <Card className="border-0 shadow-lg bg-card">
+                  <CardHeader className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
                     <CardTitle className="flex items-center gap-2">
                       <BarChart3 className="h-5 w-5" />
                       Deals by Category
@@ -320,17 +320,23 @@ const AdminDashboard = () => {
                   <CardContent className="p-6">
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="category" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis dataKey="category" className="fill-muted-foreground" />
+                        <YAxis className="fill-muted-foreground" />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
                 
-                <Card className="border-0 shadow-lg">
+                <Card className="border-0 shadow-lg bg-card">
                   <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
                     <CardTitle className="flex items-center gap-2">
                       <Activity className="h-5 w-5" />
@@ -354,7 +360,13 @@ const AdminDashboard = () => {
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -365,19 +377,19 @@ const AdminDashboard = () => {
             <TabsContent value="deals">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-slate-900">Deals Management</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Deals Management</h2>
                   <Badge variant="outline" className="text-sm">
                     {deals?.length || 0} total deals
                   </Badge>
                 </div>
                 <div className="grid gap-4">
                   {deals?.map(deal => (
-                    <Card key={deal.id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Card key={deal.id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-card">
                       <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-slate-900 mb-2">{deal.title}</h3>
-                            <div className="flex items-center gap-4 text-sm text-slate-600">
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{deal.title}</h3>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <Clock className="h-4 w-4" />
                                 {new Date(deal.created_at).toLocaleDateString()}
@@ -400,14 +412,14 @@ const AdminDashboard = () => {
             <TabsContent value="users">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-slate-900">Users Management</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Users Management</h2>
                   <Badge variant="outline" className="text-sm">
                     {users?.length || 0} total users
                   </Badge>
                 </div>
                 <div className="grid gap-4">
                   {users?.map(user => (
-                    <Card key={user.user_id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Card key={user.user_id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-card">
                       <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-4">
@@ -418,20 +430,20 @@ const AdminDashboard = () => {
                                 className="w-12 h-12 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-primary-foreground font-semibold">
                                 {user.display_name.charAt(0).toUpperCase()}
                               </div>
                             )}
                             <div>
-                              <h3 className="text-lg font-semibold text-slate-900">{user.display_name}</h3>
-                              <p className="text-sm text-slate-600">User ID: {user.user_id.slice(0, 8)}...</p>
+                              <h3 className="text-lg font-semibold text-foreground">{user.display_name}</h3>
+                              <p className="text-sm text-muted-foreground">User ID: {user.user_id.slice(0, 8)}...</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge variant={user.is_admin ? 'default' : 'secondary'}>
                               {user.role}
                             </Badge>
-                            <Badge variant="outline" className="text-green-600 border-green-200">
+                            <Badge variant="outline" className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-800">
                               <CheckCircle className="h-3 w-3 mr-1" />
                               Active
                             </Badge>
@@ -447,21 +459,21 @@ const AdminDashboard = () => {
             <TabsContent value="claims">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-slate-900">Claims Management</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Claims Management</h2>
                   <Badge variant="outline" className="text-sm">
                     {claims?.length || 0} total claims
                   </Badge>
                 </div>
                 <div className="grid gap-4">
                   {claims?.map(claim => (
-                    <Card key={claim.id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Card key={claim.id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-card">
                       <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                            <h3 className="text-lg font-semibold text-foreground mb-2">
                               Claim #{claim.id.slice(0, 8)}
                             </h3>
-                            <div className="space-y-1 text-sm text-slate-600">
+                            <div className="space-y-1 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <Clock className="h-4 w-4" />
                                 Claimed: {new Date(claim.claimed_at).toLocaleDateString()}
