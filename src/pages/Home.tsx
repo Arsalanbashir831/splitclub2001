@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -8,9 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { VideoUploadModal } from '@/components/VideoUploadModal';
 import { DemoVideoSection } from '@/components/DemoVideoSection';
+import { CountUp } from '@/components/ui/CountUp';
 import { ArrowRight, Leaf, Share2, DollarSign, Users, Shield, Star, Heart, CheckCircle, Calendar, Play, Upload, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { videoService } from '@/services/videoService';
 
 // Animation variants
 const fadeInUp = {
@@ -42,6 +44,17 @@ export const Home = () => {
   const isAdmin = user?.isAdmin || false;
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
+
+  // Load demo video on component mount
+  useEffect(() => {
+    const loadDemoVideo = async () => {
+      const video = await videoService.getActiveDemoVideo();
+      if (video) {
+        setDemoVideoUrl(video.url);
+      }
+    };
+    loadDemoVideo();
+  }, []);
 
   const handleWatchDemo = () => {
     if (demoVideoUrl) {
@@ -108,10 +121,10 @@ export const Home = () => {
   ];
 
   const stats = [
-    { icon: Users, value: "10K+", label: "Community Members" },
-    { icon: Share2, value: "5K+", label: "Deals Shared" },
-    { icon: DollarSign, value: "$250K+", label: "Total Savings" },
-    { icon: Leaf, value: "85%", label: "Waste Reduction" }
+    { icon: Users, value: 10000, label: "Community Members", prefix: "", suffix: "+" },
+    { icon: Share2, value: 5000, label: "Deals Shared", prefix: "", suffix: "+" },
+    { icon: DollarSign, value: 250000, label: "Total Savings", prefix: "$", suffix: "+" },
+    { icon: Leaf, value: 85, label: "Waste Reduction", prefix: "", suffix: "%" }
   ];
 
   return (
@@ -369,7 +382,14 @@ export const Home = () => {
                   <div className="flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mx-auto mb-4">
                     <Icon className="w-8 h-8 text-primary" />
                   </div>
-                  <div className="text-3xl font-bold text-foreground mb-2">{stat.value}</div>
+                  <div className="text-3xl font-bold text-foreground mb-2">
+                    <CountUp 
+                      end={stat.value} 
+                      prefix={stat.prefix} 
+                      suffix={stat.suffix}
+                      duration={2}
+                    />
+                  </div>
                   <div className="text-muted-foreground">{stat.label}</div>
                 </motion.div>
               );
@@ -526,7 +546,7 @@ export const Home = () => {
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
       >
-        <DemoVideoSection />
+        <DemoVideoSection videoUrl={demoVideoUrl} />
       </motion.div>
 
       {/* CTA Section */}

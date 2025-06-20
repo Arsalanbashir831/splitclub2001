@@ -127,6 +127,11 @@ const Index = () => {
     
     let filteredList = [...deals];
 
+    // Filter out current user's own deals
+    if (user) {
+      filteredList = filteredList.filter(deal => deal.sharedBy.id !== user.id);
+    }
+
     if (searchQuery) {
       filteredList = filteredList.filter(deal =>
         deal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -181,7 +186,7 @@ const Index = () => {
     }
 
     return filteredList;
-  }, [deals, searchQuery, filters]);
+  }, [deals, searchQuery, filters, user]);
 
   const clearFilters = () => {
     setFilters({

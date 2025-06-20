@@ -1,225 +1,189 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Building, Users, TrendingUp, Shield, Zap, Globe } from 'lucide-react';
+import { Building2, Users, TrendingUp, Shield, CheckCircle, ArrowRight } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
+import { Link } from 'react-router-dom';
 
 export const Business = () => {
   const features = [
     {
-      icon: Building,
-      title: 'Enterprise Dashboard',
-      description: 'Comprehensive analytics and management tools for your organization\'s benefit sharing programs.'
+      icon: Building2,
+      title: "Enterprise Dashboard",
+      description: "Comprehensive analytics and management tools for your organization's deals and subscriptions."
     },
     {
       icon: Users,
-      title: 'Team Management',
-      description: 'Easily manage multiple users and set permissions for different departments and roles.'
+      title: "Team Management",
+      description: "Easily manage team members, permissions, and access levels across your organization."
     },
     {
       icon: TrendingUp,
-      title: 'Cost Optimization',
-      description: 'Track savings and optimize your subscription spending with detailed reporting and insights.'
+      title: "Cost Optimization",
+      description: "Advanced insights and recommendations to optimize your subscription spending and reduce waste."
     },
     {
       icon: Shield,
-      title: 'Enterprise Security',
-      description: 'Bank-level security with SSO, audit logs, and compliance features for peace of mind.'
+      title: "Enterprise Security",
+      description: "Bank-grade security with SSO, compliance certifications, and dedicated support."
     }
   ];
 
-  const plans = [
-    {
-      name: 'Startup',
-      price: '$99',
-      period: '/month',
-      description: 'Perfect for small teams getting started',
-      features: ['Up to 25 employees', 'Basic analytics', 'Email support', 'API access'],
-      highlighted: false
-    },
-    {
-      name: 'Growth',
-      price: '$299',
-      period: '/month',
-      description: 'Ideal for growing companies',
-      features: ['Up to 100 employees', 'Advanced analytics', 'Priority support', 'Custom integrations', 'SSO'],
-      highlighted: true
-    },
-    {
-      name: 'Enterprise',
-      price: 'Custom',
-      period: '',
-      description: 'Tailored for large organizations',
-      features: ['Unlimited employees', 'White-label options', 'Dedicated support', 'Custom features', 'SLA guarantee'],
-      highlighted: false
-    }
+  const benefits = [
+    "Reduce subscription costs by up to 60%",
+    "Centralized management of all deals",
+    "Real-time analytics and reporting",
+    "Priority customer support",
+    "Custom integrations available",
+    "Compliance with enterprise standards"
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div 
+      className="min-h-screen bg-background"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <Navbar />
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <Badge variant="secondary" className="mb-4">
-            <Zap className="w-4 h-4 mr-1" />
-            Enterprise Solutions
-          </Badge>
-          <h1 className="text-4xl font-bold mb-4">Services for Business</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Empower your organization with enterprise-grade benefit sharing solutions. 
-            Reduce costs, improve employee satisfaction, and maximize your subscription investments.
-          </p>
-          <div className="mt-8 space-x-4">
-            <Button size="lg">Get Started</Button>
-            <Button variant="outline" size="lg">Schedule Demo</Button>
+      
+      {/* Hero Section */}
+      <motion.section 
+        className="py-20 bg-gradient-to-r from-primary/10 to-accent/10"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <motion.h1 
+            className="text-4xl md:text-5xl font-bold mb-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
+            SplitClub for Business
+          </motion.h1>
+          <motion.p 
+            className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          >
+            Transform how your organization manages subscriptions and deals. Save money, reduce waste, and optimize your spending with our enterprise platform.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+          >
+            <Button size="lg" className="gap-2" asChild>
+              <Link to="/contact">
+                Get Started <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Button>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Features Section */}
+      <motion.section 
+        className="py-16"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="max-w-6xl mx-auto px-4">
+          <motion.div 
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl font-bold mb-4">Enterprise Features</h2>
+            <p className="text-muted-foreground">
+              Everything you need to manage deals and subscriptions at scale
+            </p>
+          </motion.div>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1, duration: 0.6 }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <Card className="h-full">
+                    <CardHeader>
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <Icon className="w-6 h-6 text-primary" />
+                        </div>
+                        <CardTitle>{feature.title}</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription className="text-base">
+                        {feature.description}
+                      </CardDescription>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
+      </motion.section>
 
-        {/* Features Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-8">Why Choose SplitClub for Business?</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature) => (
-              <Card key={feature.title}>
-                <CardHeader>
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                    <feature.icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <CardTitle className="text-lg">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{feature.description}</p>
-                </CardContent>
-              </Card>
+      {/* Benefits Section */}
+      <motion.section 
+        className="py-16 bg-card/30"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="max-w-4xl mx-auto px-4">
+          <motion.div 
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl font-bold mb-4">Why Choose SplitClub Business</h2>
+            <p className="text-muted-foreground">
+              Join hundreds of companies already saving with our platform
+            </p>
+          </motion.div>
+          
+          <div className="grid md:grid-cols-2 gap-4">
+            {benefits.map((benefit, index) => (
+              <motion.div
+                key={index}
+                className="flex items-center space-x-3 p-4 bg-background rounded-lg"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+              >
+                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                <span>{benefit}</span>
+              </motion.div>
             ))}
           </div>
         </div>
+      </motion.section>
 
-        {/* Benefits Section */}
-        <Card className="mb-16">
-          <CardHeader>
-            <CardTitle className="text-center text-2xl">Business Benefits</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-3 gap-8 text-center">
-              <div>
-                <div className="text-3xl font-bold text-primary mb-2">40%</div>
-                <div className="text-sm text-muted-foreground">Average Cost Reduction</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary mb-2">95%</div>
-                <div className="text-sm text-muted-foreground">Employee Satisfaction</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary mb-2">60%</div>
-                <div className="text-sm text-muted-foreground">Subscription Utilization</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Pricing Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-8">Choose Your Plan</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {plans.map((plan) => (
-              <Card key={plan.name} className={plan.highlighted ? 'border-primary' : ''}>
-                <CardHeader>
-                  {plan.highlighted && (
-                    <Badge className="w-fit mb-2">Most Popular</Badge>
-                  )}
-                  <CardTitle className="text-xl">{plan.name}</CardTitle>
-                  <div className="text-3xl font-bold">
-                    {plan.price}<span className="text-lg text-muted-foreground">{plan.period}</span>
-                  </div>
-                  <p className="text-muted-foreground">{plan.description}</p>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 mb-6">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center text-sm">
-                        <div className="w-2 h-2 bg-primary rounded-full mr-3"></div>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button 
-                    className="w-full" 
-                    variant={plan.highlighted ? 'default' : 'outline'}
-                  >
-                    {plan.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Use Cases */}
-        <Card className="mb-16">
-          <CardHeader>
-            <CardTitle className="text-center text-2xl">Perfect for Every Industry</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold mb-2 flex items-center">
-                  <Globe className="w-4 h-4 mr-2 text-primary" />
-                  Tech Companies
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Maximize software subscriptions and development tools across distributed teams.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2 flex items-center">
-                  <Building className="w-4 h-4 mr-2 text-primary" />
-                  Creative Agencies
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Share expensive creative software licenses and streaming services efficiently.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2 flex items-center">
-                  <Users className="w-4 h-4 mr-2 text-primary" />
-                  Consulting Firms
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Optimize research tools and professional memberships across client teams.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2 flex items-center">
-                  <TrendingUp className="w-4 h-4 mr-2 text-primary" />
-                  Financial Services
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Manage data subscriptions and analytics tools with enterprise compliance.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* CTA Section */}
-        <Card>
-          <CardContent className="pt-8 text-center">
-            <h3 className="text-2xl font-bold mb-4">Ready to Transform Your Business?</h3>
-            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Join hundreds of companies already saving money and improving efficiency with SplitClub's enterprise solutions.
-            </p>
-            <div className="space-x-4">
-              <Button size="lg">Start Free Trial</Button>
-              <Button variant="outline" size="lg">Contact Sales</Button>
-            </div>
-            <p className="text-sm text-muted-foreground mt-4">
-              30-day free trial • No credit card required • Setup in minutes
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      <Footer />
+    </motion.div>
   );
 };

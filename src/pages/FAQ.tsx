@@ -1,11 +1,12 @@
-
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Search, HelpCircle } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 
 const faqData = [
   {
@@ -59,71 +60,117 @@ export const FAQ = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div 
+      className="min-h-screen bg-background"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <HelpCircle className="mx-auto h-12 w-12 text-primary mb-4" />
+        <motion.div 
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <HelpCircle className="mx-auto h-12 w-12 text-primary mb-4" />
+          </motion.div>
           <h1 className="text-3xl font-bold mb-4">Frequently Asked Questions</h1>
           <p className="text-muted-foreground">
             Find answers to common questions about SplitClub
           </p>
-        </div>
+        </motion.div>
 
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Search FAQs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search for answers..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <Accordion type="single" collapsible className="w-full">
-              {filteredFAQs.map((faq) => (
-                <AccordionItem key={faq.id} value={faq.id}>
-                  <AccordionTrigger className="text-left">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-
-            {filteredFAQs.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">
-                  No FAQs found matching your search.
-                </p>
-                <Button variant="outline" onClick={() => setSearchQuery('')}>
-                  Clear Search
-                </Button>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.6 }}
+        >
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Search FAQs</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search for answers..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <div className="text-center mt-8">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+        >
+          <Card>
+            <CardContent className="pt-6">
+              <Accordion type="single" collapsible className="w-full">
+                {filteredFAQs.map((faq, index) => (
+                  <motion.div
+                    key={faq.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
+                  >
+                    <AccordionItem value={faq.id}>
+                      <AccordionTrigger className="text-left">
+                        {faq.question}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        {faq.answer}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </motion.div>
+                ))}
+              </Accordion>
+
+              {filteredFAQs.length === 0 && (
+                <motion.div 
+                  className="text-center py-8"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <p className="text-muted-foreground mb-4">
+                    No FAQs found matching your search.
+                  </p>
+                  <Button variant="outline" onClick={() => setSearchQuery('')}>
+                    Clear Search
+                  </Button>
+                </motion.div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div 
+          className="text-center mt-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.6 }}
+        >
           <p className="text-muted-foreground mb-4">
             Can't find what you're looking for?
           </p>
           <Button onClick={() => window.location.href = '/contact'}>
             Contact Support
           </Button>
-        </div>
+        </motion.div>
       </div>
-    </div>
+      <Footer />
+    </motion.div>
   );
 };

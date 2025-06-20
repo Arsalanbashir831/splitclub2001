@@ -4,7 +4,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
-export const DemoVideoSection = () => {
+interface DemoVideoSectionProps {
+  videoUrl?: string | null;
+}
+
+export const DemoVideoSection = ({ videoUrl }: DemoVideoSectionProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null);
@@ -51,17 +55,21 @@ export const DemoVideoSection = () => {
       <Card className="overflow-hidden">
         <CardContent className="p-0">
           <div className="relative group">
-            <video
-              ref={setVideoRef}
-              className="w-full h-auto aspect-video bg-black"
-              muted={isMuted}
-              loop
-              preload="metadata"
-              poster="/placeholder.svg"
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-            >
-              <source src="/demo-video.mp4" type="video/mp4" />
+            {videoUrl ? (
+              <video
+                ref={setVideoRef}
+                className="w-full h-auto aspect-video bg-black"
+                muted={isMuted}
+                loop
+                preload="metadata"
+                poster="/placeholder.svg"
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+              >
+                <source src={videoUrl} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            ) : (
               <div className="w-full h-64 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                 <div className="text-center space-y-4">
                   <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto">
@@ -70,54 +78,58 @@ export const DemoVideoSection = () => {
                   <p className="text-muted-foreground">Demo video coming soon</p>
                 </div>
               </div>
-            </video>
+            )}
 
-            {/* Video Controls Overlay */}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200">
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  className="rounded-full w-16 h-16 bg-white/90 hover:bg-white text-black"
-                  onClick={togglePlay}
-                >
-                  {isPlaying ? (
-                    <Pause className="w-6 h-6" />
-                  ) : (
-                    <Play className="w-6 h-6 ml-1" />
-                  )}
-                </Button>
-              </div>
+            {videoUrl && (
+              <>
+                {/* Video Controls Overlay */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <Button
+                      size="lg"
+                      variant="secondary"
+                      className="rounded-full w-16 h-16 bg-white/90 hover:bg-white text-black"
+                      onClick={togglePlay}
+                    >
+                      {isPlaying ? (
+                        <Pause className="w-6 h-6" />
+                      ) : (
+                        <Play className="w-6 h-6 ml-1" />
+                      )}
+                    </Button>
+                  </div>
 
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <div className="flex items-center space-x-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="bg-black/50 hover:bg-black/70 text-white border-none"
-                    onClick={togglePlay}
-                  >
-                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="bg-black/50 hover:bg-black/70 text-white border-none"
-                    onClick={toggleMute}
-                  >
-                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  </Button>
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="bg-black/50 hover:bg-black/70 text-white border-none"
+                        onClick={togglePlay}
+                      >
+                        {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="bg-black/50 hover:bg-black/70 text-white border-none"
+                        onClick={toggleMute}
+                      >
+                        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="bg-black/50 hover:bg-black/70 text-white border-none"
+                      onClick={toggleFullscreen}
+                    >
+                      <Maximize className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="bg-black/50 hover:bg-black/70 text-white border-none"
-                  onClick={toggleFullscreen}
-                >
-                  <Maximize className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
