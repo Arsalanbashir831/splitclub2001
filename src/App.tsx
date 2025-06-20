@@ -5,6 +5,8 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { Toaster } from '@/components/ui/toaster';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
+import { useAuthStore } from '@/store/authStore';
+import { useEffect } from 'react';
 
 // Import pages
 import { Home } from '@/pages/Home';
@@ -70,7 +72,7 @@ function AppContent() {
         </ProtectedRoute>
       } />
       <Route path="/admin" element={
-        <ProtectedRoute>
+        <ProtectedRoute requireAdmin>
           <AdminDashboard />
         </ProtectedRoute>
       } />
@@ -81,6 +83,19 @@ function AppContent() {
 }
 
 function App() {
+  const initialize = useAuthStore((state) => state.initialize);
+
+  useEffect(() => {
+    // Initialize auth store
+    const subscription = initialize();
+    
+    return () => {
+      if (subscription && typeof subscription.unsubscribe === 'function') {
+        subscription.unsubscribe();
+      }
+    };
+  }, [initialize]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">

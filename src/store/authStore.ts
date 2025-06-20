@@ -221,15 +221,35 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state changed:', event, session);
         get().setSession(session);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session);
       get().setSession(session);
     });
 
     return subscription;
   }
 }));
+
+// Initialize the auth store when the module is loaded
+let authSubscription: any = null;
+
+// Initialize auth on store creation
+if (typeof window !== 'undefined') {
+  const store = useAuthStore.getState();
+  authSubscription = store.initialize();
+}
+
+// Clean up subscription on page unload
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    if (authSubscription) {
+      authSubscription.unsubscribe();
+    }
+  });
+}
