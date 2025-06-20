@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '../store/authStore';
-import { Search, Plus, User, Settings, LogOut, Sun, Moon, Menu } from 'lucide-react';
+import { Search, Plus, User, Settings, LogOut, Sun, Moon, Menu, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Navbar = () => {
@@ -17,6 +17,7 @@ export const Navbar = () => {
   const [isDark, setIsDark] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const navigate = useNavigate();
 
   const toggleTheme = () => {
@@ -39,6 +40,16 @@ export const Navbar = () => {
     if (e.key === 'Enter') {
       handleSearch(e);
     }
+    if (e.key === 'Escape') {
+      setSearchQuery('');
+      setIsSearchFocused(false);
+      (e.target as HTMLInputElement).blur();
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setIsSearchFocused(false);
   };
 
   return (
@@ -73,18 +84,46 @@ export const Navbar = () => {
             </div>
           </div>
 
-          {/* Search bar - hidden on mobile */}
+          {/* Enhanced Search bar - hidden on mobile */}
           <div className="hidden md:flex flex-1 max-w-lg mx-8">
-            <form onSubmit={handleSearch} className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <input
-                type="text"
-                placeholder="Search deals..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                className="w-full pl-10 pr-4 py-2 bg-muted rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
+            <form onSubmit={handleSearch} className="relative w-full group">
+              <div className={`relative transition-all duration-200 ${
+                isSearchFocused ? 'transform scale-105' : ''
+              }`}>
+                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 transition-colors duration-200 ${
+                  isSearchFocused ? 'text-primary' : 'text-muted-foreground'
+                }`} />
+                <input
+                  type="text"
+                  placeholder="Search deals, subscriptions, services..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  className={`w-full pl-10 pr-12 py-2.5 bg-muted rounded-lg border border-border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-background hover:bg-background/80 ${
+                    isSearchFocused ? 'shadow-lg ring-2 ring-primary border-transparent bg-background' : ''
+                  }`}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={clearSearch}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors duration-200 p-0.5 rounded-full hover:bg-muted"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+              
+              {/* Search suggestions overlay - could be enhanced further */}
+              {isSearchFocused && searchQuery && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                  <div className="p-2 text-xs text-muted-foreground border-b">
+                    Press Enter to search for "{searchQuery}"
+                  </div>
+                </div>
+              )}
             </form>
           </div>
 
