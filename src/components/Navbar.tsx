@@ -16,7 +16,6 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { Menu, X, User, Settings, LogOut, Shield, Plus, Search, Sun, Moon, Info } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
-import { HoverScale } from '@/components/animations/HoverScale';
 
 export const Navbar = () => {
   const { user, isAuthenticated, signOut } = useAuthStore();
@@ -62,7 +61,7 @@ export const Navbar = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <HoverScale>
+            <motion.div className="hover:scale-105 transition-transform duration-200">
               <Link to="/" className="flex items-center space-x-2">
                 <motion.div 
                   className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center"
@@ -73,7 +72,7 @@ export const Navbar = () => {
                 </motion.div>
                 <span className="font-bold text-xl text-foreground hidden sm:block">SplitClub</span>
               </Link>
-            </HoverScale>
+            </motion.div>
           </motion.div>
 
           {/* Desktop Navigation */}
@@ -128,7 +127,7 @@ export const Navbar = () => {
             transition={{ delay: 0.3 }}
           >
             {/* Theme Toggle */}
-            <HoverScale>
+            <div className="hover:scale-105 transition-transform duration-200">
               <Button
                 variant="ghost"
                 size="icon"
@@ -139,24 +138,24 @@ export const Navbar = () => {
                 <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                 <span className="sr-only">Toggle theme</span>
               </Button>
-            </HoverScale>
+            </div>
 
             {isAuthenticated && user ? (
               <>
                 {/* Share Deal Button */}
-                <HoverScale>
+                <div className="hover:scale-105 transition-transform duration-200">
                   <Button asChild variant="outline" size="sm" className="hidden md:flex">
                     <Link to="/share-deal">
                       <Plus className="h-4 w-4 mr-2" />
                       Share Deal
                     </Link>
                   </Button>
-                </HoverScale>
+                </div>
                 
                 {/* User Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <HoverScale>
+                    <div className="hover:scale-105 transition-transform duration-200">
                       <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={user.avatar} alt={user.name} />
@@ -165,9 +164,9 @@ export const Navbar = () => {
                           </AvatarFallback>
                         </Avatar>
                       </Button>
-                    </HoverScale>
+                    </div>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuContent className="w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">{user.name}</p>
@@ -234,15 +233,15 @@ export const Navbar = () => {
                 </DropdownMenu>
               </>
             ) : (
-              <HoverScale>
+              <div className="hover:scale-105 transition-transform duration-200">
                 <Button asChild size="sm">
                   <Link to="/login">Sign In</Link>
                 </Button>
-              </HoverScale>
+              </div>
             )}
 
             {/* Mobile menu button */}
-            <HoverScale>
+            <div className="hover:scale-105 transition-transform duration-200">
               <Button
                 variant="ghost"
                 className="lg:hidden"
@@ -272,7 +271,7 @@ export const Navbar = () => {
                   )}
                 </AnimatePresence>
               </Button>
-            </HoverScale>
+            </div>
           </motion.div>
         </div>
 
