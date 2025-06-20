@@ -204,7 +204,12 @@ const Index = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
+      <motion.div 
+        className="min-h-screen bg-background"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
         <Navbar />
         <AnimatedContainer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
@@ -212,17 +217,27 @@ const Index = () => {
             <p className="text-muted-foreground">Please try refreshing the page</p>
           </div>
         </AnimatedContainer>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div 
+      className="min-h-screen bg-background"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       <WelcomeTip />
       <Navbar />
       
       {/* Hero section */}
-      <div className="bg-gradient-to-r from-primary/10 via-background to-accent/10 border-b border-border">
+      <motion.div 
+        className="bg-gradient-to-r from-primary/10 via-background to-accent/10 border-b border-border"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
           <div className="text-center max-w-3xl mx-auto">
             <AnimatedContainer variant="scaleIn" className="flex justify-center mb-6">
@@ -278,17 +293,29 @@ const Index = () => {
             </motion.div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Demo Video Section */}
-      <AnimatedContainer variant="scaleIn" delay={0.3} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+      >
         <DemoVideoSection />
-      </AnimatedContainer>
+      </motion.div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters sidebar */}
-          <AnimatedContainer variant="slideRight" className="lg:col-span-1">
+          <motion.div
+            className="lg:col-span-1"
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
             <DealFilters
               filters={filters}
               onFiltersChange={setFilters}
@@ -296,12 +323,18 @@ const Index = () => {
               isOpen={isFiltersOpen}
               onToggle={() => setIsFiltersOpen(!isFiltersOpen)}
             />
-          </AnimatedContainer>
+          </motion.div>
 
           {/* Main content */}
           <div className="lg:col-span-3">
             {/* Search and header */}
-            <AnimatedContainer variant="fadeIn" className="mb-6">
+            <motion.div
+              className="mb-6"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">Available Deals</h2>
@@ -380,24 +413,42 @@ const Index = () => {
                   </HoverScale>
                 </StaggeredList>
               )}
-            </AnimatedContainer>
+            </motion.div>
 
             {/* Loading state */}
             {isLoading && (
-              <div className="flex items-center justify-center py-12">
+              <motion.div 
+                className="flex items-center justify-center py-12"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
                 <LoadingSpinner size="lg" text="Loading deals..." />
-              </div>
+              </motion.div>
             )}
 
             {/* Deals grid */}
             {!isLoading && filteredDeals.length > 0 ? (
-              <StaggeredList className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
                 {filteredDeals.map((deal, index) => {
                   const isOwnDeal = user && deal.sharedBy.id === user.id;
                   const hasClaimedThisDeal = hasClaimedDeal(deal.id);
                   
                   return (
-                    <StaggeredItem key={deal.id} className="relative">
+                    <motion.div
+                      key={deal.id}
+                      className="relative"
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.1, duration: 0.5 }}
+                    >
                       <DealCard
                         deal={deal}
                         onClaim={handleDealClaim}
@@ -432,12 +483,18 @@ const Index = () => {
                           </HoverScale>
                         </motion.div>
                       )}
-                    </StaggeredItem>
+                    </motion.div>
                   );
                 })}
-              </StaggeredList>
+              </motion.div>
             ) : !isLoading && (
-              <AnimatedContainer variant="scaleIn" className="text-center py-12">
+              <motion.div
+                className="text-center py-12"
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                   <Search className="h-8 w-8 text-muted-foreground" />
                 </div>
@@ -450,15 +507,22 @@ const Index = () => {
                     Clear Filters
                   </Button>
                 </HoverScale>
-              </AnimatedContainer>
+              </motion.div>
             )}
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <Footer />
-    </div>
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
+        <Footer />
+      </motion.div>
+    </motion.div>
   );
 };
 

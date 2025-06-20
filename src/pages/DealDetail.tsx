@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Navbar } from '../components/Navbar';
 import { useDeal } from '../hooks/useDeals';
 import { dealsService } from '../services/dealsService';
@@ -27,6 +29,134 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '../store/authStore';
+
+const DealDetailSkeleton = () => (
+  <div className="min-h-screen bg-background">
+    <Navbar />
+    
+    {/* Header Skeleton */}
+    <div className="bg-card border-b border-border">
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="flex items-center justify-between mb-4">
+          <Skeleton className="h-10 w-32" />
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-8 w-8" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Deal Summary Header Skeleton */}
+      <div className="mb-8">
+        <div className="flex items-start space-x-4 mb-6">
+          <Skeleton className="w-16 h-16 rounded-xl" />
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-6 w-20" />
+            </div>
+            <Skeleton className="h-6 w-96 mb-4" />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main content skeleton */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i}>
+                    <Skeleton className="h-4 w-20 mb-2" />
+                    <Skeleton className="h-5 w-32" />
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-12" />
+                </div>
+                <Skeleton className="h-2 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex flex-wrap gap-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-6 w-24" />
+            ))}
+          </div>
+
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-48" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-start space-x-2">
+                  <Skeleton className="h-4 w-4 mt-1" />
+                  <Skeleton className="h-4 w-64" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar skeleton */}
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center space-y-4">
+                <Skeleton className="h-12 w-24 mx-auto" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-24" />
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-3">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div>
+                  <Skeleton className="h-4 w-24 mb-2" />
+                  <div className="flex items-center space-x-2">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center space-x-2">
+                  <Skeleton className="h-3 w-3" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export const DealDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -128,27 +258,22 @@ export const DealDetail = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="max-w-4xl mx-auto px-4 py-8 flex items-center justify-center">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading deal...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <DealDetailSkeleton />;
   }
 
   if (error || !deal) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <motion.div 
+        className="min-h-screen bg-background flex items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Deal not found</h1>
           <Button onClick={() => navigate('/deals')}>Back to Deals</Button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -180,11 +305,21 @@ export const DealDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div 
+      className="min-h-screen bg-background"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       <Navbar />
       
       {/* Header */}
-      <div className="bg-card border-b border-border">
+      <motion.div 
+        className="bg-card border-b border-border"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.3 }}
+      >
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-4">
             <Button 
@@ -206,11 +341,16 @@ export const DealDetail = () => {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Deal Summary Header */}
-        <div className="mb-8">
+        <motion.div 
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+        >
           <div className="flex items-start space-x-4 mb-6">
             {/* Service Icon/Logo */}
             <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
@@ -247,11 +387,16 @@ export const DealDetail = () => {
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main content */}
-          <div className="lg:col-span-2 space-y-6">
+          <motion.div 
+            className="lg:col-span-2 space-y-6"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.3 }}
+          >
             {/* Offer Details */}
             <Card>
               <CardHeader>
@@ -364,10 +509,15 @@ export const DealDetail = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <motion.div 
+            className="space-y-6"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
+          >
             {/* Price and action */}
             <Card>
               <CardContent className="p-6">
@@ -494,9 +644,9 @@ export const DealDetail = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
