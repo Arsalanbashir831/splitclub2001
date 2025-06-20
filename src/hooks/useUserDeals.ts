@@ -83,13 +83,13 @@ export const useUserDeals = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    // Clean up existing channel
+    // Clean up existing channel first
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
 
-    // Create new channel with unique name
+    // Create new channel with unique name to prevent multiple subscriptions
     const channelName = `user-deals-${user.id}-${Date.now()}`;
     channelRef.current = supabase
       .channel(channelName)

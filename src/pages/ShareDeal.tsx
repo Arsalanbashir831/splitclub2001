@@ -1,14 +1,18 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Navbar } from '@/components/Navbar';
-import { ChooseRewardType } from '@/components/share-deal/ChooseRewardType';
-import { UploadRewardDetails } from '@/components/share-deal/UploadRewardDetails';
-import { SetPriceAvailability } from '@/components/share-deal/SetPriceAvailability';
-import { AddConditions } from '@/components/share-deal/AddConditions';
-import { PreviewPublish } from '@/components/share-deal/PreviewPublish';
-import { useAuthStore } from '@/store/authStore';
-import { useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Navbar } from '../components/Navbar';
+import { Footer } from '../components/Footer';
+import { ChooseRewardType } from '../components/share-deal/ChooseRewardType';
+import { UploadRewardDetails } from '../components/share-deal/UploadRewardDetails';
+import { SetPriceAvailability } from '../components/share-deal/SetPriceAvailability';
+import { AddConditions } from '../components/share-deal/AddConditions';
+import { PreviewPublish } from '../components/share-deal/PreviewPublish';
+import { useAuthStore } from '../store/authStore';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 
 export interface DealFormData {
   category: string;
@@ -171,3 +175,5 @@ export const ShareDeal = () => {
     </div>
   );
 };
+
+export default ShareDeal;

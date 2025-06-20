@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 
 interface DealClaimButtonProps {
   isOwnDeal: boolean;
@@ -38,6 +38,7 @@ export const DealClaimButton = ({
         disabled 
         className="w-full"
       >
+        <CheckCircle className="h-3 w-3 mr-1" />
         Already Claimed
       </Button>
     );

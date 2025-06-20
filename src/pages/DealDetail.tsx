@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Navbar } from '../components/Navbar';
+import { Footer } from '../components/Footer';
 import { useDeal } from '../hooks/useDeals';
 import { dealsService } from '../services/dealsService';
 import { useUserClaims } from '../hooks/useUserClaims';
@@ -646,7 +647,7 @@ transition={{ delay: 0.2, duration: 0.3 }}
             </Card>
           </motion.div>
         </div>
-</div>
+      </div>
     </motion.div>
   );
 };

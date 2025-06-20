@@ -1,16 +1,32 @@
-
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Navbar } from '@/components/Navbar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuthStore } from '@/store/authStore';
-import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
+import { Navbar } from '../components/Navbar';
+import { Footer } from '../components/Footer';
+import { useAuthStore } from '../store/authStore';
 import { useToast } from '@/hooks/use-toast';
-import { User, Camera, Key, Trash2, Loader2 } from 'lucide-react';
+import { 
+  User, 
+  Bell, 
+  Shield, 
+  CreditCard, 
+  Globe, 
+  Moon, 
+  Sun,
+  Eye,
+  EyeOff,
+  Camera,
+  Save,
+  Trash2
+} from 'lucide-react';
 
 export const Settings = () => {
   const { user, isAuthenticated } = useAuthStore();
