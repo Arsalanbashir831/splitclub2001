@@ -1,10 +1,12 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navbar } from '@/components/Navbar';
 import { MessageReader } from '@/components/MessageReader';
+import { AdminSkeleton } from '@/components/AdminDashboard/AdminSkeleton';
+import { VideoManagement } from '@/components/AdminDashboard/VideoManagement';
 import { useRealtimeDeals } from '@/hooks/useRealtimeDeals';
 import { useRealtimeContactMessages } from '@/hooks/useRealtimeContactMessages';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line
@@ -15,8 +17,11 @@ import {
 } from 'lucide-react';
 
 export const AdminDashboard = () => {
+  useScrollToTop();
   const { deals, isLoading: dealsLoading } = useRealtimeDeals();
   const { messages, isLoading: messagesLoading } = useRealtimeContactMessages();
+
+  const isLoading = dealsLoading || messagesLoading;
 
   // Calculate statistics
   const stats = {
@@ -43,6 +48,24 @@ export const AdminDashboard = () => {
   const recentDeals = deals?.slice(0, 5) || [];
   const recentMessages = messages?.slice(0, 5) || [];
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+              <p className="text-muted-foreground">Monitor and manage your platform</p>
+            </div>
+            <MessageReader />
+          </div>
+          <AdminSkeleton />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -54,6 +77,11 @@ export const AdminDashboard = () => {
             <p className="text-muted-foreground">Monitor and manage your platform</p>
           </div>
           <MessageReader />
+        </div>
+
+        {/* Video Management Section */}
+        <div className="mb-8">
+          <VideoManagement />
         </div>
 
         {/* Stats Cards */}

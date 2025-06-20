@@ -1,99 +1,96 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
-import { useAuthStore } from "./store/authStore";
-import { Home } from "./pages/Home";
-import Index from "./pages/Index";
-import { Login } from "./pages/Login";
-import { DealDetail } from "./pages/DealDetail";
-import { AdminDashboard } from "./pages/AdminDashboard";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { About } from "./pages/About";
-import { Help } from "./pages/Help";
-import { Contact } from "./pages/Contact";
-import { Press } from "./pages/Press";
-import { Terms } from "./pages/Terms";
-import { Privacy } from "./pages/Privacy";
-import { Cookies } from "./pages/Cookies";
-import { WhoAreWe } from "./pages/WhoAreWe";
-import { Recruiting } from "./pages/Recruiting";
-import { Business } from "./pages/Business";
-import NotFound from "./pages/NotFound";
-import { Footer } from "./components/Footer";
-import { Profile } from "./pages/Profile";
-import { ShareDeal } from "./pages/ShareDeal";
-import { FAQ } from "./pages/FAQ";
-import { Settings } from "./pages/Settings";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '@/components/ThemeProvider';
+import { Toaster } from '@/components/ui/toaster';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
+
+// Import pages
+import { Home } from '@/pages/Home';
+import { Index } from '@/pages/Index';
+import { Login } from '@/pages/Login';
+import { ShareDeal } from '@/pages/ShareDeal';
+import { Profile } from '@/pages/Profile';
+import { Settings } from '@/pages/Settings';
+import { AdminDashboard } from '@/pages/AdminDashboard';
+import { DealDetail } from '@/pages/DealDetail';
+import { About } from '@/pages/About';
+import { Contact } from '@/pages/Contact';
+import { FAQ } from '@/pages/FAQ';
+import { Help } from '@/pages/Help';
+import { Press } from '@/pages/Press';
+import { Business } from '@/pages/Business';
+import { WhoAreWe } from '@/pages/WhoAreWe';
+import { Recruiting } from '@/pages/Recruiting';
+import { Careers } from '@/pages/Careers';
+import { Privacy } from '@/pages/Privacy';
+import { Terms } from '@/pages/Terms';
+import { Cookies } from '@/pages/Cookies';
+import { NotFound } from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
 
-const AppContent = () => {
-  const { initialize } = useAuthStore();
-
-  useEffect(() => {
-    const subscription = initialize();
-    return () => subscription?.unsubscribe();
-  }, [initialize]);
-
+function AppContent() {
+  useScrollToTop();
+  
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex-1">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/deals" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/deal/:id" element={<DealDetail />} />
-          <Route path="/admin" element={
-            <ProtectedRoute requireAdmin={true}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          } />
-          <Route path="/share-deal" element={
-            <ProtectedRoute>
-              <ShareDeal />
-            </ProtectedRoute>
-          } />
-          <Route path="/about" element={<About />} />
-          <Route path="/help" element={<Help />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/press" element={<Press />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/cookies" element={<Cookies />} />
-          <Route path="/who-are-we" element={<WhoAreWe />} />
-          <Route path="/recruiting" element={<Recruiting />} />
-          <Route path="/business" element={<Business />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
-      <Footer />
-    </div>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/deals" element={<Index />} />
+      <Route path="/deal/:id" element={<DealDetail />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/faq" element={<FAQ />} />
+      <Route path="/help" element={<Help />} />
+      <Route path="/press" element={<Press />} />
+      <Route path="/business" element={<Business />} />
+      <Route path="/who-are-we" element={<WhoAreWe />} />
+      <Route path="/recruiting" element={<Recruiting />} />
+      <Route path="/careers" element={<Careers />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/cookies" element={<Cookies />} />
+      
+      {/* Protected Routes */}
+      <Route path="/share-deal" element={
+        <ProtectedRoute>
+          <ShareDeal />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <Profile />
+        </ProtectedRoute>
+      } />
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin" element={
+        <ProtectedRoute>
+          <AdminDashboard />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
-};
+}
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <Toaster />
-    <Sonner />
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <Router>
+          <AppContent />
+        </Router>
+        <Toaster />
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

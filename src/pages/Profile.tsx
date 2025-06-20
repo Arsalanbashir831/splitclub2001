@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Navbar } from '@/components/Navbar';
@@ -12,9 +11,13 @@ import { useUserDeals } from '@/hooks/useUserDeals';
 import { useFavoriteDeals } from '@/hooks/useFavoriteDeals';
 import { useFavorites } from '@/hooks/useFavorites';
 import { DealCard } from '@/components/DealCard';
-import { Clock, MapPin, User, Package, Heart, HeartOff } from 'lucide-react';
+import { ClaimedDealCard } from '@/components/Profile/ClaimedDealCard';
+import { EditDealModal } from '@/components/DealEdit/EditDealModal';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
+import { Clock, MapPin, User, Package, Heart, HeartOff, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { Deal } from '@/types';
 
 // Animation variants
 const fadeInUp = {
@@ -69,6 +72,7 @@ const ProfileSkeleton = () => (
 );
 
 export const Profile = () => {
+  useScrollToTop();
   const { user } = useAuthStore();
   const { userDeals, claimedDeals, isLoading } = useUserDeals();
   const { data: favoriteDeals, isLoading: favoritesLoading } = useFavoriteDeals();
@@ -76,6 +80,24 @@ export const Profile = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('deals');
+  const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
+  const [userDealsState, setUserDealsState] = useState<Deal[]>([]);
+
+  // Update local state when userDeals changes
+  React.useEffect(() => {
+    setUserDealsState(userDeals);
+  }, [userDeals]);
+
+  const handleEditDeal = (deal: Deal) => {
+    setEditingDeal(deal);
+  };
+
+  const handleSaveDeal = (updatedDeal: Deal) => {
+    setUserDealsState(prev => 
+      prev.map(deal => deal.id === updatedDeal.id ? updatedDeal : deal)
+    );
+    setEditingDeal(null);
+  };
 
   const handleRemoveFavorite = (dealId: string) => {
     removeFavorite(dealId);
@@ -156,7 +178,7 @@ export const Profile = () => {
         <motion.div variants={fadeInUp} transition={{ delay: 0.2 }}>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="deals">My Deals ({userDeals.length})</TabsTrigger>
+              <TabsTrigger value="deals">My Deals ({userDealsState.length})</TabsTrigger>
               <TabsTrigger value="claimed">Claimed ({claimedDeals.length})</TabsTrigger>
               <TabsTrigger value="favorites">Favorites ({favoriteDeals?.length || 0})</TabsTrigger>
             </TabsList>
@@ -165,12 +187,12 @@ export const Profile = () => {
             <TabsContent value="deals" className="mt-6">
               {isLoading ? (
                 <ProfileSkeleton />
-              ) : userDeals.length > 0 ? (
+              ) : userDealsState.length > 0 ? (
                 <motion.div 
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                   variants={staggerContainer}
                 >
-                  {userDeals.map((deal, index) => (
+                  {userDealsState.map((deal, index) => (
                     <motion.div
                       key={deal.id}
                       variants={fadeInUp}
@@ -181,12 +203,30 @@ export const Profile = () => {
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
                             <CardTitle className="text-lg line-clamp-2">{deal.title}</CardTitle>
-                            <Badge variant={deal.status === 'active' ? 'default' : 'secondary'}>
-                              {deal.status}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={deal.status === 'active' ? 'default' : 'secondary'}>
+                                {deal.status}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditDeal(deal)}
+                                className="h-8 w-8"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-3">
+                          {deal.imageUrl && (
+                            <img
+                              src={deal.imageUrl}
+                              alt={deal.title}
+                              className="w-full h-32 object-cover rounded-lg"
+                            />
+                          )}
+                          
                           <div className="flex items-center justify-between">
                             <Badge variant="outline">{deal.category}</Badge>
                             <div className="text-right">
@@ -271,21 +311,11 @@ export const Profile = () => {
                       key={claim.id}
                       variants={fadeInUp}
                       transition={{ delay: index * 0.1 }}
-                      whileHover={{ scale: 1.01 }}
                     >
-                      <Card>
-                        <CardContent className="pt-6">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-semibold">{claim.deals?.title}</h3>
-                              <p className="text-muted-foreground text-sm">
-                                Claimed on {new Date(claim.claimed_at).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <Badge variant="secondary">Claimed</Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <ClaimedDealCard 
+                        claim={claim} 
+                        onViewDetails={handleDealView}
+                      />
                     </motion.div>
                   ))}
                 </motion.div>
@@ -374,6 +404,16 @@ export const Profile = () => {
           </Tabs>
         </motion.div>
       </div>
+
+      {/* Edit Deal Modal */}
+      {editingDeal && (
+        <EditDealModal
+          deal={editingDeal}
+          isOpen={!!editingDeal}
+          onClose={() => setEditingDeal(null)}
+          onSave={handleSaveDeal}
+        />
+      )}
     </motion.div>
   );
 };

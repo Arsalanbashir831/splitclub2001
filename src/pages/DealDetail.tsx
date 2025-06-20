@@ -1,231 +1,83 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Navbar } from '../components/Navbar';
-import { useDeal } from '../hooks/useDeals';
-import { dealsService } from '../services/dealsService';
-import { useUserClaims } from '../hooks/useUserClaims';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
+import { Navbar } from '@/components/Navbar';
 import { 
-  Clock, 
-  Users, 
-  DollarSign, 
-  Gift, 
-  ArrowLeft, 
-  Share2, 
-  Heart,
-  MapPin,
-  Calendar,
-  Tag,
-  CheckCircle,
-  Shield,
-  Zap,
-  Mail,
-  Loader2
+  ArrowLeft, Clock, MapPin, Users, Heart, 
+  Calendar, DollarSign, Tag, FileText 
 } from 'lucide-react';
+import { Deal } from '@/types';
+import { dealsService } from '@/services/dealsService';
+import { useAuthStore } from '@/store/authStore';
+import { useFavorites } from '@/hooks/useFavorites';
 import { useToast } from '@/hooks/use-toast';
-import { useAuthStore } from '../store/authStore';
-
-const DealDetailSkeleton = () => (
-  <div className="min-h-screen bg-background">
-    <Navbar />
-    
-    {/* Header Skeleton */}
-    <div className="bg-card border-b border-border">
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-4">
-          <Skeleton className="h-10 w-32" />
-          <div className="flex items-center space-x-2">
-            <Skeleton className="h-8 w-20" />
-            <Skeleton className="h-8 w-8" />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Deal Summary Header Skeleton */}
-      <div className="mb-8">
-        <div className="flex items-start space-x-4 mb-6">
-          <Skeleton className="w-16 h-16 rounded-xl" />
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-6 w-20" />
-            </div>
-            <Skeleton className="h-6 w-96 mb-4" />
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main content skeleton */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i}>
-                    <Skeleton className="h-4 w-20 mb-2" />
-                    <Skeleton className="h-5 w-32" />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-12" />
-                </div>
-                <Skeleton className="h-2 w-full" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex flex-wrap gap-3">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-6 w-24" />
-            ))}
-          </div>
-
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-48" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-start space-x-2">
-                  <Skeleton className="h-4 w-4 mt-1" />
-                  <Skeleton className="h-4 w-64" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar skeleton */}
-        <div className="space-y-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center space-y-4">
-                <Skeleton className="h-12 w-24 mx-auto" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-16 w-full" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-5 w-24" />
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-3">
-                <Skeleton className="h-12 w-12 rounded-full" />
-                <div>
-                  <Skeleton className="h-4 w-24 mb-2" />
-                  <div className="flex items-center space-x-2">
-                    <Skeleton className="h-4 w-16" />
-                    <Skeleton className="h-4 w-20" />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-5 w-32" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center space-x-2">
-                  <Skeleton className="h-3 w-3" />
-                  <Skeleton className="h-4 w-32" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 export const DealDetail = () => {
+  useScrollToTop();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuthStore();
+  const { addFavorite, removeFavorite, isFavorite } = useFavorites();
   const { toast } = useToast();
-  const { isAuthenticated, user } = useAuthStore();
-  const { deal, isLoading, error } = useDeal(id || '');
-  const { hasClaimedDeal } = useUserClaims();
-  const [isLiked, setIsLiked] = useState(false);
+  
+  const [deal, setDeal] = useState<Deal | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isClaimLoading, setIsClaimLoading] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  
+  const isFav = deal ? isFavorite(deal.id) : false;
 
-  const isOwnDeal = user && deal && deal.sharedBy.id === user.id;
-  const hasClaimedThisDeal = deal ? hasClaimedDeal(deal.id) : false;
+  useEffect(() => {
+    const fetchDeal = async () => {
+      if (!id) return;
+      
+      try {
+        const dealData = await dealsService.getDealById(id);
+        setDeal(dealData);
+      } catch (error) {
+        console.error('Error fetching deal:', error);
+        toast({
+          title: "Error loading deal",
+          description: "Could not load deal details. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDeal();
+  }, [id, toast]);
 
   const handleClaim = async () => {
-    if (!isAuthenticated) {
-      sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
-      navigate('/login');
-      return;
-    }
-
-    if (!user || !deal) {
-      toast({
-        title: "Error",
-        description: "User information not available. Please try logging in again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (isOwnDeal) {
-      toast({
-        title: "Cannot claim own deal",
-        description: "You cannot claim your own deal.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (hasClaimedThisDeal) {
-      toast({
-        title: "Already claimed",
-        description: "You have already claimed this deal.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (deal.availableSlots <= 0) {
-      toast({
-        title: "Deal fully claimed",
-        description: "This deal has been fully claimed by other users.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (!deal || !user) return;
+    
     setIsClaimLoading(true);
     try {
       await dealsService.claimDeal(deal.id, user.id);
       toast({
         title: "Deal claimed!",
-        description: `You've successfully claimed "${deal.title}". The owner will be notified.`,
+        description: "You have successfully claimed this deal.",
       });
+      
+      // Update deal to show one less available slot
+      setDeal(prev => prev ? {
+        ...prev,
+        availableSlots: prev.availableSlots - 1
+      } : null);
     } catch (error) {
       console.error('Error claiming deal:', error);
       toast({
         title: "Error claiming deal",
-        description: "Something went wrong. Please try again.",
+        description: "Could not claim this deal. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -233,76 +85,67 @@ export const DealDetail = () => {
     }
   };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast({
-      title: "Link copied!",
-      description: "Deal link copied to clipboard",
-    });
-  };
-
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    toast({
-      title: isLiked ? "Removed from favorites" : "Added to favorites",
-      description: isLiked ? "Deal removed from your favorites" : "Deal saved to your favorites",
-    });
-  };
-
-  const getClaimButtonText = () => {
-    if (isOwnDeal) return 'Your Deal';
-    if (hasClaimedThisDeal) return 'Already Claimed';
-    if (deal?.availableSlots === 0) return 'Fully Claimed';
-    if (deal?.isFree) return 'Join for Free';
-    return `Join Now for £${deal?.sharePrice}/month`;
-  };
-
-  if (isLoading) {
-    return <DealDetailSkeleton />;
-  }
-
-  if (error || !deal) {
-    return (
-      <motion.div 
-        className="min-h-screen bg-background flex items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Deal not found</h1>
-          <Button onClick={() => navigate('/deals')}>Back to Deals</Button>
-        </div>
-      </motion.div>
-    );
-  }
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'subscription': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'membership': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'reward': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+  const handleFavoriteToggle = () => {
+    if (!deal) return;
+    
+    if (isFav) {
+      removeFavorite(deal.id);
+      toast({
+        title: "Removed from favorites",
+        description: "Deal removed from your favorites.",
+      });
+    } else {
+      addFavorite(deal.id);
+      toast({
+        title: "Added to favorites",
+        description: "Deal added to your favorites.",
+      });
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long', 
-      day: 'numeric'
-    });
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="space-y-6">
+            <Skeleton className="h-8 w-32" />
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-64 w-full mb-4" />
+                <div className="space-y-4">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const isExpiringSoon = () => {
-    const expiryDate = new Date(deal.expiryDate);
-    const today = new Date();
-    const diffTime = expiryDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 7;
-  };
+  if (!deal) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Deal not found</h1>
+            <Button onClick={() => navigate('/deals')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Deals
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div 
@@ -313,339 +156,239 @@ export const DealDetail = () => {
     >
       <Navbar />
       
-      {/* Header */}
-      <motion.div 
-        className="bg-card border-b border-border"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.3 }}
-      >
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between mb-4">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/deals')}
-              className="flex items-center space-x-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Deals</span>
-            </Button>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={handleShare}>
-                <Share2 className="h-4 w-4 mr-2" />
-                Share
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleLike}>
-                <Heart className={`h-4 w-4 ${isLiked ? 'fill-current text-red-500' : ''}`} />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Deal Summary Header */}
-        <motion.div 
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.3 }}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
         >
-          <div className="flex items-start space-x-4 mb-6">
-            {/* Service Icon/Logo */}
-            <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
-              {deal?.imageUrl ? (
-                <img 
-                  src={deal.imageUrl} 
-                  alt={deal.title} 
-                  className="w-full h-full object-cover rounded-xl"
-                />
-              ) : (
-                <span className="text-2xl font-bold text-primary-foreground">
-                  {deal?.title.charAt(0)}
-                </span>
-              )}
-            </div>
-            
-            <div className="flex-1">
-              {/* Deal Title */}
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                  {deal?.title}
-                </h1>
-                {isOwnDeal && (
-                  <Badge variant="secondary">Your Deal</Badge>
-                )}
-                {hasClaimedThisDeal && !isOwnDeal && (
-                  <Badge variant="default" className="bg-green-600">Claimed</Badge>
-                )}
-              </div>
-              
-              {/* Short Subtitle */}
-              <p className="text-muted-foreground text-lg mb-4">
-                {deal?.description}
-              </p>
-            </div>
-          </div>
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)}
+            className="mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main content */}
-          <motion.div 
-            className="lg:col-span-2 space-y-6"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3, duration: 0.3 }}
-          >
-            {/* Offer Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Gift className="h-5 w-5" />
-                  <span>Offer Details</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="font-medium text-sm text-muted-foreground">Type</p>
-                    <p className="font-semibold capitalize">{deal.category}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-muted-foreground">Source</p>
-                    <p className="font-semibold">{deal.source || 'Not specified'}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-muted-foreground">Expires</p>
-                    <p className="font-semibold">{formatDate(deal.expiryDate)}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-muted-foreground">Availability</p>
-                    <p className="font-semibold">
-                      {deal.availableSlots} of {deal.totalSlots} slots remaining
-                    </p>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Card className="overflow-hidden">
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <CardTitle className="text-2xl mb-2">{deal.title}</CardTitle>
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Badge variant="outline">{deal.category}</Badge>
+                    <Badge variant={deal.status === 'active' ? 'default' : 'secondary'}>
+                      {deal.status}
+                    </Badge>
                   </div>
                 </div>
+                
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={handleFavoriteToggle}
+                  className={cn(
+                    "p-2 rounded-full transition-colors",
+                    isFav ? "text-red-500" : "text-gray-400 hover:text-red-500"
+                  )}
+                >
+                  <Heart className={cn("h-6 w-6", isFav && "fill-current")} />
+                </motion.button>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
+              {deal.imageUrl && (
+                <motion.div 
+                  className="relative"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                >
+                  {!isImageLoaded && (
+                    <Skeleton className="w-full h-64 rounded-lg" />
+                  )}
+                  <img
+                    src={deal.imageUrl}
+                    alt={deal.title}
+                    className={cn(
+                      "w-full h-64 object-cover rounded-lg transition-opacity duration-300",
+                      isImageLoaded ? "opacity-100" : "opacity-0"
+                    )}
+                    onLoad={() => setIsImageLoaded(true)}
+                    onError={() => setIsImageLoaded(true)}
+                  />
+                </motion.div>
+              )}
 
-                {/* Progress bar */}
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Claimed</span>
-                    <span>{deal.totalSlots - deal.availableSlots}/{deal.totalSlots}</span>
+              {/* Price Section */}
+              <motion.div 
+                className="text-center py-6 bg-muted rounded-lg"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
+              >
+                {deal.isFree ? (
+                  <div>
+                    <span className="text-4xl font-bold text-green-600">FREE</span>
+                    {deal.originalPrice > 0 && (
+                      <p className="text-muted-foreground mt-2">
+                        Original price: <span className="line-through">${deal.originalPrice}</span>
+                      </p>
+                    )}
                   </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div
-                      className="bg-primary h-2 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${((deal.totalSlots - deal.availableSlots) / deal.totalSlots) * 100}%`
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {deal.usageNotes && (
-                  <div className="mt-4 p-4 bg-muted rounded-lg">
-                    <h4 className="font-medium mb-2">Usage Notes</h4>
-                    <p className="text-sm text-muted-foreground">{deal.usageNotes}</p>
+                ) : (
+                  <div>
+                    <span className="text-4xl font-bold text-green-600">${deal.sharePrice}</span>
+                    {deal.originalPrice > deal.sharePrice && (
+                      <div className="mt-2">
+                        <span className="text-lg text-muted-foreground line-through">
+                          ${deal.originalPrice}
+                        </span>
+                        <span className="ml-2 text-green-600 font-semibold">
+                          Save ${(deal.originalPrice - deal.sharePrice).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </motion.div>
 
-            {/* Optional Tags */}
-            <div className="flex flex-wrap gap-3">
-              {deal.tags.includes('verified') && (
-                <Badge variant="secondary" className="flex items-center space-x-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-                  <CheckCircle className="h-3 w-3" />
-                  <span>Verified sharer</span>
-                </Badge>
-              )}
-              {deal.tags.includes('instant') && (
-                <Badge variant="secondary" className="flex items-center space-x-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                  <Zap className="h-3 w-3" />
-                  <span>Fast responder</span>
-                </Badge>
-              )}
-              <Badge variant="secondary" className="flex items-center space-x-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
-                <Shield className="h-3 w-3" />
-                <span>Buyer protected</span>
-              </Badge>
-            </div>
-
-            {/* Additional Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Additional Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-start space-x-2">
-                    <Shield className="h-4 w-4 mt-1 text-green-600" />
-                    <p className="text-sm">Backed by SplitClub's 100% Claim Guarantee</p>
+              {/* Deal Details */}
+              <motion.div 
+                className="grid md:grid-cols-2 gap-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.4 }}
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <Users className="h-5 w-5 mr-3 text-muted-foreground" />
+                    <span>{deal.availableSlots} of {deal.totalSlots} slots available</span>
                   </div>
-                  <div className="flex items-start space-x-2">
-                    <Calendar className="h-4 w-4 mt-1 text-blue-600" />
-                    <p className="text-sm">Valid until {formatDate(deal.expiryDate)}</p>
+                  
+                  <div className="flex items-center">
+                    <Clock className="h-5 w-5 mr-3 text-muted-foreground" />
+                    <span>Expires on {new Date(deal.expiryDate).toLocaleDateString()}</span>
                   </div>
-                  {deal.redemptionType && (
-                    <div className="flex items-start space-x-2">
-                      <Mail className="h-4 w-4 mt-1 text-purple-600" />
-                      <p className="text-sm">Redemption type: {deal.redemptionType}</p>
-                    </div>
-                  )}
+                  
                   {deal.isLocationBound && deal.locationDetails && (
-                    <div className="flex items-start space-x-2">
-                      <MapPin className="h-4 w-4 mt-1 text-orange-600" />
-                      <p className="text-sm">Location: {deal.locationDetails}</p>
+                    <div className="flex items-center">
+                      <MapPin className="h-5 w-5 mr-3 text-muted-foreground" />
+                      <span>{deal.locationDetails}</span>
                     </div>
                   )}
                 </div>
-                
-                <div className="pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground mb-2">Want to list your own unused slot?</p>
-                  <Button variant="outline" size="sm" onClick={() => navigate('/share-deal')}>
-                    Share Your Deal
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
 
-          {/* Sidebar */}
-          <motion.div 
-            className="space-y-6"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4, duration: 0.3 }}
-          >
-            {/* Price and action */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center space-y-4">
-                  {deal?.isFree ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <Gift className="h-6 w-6 text-green-600" />
-                      <span className="text-2xl font-bold text-green-600">FREE</span>
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <Calendar className="h-5 w-5 mr-3 text-muted-foreground" />
+                    <span>Shared on {new Date(deal.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  
+                  {deal.source && (
+                    <div className="flex items-center">
+                      <Tag className="h-5 w-5 mr-3 text-muted-foreground" />
+                      <span>Source: {deal.source}</span>
                     </div>
-                  ) : (
+                  )}
+                </div>
+              </div>
+
+              {/* Usage Notes */}
+              {deal.usageNotes && (
+                <motion.div 
+                  className="p-4 bg-muted rounded-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.5 }}
+                >
+                  <div className="flex items-start">
+                    <FileText className="h-5 w-5 mr-3 text-muted-foreground mt-0.5" />
                     <div>
-                      <div className="flex items-center justify-center space-x-2">
-                        <span className="text-sm text-muted-foreground">£</span>
-                        <span className="text-3xl font-bold">£{deal?.sharePrice}</span>
-                        <span className="text-sm text-muted-foreground">/month</span>
-                      </div>
-                      <div className="flex items-center justify-center space-x-2 mt-2">
-                        <span className="text-sm text-muted-foreground line-through">
-                          £{deal?.originalPrice}
-                        </span>
-                        <Badge variant="secondary" className="text-green-600">
-                          Save £{deal ? (deal.originalPrice - deal.sharePrice).toFixed(2) : '0'}
-                        </Badge>
-                      </div>
-                    </div>
-                  )}
-
-                  {deal?.status === 'active' && deal.availableSlots > 0 && !hasClaimedThisDeal && !isOwnDeal ? (
-                    <Button 
-                      className="w-full" 
-                      size="lg" 
-                      onClick={handleClaim}
-                      disabled={isClaimLoading}
-                    >
-                      {isClaimLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Claiming...
-                        </>
-                      ) : (
-                        <>💸 {getClaimButtonText()}</>
-                      )}
-                    </Button>
-                  ) : isOwnDeal ? (
-                    <Button variant="secondary" className="w-full" size="lg" disabled>
-                      Your Deal
-                    </Button>
-                  ) : hasClaimedThisDeal ? (
-                    <Button variant="secondary" className="w-full" size="lg" disabled>
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Already Claimed
-                    </Button>
-                  ) : deal?.availableSlots === 0 ? (
-                    <Button variant="secondary" className="w-full" size="lg" disabled>
-                      Fully Claimed
-                    </Button>
-                  ) : (
-                    <Button variant="secondary" className="w-full" size="lg" disabled>
-                      Expired
-                    </Button>
-                  )}
-
-                  <div className="text-xs text-muted-foreground space-y-1">
-                    <p className="font-medium text-primary">Secure Payment Notice</p>
-                    <p>SplitClub holds your payment until access is confirmed.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Owner Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Owner Info</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={deal.sharedBy.avatar} alt={deal.sharedBy.name} />
-                    <AvatarFallback>
-                      {deal.sharedBy.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{deal.sharedBy.name}</p>
-                    <div className="flex items-center space-x-2 mt-1">
-                      {deal.tags.includes('verified') && (
-                        <Badge variant="secondary" className="text-xs">Verified</Badge>
-                      )}
-                      {deal.tags.includes('instant') && (
-                        <Badge variant="secondary" className="text-xs">Fast responder</Badge>
-                      )}
+                      <h4 className="font-semibold mb-2">Usage Notes</h4>
+                      <p className="text-muted-foreground">{deal.usageNotes}</p>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </motion.div>
+              )}
 
-            {/* Safety & Terms */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Terms & Safety</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="text-sm space-y-2">
-                  <p className="flex items-center space-x-2">
-                    <Shield className="h-3 w-3 text-green-600" />
-                    <span>Buyer protection included</span>
-                  </p>
-                  <p className="flex items-center space-x-2">
-                    <CheckCircle className="h-3 w-3 text-blue-600" />
-                    <span>Cancel anytime</span>
-                  </p>
-                  <p className="flex items-center space-x-2">
-                    <Mail className="h-3 w-3 text-purple-600" />
-                    <span>Instant access via email</span>
-                  </p>
+              {/* Shared By */}
+              <motion.div 
+                className="flex items-center space-x-3 p-4 bg-muted rounded-lg"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.6 }}
+              >
+                <Avatar>
+                  <AvatarImage src={deal.sharedBy.avatar} />
+                  <AvatarFallback>
+                    {deal.sharedBy.name.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold">Shared by {deal.sharedBy.name}</p>
+                  <p className="text-sm text-muted-foreground">Community member</p>
                 </div>
-                
-                <div className="pt-3 border-t border-border">
-                  <Button variant="link" size="sm" className="text-xs p-0 h-auto">
-                    View Terms and Conditions
+              </motion.div>
+
+              {/* Action Buttons */}
+              {isAuthenticated && deal.availableSlots > 0 && (
+                <motion.div 
+                  className="flex space-x-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.7 }}
+                >
+                  <Button 
+                    size="lg" 
+                    className="flex-1"
+                    onClick={handleClaim}
+                    disabled={isClaimLoading}
+                  >
+                    {isClaimLoading ? 'Claiming...' : 'Claim This Deal'}
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
+                </motion.div>
+              )}
+              
+              {!isAuthenticated && (
+                <motion.div 
+                  className="text-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.7 }}
+                >
+                  <p className="text-muted-foreground mb-4">
+                    Please log in to claim this deal
+                  </p>
+                  <Button onClick={() => navigate('/login')}>
+                    Log In
+                  </Button>
+                </motion.div>
+              )}
+              
+              {deal.availableSlots === 0 && (
+                <motion.div 
+                  className="text-center p-4 bg-destructive/10 rounded-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.7 }}
+                >
+                  <p className="text-destructive font-semibold">
+                    This deal is no longer available
+                  </p>
+                </motion.div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </motion.div>
   );

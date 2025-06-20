@@ -3,8 +3,27 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Clock, Users, Briefcase } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
+import { motion } from 'framer-motion';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
 
 export const Recruiting = () => {
+  useScrollToTop();
+  
   const jobOpenings = [
     {
       title: 'Senior Frontend Developer',
@@ -48,15 +67,24 @@ export const Recruiting = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div 
+      className="min-h-screen bg-background"
+      initial="hidden"
+      animate="visible"
+      variants={staggerContainer}
+    >
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="text-center mb-12">
+        <motion.div 
+          className="text-center mb-12"
+          variants={fadeInUp}
+          transition={{ duration: 0.6 }}
+        >
           <h1 className="text-3xl font-bold mb-4">Join Our Team</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Help us build the future of community-driven sharing and make premium services accessible to everyone
           </p>
-        </div>
+        </motion.div>
 
         {/* Why Work With Us */}
         <Card className="mb-8">
@@ -196,6 +224,6 @@ export const Recruiting = () => {
           <Button variant="outline">Send Us Your Resume</Button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
