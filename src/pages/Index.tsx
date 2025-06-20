@@ -18,6 +18,7 @@ import { useDeals } from '../hooks/useDeals';
 import { useUserClaims } from '../hooks/useUserClaims';
 import { useAuthStore } from '../store/authStore';
 import { dealsService } from '../services/dealsService';
+import { videoService } from '@/services/videoService';
 import { Search, Leaf, TrendingUp, Users, Gift, Heart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -31,6 +32,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [claimingDealId, setClaimingDealId] = useState<string | null>(null);
+  const [demoVideoUrl, setDemoVideoUrl] = useState<string | null>(null);
   const { deals, isLoading, error } = useDeals();
   const { hasClaimedDeal } = useUserClaims();
   const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
@@ -43,6 +45,17 @@ const Index = () => {
     expiringWithin: 'any',
     sortBy: 'newest'
   });
+
+  // Load demo video
+  useEffect(() => {
+    const loadDemoVideo = async () => {
+      const video = await videoService.getActiveDemoVideo();
+      if (video) {
+        setDemoVideoUrl(video.url);
+      }
+    };
+    loadDemoVideo();
+  }, []);
 
   // Handle search from URL parameters
   useEffect(() => {
@@ -308,7 +321,7 @@ const Index = () => {
         transition={{ duration: 0.6 }}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
       >
-        <DemoVideoSection />
+        <DemoVideoSection videoUrl={demoVideoUrl} />
       </motion.div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
