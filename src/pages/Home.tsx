@@ -4,210 +4,409 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Navbar } from '@/components/Navbar';
-import { DemoVideoSection } from '@/components/DemoVideoSection';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ArrowRight, Shield, Users, Zap, Star, Play, Upload } from 'lucide-react';
+import { VideoUploadModal } from '@/components/VideoUploadModal';
+import { VideoPlayer } from '@/components/VideoPlayer';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeDeals } from '@/hooks/useRealtimeDeals';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { ArrowRight, TrendingUp, Users, Shield, Clock, Eye } from 'lucide-react';
 
 export const Home = () => {
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [demoVideoUrl, setDemoVideoUrl] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Get real deals from backend
   const { deals: latestDeals, isLoading } = useRealtimeDeals(10);
 
+  // Check for existing demo video and user role
+  useEffect(() => {
+    const checkDemoVideo = async () => {
+      try {
+        // Check if user is admin (simplified check - you might want to check auth state)
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('user_id', user.id)
+            .single();
+          
+          setIsAdmin(profile?.is_admin || false);
+        }
+        
+        // List files in demo-videos bucket to find existing demo
+        const { data: files } = await supabase.storage
+          .from('demo-videos')
+          .list('demos', { limit: 1 });
+        
+        if (files && files.length > 0) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('demo-videos')
+            .getPublicUrl(`demos/${files[0].name}`);
+          
+          setDemoVideoUrl(publicUrl);
+        }
+      } catch (error) {
+        console.error('Error checking demo video:', error);
+      }
+    };
+
+    checkDemoVideo();
+  }, []);
+
+  const handleVideoUploaded = (videoUrl: string) => {
+    setDemoVideoUrl(videoUrl);
+  };
+
+  const handleWatchDemo = () => {
+    if (demoVideoUrl) {
+      setShowVideoPlayer(true);
+    } else if (isAdmin) {
+      setShowUploadModal(true);
+    }
+  };
+
+  const features = [
+    {
+      icon: <Shield className="w-6 h-6" />,
+      title: "Secure Deals",
+      description: "All transactions are protected with end-to-end encryption"
+    },
+    {
+      icon: <Users className="w-6 h-6" />,
+      title: "Community Driven",
+      description: "Join thousands of users sharing and saving together"
+    },
+    {
+      icon: <Zap className="w-6 h-6" />,
+      title: "Instant Access",
+      description: "Get immediate access to shared subscriptions and deals"
+    }
+  ];
+
+  const stats = [
+    { value: "50K+", label: "Active Users" },
+    { value: "$2M+", label: "Total Savings" },
+    { value: "95%", label: "Success Rate" },
+    { value: "24/7", label: "Support" }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-              Share Deals,{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                Save Money
-              </span>
-            </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-              Join our community to discover and share the best deals. Save money while helping others find amazing offers.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="text-lg px-8 py-3">
-                <Link to="/deals">
-                  Browse Deals
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-3">
-                <Link to="/share-deal">Share Your Deal</Link>
-              </Button>
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <Badge variant="secondary" className="w-fit">
+                  🎉 New Feature: Mobile App Available
+                </Badge>
+                <h1 className="text-4xl md:text-6xl font-bold text-foreground leading-tight">
+                  Share deals,
+                  <span className="text-primary"> Save money</span>
+                </h1>
+                <p className="text-xl text-muted-foreground max-w-lg">
+                  Join the community marketplace for unused subscriptions, memberships, and rewards. Reduce waste while saving money together.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" className="gap-2" asChild>
+                  <Link to="/login">
+                    Get Started <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="gap-2"
+                  onClick={handleWatchDemo}
+                  disabled={!demoVideoUrl && !isAdmin}
+                >
+                  {demoVideoUrl ? (
+                    <>
+                      <Play className="w-4 h-4" />
+                      Watch Demo
+                    </>
+                  ) : isAdmin ? (
+                    <>
+                      <Upload className="w-4 h-4" />
+                      Upload Demo
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4" />
+                      Demo Coming Soon
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-4 pt-4">
+                <div className="flex -space-x-2">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent border-2 border-background"
+                    />
+                  ))}
+                </div>
+                <div className="text-sm">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground">4.9/5 from 1000+ reviews</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Content - Mobile Mockups */}
+            <div className="relative">
+              <div className="relative mx-auto w-80 h-[600px]">
+                {/* Main Phone */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[3rem] p-2 shadow-2xl">
+                  <div className="w-full h-full bg-background rounded-[2.5rem] overflow-hidden">
+                    {/* Phone Header */}
+                    <div className="h-24 bg-gradient-to-r from-primary to-accent flex items-center justify-center">
+                      <div className="text-primary-foreground font-bold text-lg">SplitClub</div>
+                    </div>
+
+                    {/* Phone Content */}
+                    <div className="p-6 space-y-4">
+                      <div className="space-y-3">
+                        <div className="h-4 bg-muted rounded w-3/4"></div>
+                        <div className="h-4 bg-muted rounded w-1/2"></div>
+                      </div>
+                      
+                      {/* Deal Cards */}
+                      <div className="space-y-3">
+                        {[1, 2, 3].map((i) => (
+                          <Card key={i} className="p-4">
+                            <CardContent className="p-0">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-lg"></div>
+                                <div className="flex-1 space-y-2">
+                                  <div className="h-3 bg-muted rounded w-full"></div>
+                                  <div className="h-2 bg-muted rounded w-2/3"></div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Secondary Phone */}
+                <div className="absolute -right-16 top-20 w-64 h-[480px] bg-gradient-to-br from-gray-700 to-gray-800 rounded-[2.5rem] p-2 shadow-xl opacity-60 rotate-12">
+                  <div className="w-full h-full bg-background rounded-[2rem] overflow-hidden">
+                    <div className="h-16 bg-gradient-to-r from-accent to-primary"></div>
+                    <div className="p-4 space-y-3">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="h-12 bg-muted rounded"></div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Elements */}
+                <div className="absolute -left-8 top-32 w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-primary/30">
+                  <Shield className="w-8 h-8 text-primary" />
+                </div>
+                <div className="absolute -right-4 bottom-32 w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-accent/30">
+                  <Zap className="w-6 h-6 text-accent" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Latest Deals Table Section */}
-      <section className="py-16 bg-white dark:bg-gray-800">
+      {/* Stats Section */}
+      <section className="py-16 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Latest Deals</h2>
-            <p className="text-gray-600 dark:text-gray-300">Fresh deals added by our community</p>
-          </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="h-5 w-5" />
-                <span>Recent Community Deals</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="space-y-3">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="animate-pulse flex space-x-4">
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Deal</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Shared By</TableHead>
-                        <TableHead>Expires</TableHead>
-                        <TableHead>Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {latestDeals.length > 0 ? (
-                        latestDeals.map((deal) => (
-                          <TableRow key={deal.id}>
-                            <TableCell>
-                              <div className="font-medium">{deal.title}</div>
-                              <div className="text-sm text-muted-foreground line-clamp-1">
-                                {deal.description}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{deal.category}</Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <span className="font-bold text-green-600">
-                                  {deal.isFree ? 'FREE' : `$${deal.sharePrice}`}
-                                </span>
-                                {deal.originalPrice && !deal.isFree && (
-                                  <span className="text-sm text-gray-500 line-through">
-                                    ${deal.originalPrice}
-                                  </span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">{deal.sharedBy.name}</div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center text-sm text-gray-500">
-                                <Clock className="h-4 w-4 mr-1" />
-                                {new Date(deal.expiryDate).toLocaleDateString()}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Button asChild size="sm" variant="outline">
-                                <Link to={`/deal/${deal.id}`}>
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  View
-                                </Link>
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
-                            <div className="text-muted-foreground">No deals available yet.</div>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-              
-              <div className="text-center mt-6">
-                <Button asChild variant="outline" size="lg">
-                  <Link to="/deals">View All Deals</Link>
-                </Button>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-3xl md:text-4xl font-bold text-primary">{stat.value}</div>
+                <div className="text-muted-foreground mt-2">{stat.label}</div>
               </div>
-            </CardContent>
-          </Card>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-gray-50 dark:bg-gray-900">
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Why Choose SplitClub?</h2>
-            <p className="text-gray-600 dark:text-gray-300">Join thousands of savvy shoppers saving money together</p>
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Why Choose SplitClub?
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Experience the future of deal sharing with our innovative platform
+            </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center p-6">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Fresh Deals Daily</h3>
-              <p className="text-gray-600 dark:text-gray-400">New deals added every day by our active community members</p>
-            </Card>
-            <Card className="text-center p-6">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Community Driven</h3>
-              <p className="text-gray-600 dark:text-gray-400">Real deals shared by real people who want to help others save</p>
-            </Card>
-            <Card className="text-center p-6">
-              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Verified & Safe</h3>
-              <p className="text-gray-600 dark:text-gray-400">All deals are moderated to ensure quality and authenticity</p>
-            </Card>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} className="p-6 text-center hover:shadow-lg transition-shadow">
+                <CardContent className="p-0 space-y-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto text-primary">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold">{feature.title}</h3>
+                  <p className="text-muted-foreground">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Demo Video Section */}
-      <DemoVideoSection />
+      {/* Deals Table Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Latest Deals
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Discover the newest deals and savings opportunities from our community
+            </p>
+          </div>
+          
+          <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border border-border rounded-lg overflow-hidden">
+            <div className="sticky top-16 z-40 bg-background border-b border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[200px]">Title</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Original Price</TableHead>
+                    <TableHead>Share Price</TableHead>
+                    <TableHead>Available</TableHead>
+                    <TableHead>Expires</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+              </Table>
+            </div>
+            
+            <div className="max-h-96 overflow-y-auto">
+              <Table>
+                <TableBody>
+                  {isLoading ? (
+                    // Loading skeleton
+                    [...Array(5)].map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div></TableCell>
+                        <TableCell><div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div></TableCell>
+                        <TableCell><div className="h-4 bg-muted rounded w-1/3 animate-pulse"></div></TableCell>
+                        <TableCell><div className="h-4 bg-muted rounded w-1/3 animate-pulse"></div></TableCell>
+                        <TableCell><div className="h-4 bg-muted rounded w-1/4 animate-pulse"></div></TableCell>
+                        <TableCell><div className="h-4 bg-muted rounded w-1/3 animate-pulse"></div></TableCell>
+                        <TableCell><div className="h-4 bg-muted rounded w-1/4 animate-pulse"></div></TableCell>
+                      </TableRow>
+                    ))
+                  ) : latestDeals.length > 0 ? (
+                    latestDeals.map((deal) => (
+                      <TableRow key={deal.id}>
+                        <TableCell className="font-medium">
+                          <Link to={`/deal/${deal.id}`} className="hover:text-primary transition-colors">
+                            {deal.title}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="capitalize">
+                            {deal.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>${deal.originalPrice.toFixed(2)}</TableCell>
+                        <TableCell>
+                          {deal.isFree ? (
+                            <Badge variant="outline" className="text-green-600 border-green-600">
+                              Free
+                            </Badge>
+                          ) : (
+                            `$${deal.sharePrice.toFixed(2)}`
+                          )}
+                        </TableCell>
+                        <TableCell>{deal.availableSlots}/{deal.totalSlots}</TableCell>
+                        <TableCell>{new Date(deal.expiryDate).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={deal.status === 'active' ? 'default' : deal.status === 'claimed' ? 'secondary' : 'destructive'}
+                            className="capitalize"
+                          >
+                            {deal.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        <div className="text-muted-foreground">No deals available yet.</div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white mb-4">
+      <section className="py-20 bg-gradient-to-r from-primary/10 via-background to-accent/10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Ready to Start Saving?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Join our community today and discover amazing deals shared by people like you.
+          <p className="text-xl text-muted-foreground mb-8">
+            Join thousands of users who are already saving money with SplitClub
           </p>
-          <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-3">
-            <Link to="/login">Get Started Now</Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" className="gap-2" asChild>
+              <Link to="/login">
+                Sign Up Free <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/about">Learn More</Link>
+            </Button>
+          </div>
         </div>
       </section>
+
+      {/* Video Modals */}
+      <VideoUploadModal
+        open={showUploadModal}
+        onOpenChange={setShowUploadModal}
+        onVideoUploaded={handleVideoUploaded}
+      />
+      
+      {demoVideoUrl && (
+        <VideoPlayer
+          open={showVideoPlayer}
+          onOpenChange={setShowVideoPlayer}
+          videoUrl={demoVideoUrl}
+          title="SplitClub Demo"
+        />
+      )}
     </div>
   );
 };
