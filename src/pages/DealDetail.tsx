@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Calendar, Users, MapPin, Tag, Clock, ExternalLink, Heart, HeartOff, Share2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, Users, MapPin, Tag, Clock, ExternalLink, Heart, HeartOff, Share2, AlertCircle, FileText } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/store/authStore';
@@ -20,12 +20,14 @@ import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { DealClaimButton } from '@/components/deals/DealClaimButton';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
+import { dealsService } from '@/services/dealsService';
+import { cn } from '@/lib/utils';
 
 export const DealDetail = () => {
   useScrollToTop();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const { hasClaimedDeal } = useUserClaims();
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
   const { toast } = useToast();
@@ -129,6 +131,7 @@ export const DealDetail = () => {
             </Card>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -146,6 +149,7 @@ export const DealDetail = () => {
             </Button>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -388,6 +392,8 @@ export const DealDetail = () => {
           </Card>
         </motion.div>
       </div>
+
+      <Footer />
     </div>
   );
 };

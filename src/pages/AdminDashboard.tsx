@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -15,51 +16,51 @@ export const AdminDashboard = () => {
   useScrollToTop();
   const { user } = useAuthStore();
 
-  const { data: usersCount, isLoading: usersLoading } = useQuery(
-    ['usersCount'],
-    async () => {
+  const { data: usersCount, isLoading: usersLoading } = useQuery({
+    queryKey: ['usersCount'],
+    queryFn: async () => {
       const { count, error } = await supabase
         .from('profiles')
         .select('*', { count: 'exact' });
       if (error) throw error;
       return count || 0;
     }
-  );
+  });
 
-  const { data: dealsCount, isLoading: dealsLoading } = useQuery(
-    ['dealsCount'],
-    async () => {
+  const { data: dealsCount, isLoading: dealsLoading } = useQuery({
+    queryKey: ['dealsCount'],
+    queryFn: async () => {
       const { count, error } = await supabase
         .from('deals')
         .select('*', { count: 'exact' });
       if (error) throw error;
       return count || 0;
     }
-  );
+  });
 
-  const { data: messagesCount, isLoading: messagesLoading } = useQuery(
-    ['messagesCount'],
-    async () => {
+  const { data: messagesCount, isLoading: messagesLoading } = useQuery({
+    queryKey: ['messagesCount'],
+    queryFn: async () => {
       const { count, error } = await supabase
         .from('contact_messages')
         .select('*', { count: 'exact' });
       if (error) throw error;
       return count || 0;
     }
-  );
+  });
 
-  const { data: totalRevenue, isLoading: revenueLoading } = useQuery(
-    ['totalRevenue'],
-    async () => {
+  const { data: totalRevenue, isLoading: revenueLoading } = useQuery({
+    queryKey: ['totalRevenue'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('deals')
         .select('price')
         .not('price', 'is', null);
       if (error) throw error;
-      const total = data?.reduce((acc, deal) => acc + (deal.price || 0), 0) || 0;
+      const total = data?.reduce((acc, deal) => acc + (Number(deal.price) || 0), 0) || 0;
       return total;
     }
-  );
+  });
 
   const isAdmin = user?.isAdmin;
 
@@ -141,7 +142,7 @@ export const AdminDashboard = () => {
               {revenueLoading ? (
                 <AdminSkeleton />
               ) : (
-                <div className="text-3xl font-bold">${totalRevenue?.toFixed(2)}</div>
+                <div className="text-3xl font-bold">${Number(totalRevenue).toFixed(2)}</div>
               )}
             </CardContent>
           </Card>

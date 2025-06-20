@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -11,6 +12,7 @@ import { AddConditions } from '@/components/share-deal/AddConditions';
 import { SetPriceAvailability } from '@/components/share-deal/SetPriceAvailability';
 import { PreviewPublish } from '@/components/share-deal/PreviewPublish';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
+import { useAuthStore } from '@/store/authStore';
 
 export interface DealFormData {
   category: string;
