@@ -36,9 +36,9 @@ interface Deal {
 interface User {
   user_id: string;
   display_name: string;
-  email?: string;
   role?: string;
   avatar_url?: string;
+  is_admin: boolean;
 }
 
 interface Claim {
@@ -49,12 +49,12 @@ interface Claim {
 }
 
 const AdminDashboardSkeleton = () => (
-  <div className="min-h-screen bg-background">
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
     <Navbar />
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i}>
+          <Card key={i} className="border-0 shadow-lg">
             <CardHeader>
               <Skeleton className="h-6 w-32" />
               <Skeleton className="h-4 w-48" />
@@ -69,13 +69,17 @@ const AdminDashboardSkeleton = () => (
         <Skeleton className="h-8 w-64 mb-4" />
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex items-center space-x-4">
-              <Skeleton className="h-12 w-12 rounded-full" />
-              <div>
-                <Skeleton className="h-4 w-48 mb-2" />
-                <Skeleton className="h-3 w-32" />
-              </div>
-            </div>
+            <Card key={i} className="border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div>
+                    <Skeleton className="h-4 w-48 mb-2" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
@@ -114,13 +118,12 @@ const AdminDashboard = () => {
         throw error;
       }
 
-      // Map the data to match the User interface
       return data?.map(profile => ({
         user_id: profile.user_id,
         display_name: profile.display_name || 'Unknown User',
-        email: profile.email || '',
         role: profile.is_admin ? 'admin' : 'user',
-        avatar_url: profile.avatar_url
+        avatar_url: profile.avatar_url,
+        is_admin: profile.is_admin
       })) as User[] || [];
     }
   });
@@ -149,13 +152,19 @@ const AdminDashboard = () => {
 
   if (dealsError || usersError || claimsError) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-4">Error loading data</h2>
-            <p className="text-muted-foreground">Please try refreshing the page</p>
-          </div>
+          <Card className="border-0 shadow-xl bg-red-50 border-red-200">
+            <CardContent className="text-center p-12">
+              <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-red-700 mb-4">Error loading dashboard data</h2>
+              <p className="text-red-600">Please try refreshing the page</p>
+              <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+                Refresh Page
+              </Button>
+            </CardContent>
+          </Card>
         </div>
         <Footer />
       </div>
@@ -163,10 +172,38 @@ const AdminDashboard = () => {
   }
 
   const stats = [
-    { label: 'Total Users', value: users?.length || 0, icon: Users, color: 'text-blue-500' },
-    { label: 'Total Deals', value: deals?.length || 0, icon: Gift, color: 'text-green-500' },
-    { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)}`, icon: DollarSign, color: 'text-purple-500' },
-    { label: 'Active Deals', value: deals?.filter(deal => deal.status === 'active').length || 0, icon: TrendingUp, color: 'text-orange-500' },
+    { 
+      label: 'Total Users', 
+      value: users?.length || 0, 
+      icon: Users, 
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-50',
+      change: '+12.5%'
+    },
+    { 
+      label: 'Total Deals', 
+      value: deals?.length || 0, 
+      icon: Gift, 
+      color: 'text-green-500',
+      bgColor: 'bg-green-50',
+      change: '+8.1%'
+    },
+    { 
+      label: 'Total Revenue', 
+      value: `$${totalRevenue.toFixed(2)}`, 
+      icon: DollarSign, 
+      color: 'text-purple-500',
+      bgColor: 'bg-purple-50',
+      change: '+23.4%'
+    },
+    { 
+      label: 'Active Deals', 
+      value: deals?.filter(deal => deal.status === 'active').length || 0, 
+      icon: TrendingUp, 
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-50',
+      change: '+5.7%'
+    },
   ];
 
   // Data for charts
@@ -180,11 +217,11 @@ const AdminDashboard = () => {
     count
   }));
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
 
   return (
     <motion.div 
-      className="min-h-screen bg-background"
+      className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -198,8 +235,14 @@ const AdminDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Overview of platform statistics and management tools.</p>
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+              Admin Dashboard
+            </h1>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Comprehensive overview of platform statistics, user management, and performance metrics.
+            </p>
+          </div>
         </motion.div>
 
         <motion.div 
@@ -209,20 +252,28 @@ const AdminDashboard = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           {stats.map((stat, index) => (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {stat.label}
-                </CardTitle>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">
-                  +20.1% from last month
-                </p>
-              </CardContent>
-            </Card>
+            <motion.div
+              key={index}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`p-3 rounded-xl ${stat.bgColor}`}>
+                      <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                    </div>
+                    <Badge variant="secondary" className="text-xs font-medium">
+                      {stat.change}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 mb-1">{stat.label}</p>
+                    <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </motion.div>
 
@@ -231,39 +282,62 @@ const AdminDashboard = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="deals">Deals</TabsTrigger>
-              <TabsTrigger value="users">Users</TabsTrigger>
-              <TabsTrigger value="claims">Claims</TabsTrigger>
-              <TabsTrigger value="videos">Videos</TabsTrigger>
-            </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <div className="flex justify-center">
+              <TabsList className="grid grid-cols-5 w-fit bg-white shadow-lg border-0 p-1">
+                <TabsTrigger value="overview" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="deals" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                  <Gift className="h-4 w-4 mr-2" />
+                  Deals
+                </TabsTrigger>
+                <TabsTrigger value="users" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                  <Users className="h-4 w-4 mr-2" />
+                  Users
+                </TabsTrigger>
+                <TabsTrigger value="claims" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                  <Activity className="h-4 w-4 mr-2" />
+                  Claims
+                </TabsTrigger>
+                <TabsTrigger value="videos" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Videos
+                </TabsTrigger>
+              </TabsList>
+            </div>
             
             <TabsContent value="overview">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Deals by Category</CardTitle>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <Card className="border-0 shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5" />
+                      Deals by Category
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-6">
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="category" />
                         <YAxis />
                         <Tooltip />
-                        <Bar dataKey="count" fill="#8884d8" />
+                        <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
                 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Deal Distribution</CardTitle>
+                <Card className="border-0 shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+                    <CardTitle className="flex items-center gap-2">
+                      <Activity className="h-5 w-5" />
+                      Deal Distribution
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-6">
                     <ResponsiveContainer width="100%" height={300}>
                       <PieChart>
                         <Pie
@@ -289,23 +363,28 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="deals">
-              <div>
-                <h2 className="text-xl font-semibold text-foreground mb-4">Deals Management</h2>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold text-slate-900">Deals Management</h2>
+                  <Badge variant="outline" className="text-sm">
+                    {deals?.length || 0} total deals
+                  </Badge>
+                </div>
                 <div className="grid gap-4">
                   {deals?.map(deal => (
-                    <Card key={deal.id}>
-                      <CardHeader>
-                        <CardTitle>{deal.title}</CardTitle>
-                        <CardDescription>
-                          <Clock className="h-4 w-4 mr-1 inline" />
-                          Created at: {new Date(deal.created_at).toLocaleDateString()}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p>Category: {deal.category}</p>
-                            <p>Price: ${deal.price}</p>
+                    <Card key={deal.id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-slate-900 mb-2">{deal.title}</h3>
+                            <div className="flex items-center gap-4 text-sm text-slate-600">
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-4 w-4" />
+                                {new Date(deal.created_at).toLocaleDateString()}
+                              </div>
+                              <Badge variant="outline">{deal.category}</Badge>
+                              <span className="font-medium">${deal.price}</span>
+                            </div>
                           </div>
                           <Badge variant={deal.status === 'active' ? 'default' : 'destructive'}>
                             {deal.status}
@@ -319,28 +398,44 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="users">
-              <div>
-                <h2 className="text-xl font-semibold text-foreground mb-4">Users Management</h2>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold text-slate-900">Users Management</h2>
+                  <Badge variant="outline" className="text-sm">
+                    {users?.length || 0} total users
+                  </Badge>
+                </div>
                 <div className="grid gap-4">
                   {users?.map(user => (
-                    <Card key={user.user_id}>
-                      <CardHeader>
-                        <CardTitle>{user.display_name}</CardTitle>
-                        <CardDescription>
-                          <AlertCircle className="h-4 w-4 mr-1 inline text-yellow-500" />
-                          User ID: {user.user_id}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p>Email: {user.email}</p>
-                            <p>Role: {user.role || 'User'}</p>
+                    <Card key={user.user_id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-4">
+                            {user.avatar_url ? (
+                              <img
+                                src={user.avatar_url}
+                                alt={user.display_name}
+                                className="w-12 h-12 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+                                {user.display_name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <h3 className="text-lg font-semibold text-slate-900">{user.display_name}</h3>
+                              <p className="text-sm text-slate-600">User ID: {user.user_id.slice(0, 8)}...</p>
+                            </div>
                           </div>
-                          <Badge variant="secondary">
-                            <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
-                            Verified
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={user.is_admin ? 'default' : 'secondary'}>
+                              {user.role}
+                            </Badge>
+                            <Badge variant="outline" className="text-green-600 border-green-200">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Active
+                            </Badge>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -350,21 +445,36 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="claims">
-              <div>
-                <h2 className="text-xl font-semibold text-foreground mb-4">Claims Management</h2>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold text-slate-900">Claims Management</h2>
+                  <Badge variant="outline" className="text-sm">
+                    {claims?.length || 0} total claims
+                  </Badge>
+                </div>
                 <div className="grid gap-4">
                   {claims?.map(claim => (
-                    <Card key={claim.id}>
-                      <CardHeader>
-                        <CardTitle>Claim ID: {claim.id}</CardTitle>
-                        <CardDescription>
-                          <Clock className="h-4 w-4 mr-1 inline" />
-                          Claimed at: {new Date(claim.claimed_at).toLocaleDateString()}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <p>Deal ID: {claim.deal_id}</p>
-                        <p>User ID: {claim.user_id}</p>
+                    <Card key={claim.id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                              Claim #{claim.id.slice(0, 8)}
+                            </h3>
+                            <div className="space-y-1 text-sm text-slate-600">
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-4 w-4" />
+                                Claimed: {new Date(claim.claimed_at).toLocaleDateString()}
+                              </div>
+                              <p>Deal ID: {claim.deal_id.slice(0, 8)}...</p>
+                              <p>User ID: {claim.user_id.slice(0, 8)}...</p>
+                            </div>
+                          </div>
+                          <Badge variant="default">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Claimed
+                          </Badge>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
