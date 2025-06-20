@@ -228,7 +228,7 @@ export const Home = () => {
               delay: 0.6,
               duration: 0.6
             }}>
-                <Button size="lg" className="gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90" asChild>
+                <Button size="lg" className="gap-2 bg-gradient-to-r from-slate-900 via-blue-900 to-black hover:from-slate-800 hover:via-blue-800 hover:to-gray-900 text-white border-0 shadow-2xl shadow-blue-900/20" asChild>
                   <Link to="/login">
                     Access Platform <ArrowRight className="w-4 h-4" />
                   </Link>
