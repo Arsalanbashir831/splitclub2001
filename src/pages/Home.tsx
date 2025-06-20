@@ -1,60 +1,52 @@
+
 import { useState, useEffect } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { CountUp } from '@/components/ui/CountUp';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { VideoPlayer } from '@/components/VideoPlayer';
 import { VideoUploadModal } from '@/components/VideoUploadModal';
+import { VideoPlayer } from '@/components/VideoPlayer';
 import { DemoVideoSection } from '@/components/DemoVideoSection';
-import { CountUp } from '@/components/ui/CountUp';
-import { ArrowRight, Leaf, Share2, DollarSign, Users, Shield, Star, Heart, CheckCircle, Calendar, Play, Upload, Zap } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { useToast } from '@/hooks/use-toast';
 import { videoService } from '@/services/videoService';
-
-// Animation variants
-const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0 }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
-
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: { opacity: 1, scale: 1 }
-};
+import { ArrowRight, Play, Upload, Star, Shield, Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const Home = () => {
-  const { isAuthenticated, user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
+  const { toast } = useToast();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [demoVideoUrl, setDemoVideoUrl] = useState<string | null>(null);
-  
-  const isAdmin = user?.isAdmin || false;
-  const { scrollYProgress } = useScroll();
-  const y = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Load demo video on component mount
   useEffect(() => {
-    const loadDemoVideo = async () => {
-      const video = await videoService.getActiveDemoVideo();
-      if (video) {
-        setDemoVideoUrl(video.url);
+    const checkAdminStatus = async () => {
+      if (user) {
+        // For now, we'll use a simple check. In production, you'd want to check the profiles table
+        const adminEmails = ['admin@splitclub.com']; // Add your admin emails here
+        setIsAdmin(adminEmails.includes(user.email || ''));
       }
     };
+
+    const loadDemoVideo = async () => {
+      try {
+        const video = await videoService.getActiveDemoVideo();
+        if (video) {
+          setDemoVideoUrl(video.url);
+        }
+      } catch (error) {
+        console.error('Error loading demo video:', error);
+      }
+    };
+
+    checkAdminStatus();
     loadDemoVideo();
-  }, []);
+  }, [user]);
 
   const handleWatchDemo = () => {
     if (demoVideoUrl) {
@@ -67,94 +59,43 @@ export const Home = () => {
   const handleVideoUploaded = (videoUrl: string) => {
     setDemoVideoUrl(videoUrl);
     setShowUploadModal(false);
-    setShowVideoPlayer(true);
+    toast({
+      title: "Video uploaded successfully!",
+      description: "The demo video has been uploaded and is now active.",
+    });
   };
-
-  const latestDeals = [
-    {
-      title: "Netflix Premium Account Share",
-      originalPrice: "$15.99",
-      sharePrice: "$4.00",
-      category: "Streaming",
-      expiryDate: "2024-01-15",
-      savings: "75%"
-    },
-    {
-      title: "Spotify Family Plan Slot",
-      originalPrice: "$15.99",
-      sharePrice: "$3.00",
-      category: "Music",
-      expiryDate: "2024-01-20",
-      savings: "81%"
-    },
-    {
-      title: "Adobe Creative Suite License",
-      originalPrice: "$52.99",
-      sharePrice: "$10.00",
-      category: "Software",
-      expiryDate: "2024-01-25",
-      savings: "81%"
-    }
-  ];
-
-  const features = [
-    {
-      icon: Share2,
-      title: "Share Unused Benefits",
-      description: "Turn your unused subscriptions and memberships into shared value for the community."
-    },
-    {
-      icon: DollarSign,
-      title: "Save Money",
-      description: "Access premium services at a fraction of the cost through community sharing."
-    },
-    {
-      icon: Users,
-      title: "Build Community",
-      description: "Connect with like-minded people who believe in sustainable consumption."
-    },
-    {
-      icon: Shield,
-      title: "Secure & Trusted",
-      description: "Safe transactions and verified users ensure a trustworthy experience."
-    }
-  ];
-
-  const stats = [
-    { icon: Users, value: 10000, label: "Community Members", prefix: "", suffix: "+" },
-    { icon: Share2, value: 5000, label: "Deals Shared", prefix: "", suffix: "+" },
-    { icon: DollarSign, value: 250000, label: "Total Savings", prefix: "$", suffix: "+" },
-    { icon: Leaf, value: 85, label: "Waste Reduction", prefix: "", suffix: "%" }
-  ];
 
   return (
     <motion.div 
       className="min-h-screen bg-background"
-      initial="hidden"
-      animate="visible"
-      variants={staggerContainer}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
     >
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden animate-fade-in">
-        <motion.div 
-          className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5"
-          style={{ y }}
-        />
+      <motion.section 
+        className="relative overflow-hidden"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
             <motion.div 
               className="space-y-8"
-              variants={fadeInUp}
-              transition={{ duration: 0.6 }}
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
             >
               <div className="space-y-4">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
                 >
                   <Badge variant="secondary" className="w-fit">
                     🎉 New Feature: Mobile App Available
@@ -162,18 +103,18 @@ export const Home = () => {
                 </motion.div>
                 <motion.h1 
                   className="text-4xl md:text-6xl font-bold text-foreground leading-tight"
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.6 }}
+                  transition={{ delay: 0.4, duration: 0.6 }}
                 >
                   Share deals,
                   <span className="text-primary"> Save money</span>
                 </motion.h1>
                 <motion.p 
                   className="text-xl text-muted-foreground max-w-lg"
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.6 }}
+                  transition={{ delay: 0.5, duration: 0.6 }}
                 >
                   Join the community marketplace for unused subscriptions, memberships, and rewards. Reduce waste while saving money together.
                 </motion.p>
@@ -181,9 +122,9 @@ export const Home = () => {
 
               <motion.div 
                 className="flex flex-col sm:flex-row gap-4"
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.6 }}
+                transition={{ delay: 0.6, duration: 0.6 }}
               >
                 <Button size="lg" className="gap-2" asChild>
                   <Link to="/login">
@@ -218,18 +159,18 @@ export const Home = () => {
 
               <motion.div 
                 className="flex items-center gap-4 pt-4"
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.6 }}
+                transition={{ delay: 0.7, duration: 0.6 }}
               >
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4].map((i) => (
                     <motion.div
                       key={i}
                       className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent border-2 border-background"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.7 + i * 0.1, duration: 0.3 }}
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.8 + i * 0.1, duration: 0.3 }}
                     />
                   ))}
                 </div>
@@ -238,9 +179,9 @@ export const Home = () => {
                     {[1, 2, 3, 4, 5].map((i) => (
                       <motion.div
                         key={i}
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.8 + i * 0.05 }}
+                        initial={{ opacity: 0, rotate: -180 }}
+                        animate={{ opacity: 1, rotate: 0 }}
+                        transition={{ delay: 0.9 + i * 0.05, duration: 0.3 }}
                       >
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                       </motion.div>
@@ -256,14 +197,15 @@ export const Home = () => {
               className="relative"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4, duration: 0.8 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
             >
               <div className="relative mx-auto w-80 h-[600px]">
                 {/* Main Phone */}
                 <motion.div 
                   className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[3rem] p-2 shadow-2xl"
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, scale: 0.8, rotateY: 30 }}
+                  animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                  transition={{ delay: 0.5, duration: 0.8 }}
                 >
                   <div className="w-full h-full bg-background rounded-[2.5rem] overflow-hidden">
                     {/* Phone Header */}
@@ -274,24 +216,41 @@ export const Home = () => {
                     {/* Phone Content */}
                     <div className="p-6 space-y-4">
                       <div className="space-y-3">
-                        <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
-                        <div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div>
+                        <motion.div 
+                          className="h-4 bg-muted rounded w-3/4"
+                          initial={{ opacity: 0, width: 0 }}
+                          animate={{ opacity: 1, width: '75%' }}
+                          transition={{ delay: 0.8, duration: 0.6 }}
+                        />
+                        <motion.div 
+                          className="h-4 bg-muted rounded w-1/2"
+                          initial={{ opacity: 0, width: 0 }}
+                          animate={{ opacity: 1, width: '50%' }}
+                          transition={{ delay: 0.9, duration: 0.6 }}
+                        />
                       </div>
                       
                       {/* Deal Cards */}
                       <div className="space-y-3">
                         {[1, 2, 3].map((i) => (
-                          <Card key={i} className="p-4">
-                            <CardContent className="p-0">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-lg"></div>
-                                <div className="flex-1 space-y-2">
-                                  <div className="h-3 bg-muted rounded w-full animate-pulse"></div>
-                                  <div className="h-2 bg-muted rounded w-2/3 animate-pulse"></div>
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 1 + i * 0.1, duration: 0.5 }}
+                          >
+                            <Card className="p-4">
+                              <CardContent className="p-0">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-lg"></div>
+                                  <div className="flex-1 space-y-2">
+                                    <div className="h-3 bg-muted rounded w-full"></div>
+                                    <div className="h-2 bg-muted rounded w-2/3"></div>
+                                  </div>
                                 </div>
-                              </div>
-                            </CardContent>
-                          </Card>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
                         ))}
                       </div>
                     </div>
@@ -301,21 +260,21 @@ export const Home = () => {
                 {/* Secondary Phone */}
                 <motion.div 
                   className="absolute -right-16 top-20 w-64 h-[480px] bg-gradient-to-br from-gray-700 to-gray-800 rounded-[2.5rem] p-2 shadow-xl opacity-60 rotate-12"
-                  animate={{ 
-                    rotate: [12, 8, 12],
-                    y: [0, -5, 0]
-                  }}
-                  transition={{ 
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
+                  initial={{ opacity: 0, scale: 0.6, x: 100 }}
+                  animate={{ opacity: 0.6, scale: 1, x: 0 }}
+                  transition={{ delay: 0.7, duration: 0.8 }}
                 >
                   <div className="w-full h-full bg-background rounded-[2rem] overflow-hidden">
                     <div className="h-16 bg-gradient-to-r from-accent to-primary"></div>
                     <div className="p-4 space-y-3">
                       {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="h-12 bg-muted rounded animate-pulse"></div>
+                        <motion.div 
+                          key={i} 
+                          className="h-12 bg-muted rounded"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 1.2 + i * 0.1, duration: 0.4 }}
+                        />
                       ))}
                     </div>
                   </div>
@@ -324,29 +283,19 @@ export const Home = () => {
                 {/* Floating Elements */}
                 <motion.div 
                   className="absolute -left-8 top-32 w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-primary/30"
-                  animate={{ 
-                    y: [0, -10, 0],
-                    rotate: [0, 5, 0]
-                  }}
-                  transition={{ 
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
+                  initial={{ opacity: 0, scale: 0, rotate: -180 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  transition={{ delay: 1.5, duration: 0.6 }}
+                  whileHover={{ scale: 1.1, rotate: 10 }}
                 >
                   <Shield className="w-8 h-8 text-primary" />
                 </motion.div>
                 <motion.div 
                   className="absolute -right-4 bottom-32 w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-accent/30"
-                  animate={{ 
-                    y: [0, 10, 0],
-                    scale: [1, 1.1, 1]
-                  }}
-                  transition={{ 
-                    duration: 2.5,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
+                  initial={{ opacity: 0, scale: 0, rotate: 180 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  transition={{ delay: 1.7, duration: 0.6 }}
+                  whileHover={{ scale: 1.1, rotate: -10 }}
                 >
                   <Zap className="w-6 h-6 text-accent" />
                 </motion.div>
@@ -354,197 +303,73 @@ export const Home = () => {
             </motion.div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Stats Section */}
       <motion.section 
-        className="py-12 bg-card/50"
+        className="py-16 bg-muted/30"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            className="grid grid-cols-2 md:grid-cols-4 gap-8"
-            variants={staggerContainer}
-          >
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <motion.div 
-                  key={index}
-                  className="text-center"
-                  variants={scaleIn}
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mx-auto mb-4">
-                    <Icon className="w-8 h-8 text-primary" />
-                  </div>
-                  <div className="text-3xl font-bold text-foreground mb-2">
-                    <CountUp 
-                      end={stat.value} 
-                      prefix={stat.prefix} 
-                      suffix={stat.suffix}
-                      duration={2}
-                    />
-                  </div>
-                  <div className="text-muted-foreground">{stat.label}</div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+            >
+              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                <CountUp end={10000} duration={2} suffix="+" />
+              </div>
+              <div className="text-muted-foreground">Active Users</div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                <CountUp end={500000} duration={2} prefix="$" />
+              </div>
+              <div className="text-muted-foreground">Money Saved</div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
+              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                <CountUp end={2500} duration={2} suffix="+" />
+              </div>
+              <div className="text-muted-foreground">Deals Shared</div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+            >
+              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                <CountUp end={95} duration={2} suffix="%" />
+              </div>
+              <div className="text-muted-foreground">User Satisfaction</div>
+            </motion.div>
+          </div>
         </div>
       </motion.section>
 
-      {/* Features Section */}
-      <motion.section 
-        className="py-16 md:py-24"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            className="text-center mb-16"
-            variants={fadeInUp}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              How SplitClub Works
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Join a community that believes in making the most of what we have
-            </p>
-          </motion.div>
-          
-          <motion.div 
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
-            variants={staggerContainer}
-          >
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <motion.div
-                  key={index}
-                  variants={scaleIn}
-                  whileHover={{ scale: 1.02, y: -5 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Card className="h-full border-2 hover:border-primary/20 transition-colors">
-                    <CardHeader className="text-center">
-                      <div className="flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mx-auto mb-4">
-                        <Icon className="w-8 h-8 text-primary" />
-                      </div>
-                      <CardTitle className="text-xl">{feature.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-center text-base">
-                        {feature.description}
-                      </CardDescription>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        </div>
-      </motion.section>
-
-      {/* Latest Deals Section */}
-      <motion.section 
-        className="py-16 md:py-24 bg-card/30"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            className="text-center mb-12"
-            variants={fadeInUp}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Latest Community Deals
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Fresh opportunities shared by our community members
-            </p>
-          </motion.div>
-          
-          <motion.div 
-            className="overflow-x-auto"
-            variants={fadeInUp}
-            transition={{ delay: 0.2 }}
-          >
-            <table className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Deal</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Category</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Original Price</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Share Price</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Savings</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Expires</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                {latestDeals.map((deal, index) => (
-                  <motion.tr 
-                    key={index}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 + index * 0.1 }}
-                  >
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900 dark:text-gray-100">{deal.title}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant="outline">{deal.category}</Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-gray-500 line-through">{deal.originalPrice}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="font-bold text-green-600">{deal.sharePrice}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
-                        {deal.savings} off
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        {new Date(deal.expiryDate).toLocaleDateString()}
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </motion.div>
-          
-          <motion.div 
-            className="text-center mt-8"
-            variants={fadeInUp}
-            transition={{ delay: 0.6 }}
-          >
-            <Button size="lg" asChild>
-              <Link to="/deals">View All Deals</Link>
-            </Button>
-          </motion.div>
-        </div>
-      </motion.section>
-
-      {/* Video Demo Section */}
+      {/* Demo Video Section */}
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
       >
         <DemoVideoSection videoUrl={demoVideoUrl} />
       </motion.div>
@@ -560,7 +385,7 @@ export const Home = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.h2 
             className="text-3xl md:text-4xl font-bold text-foreground mb-4"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2, duration: 0.6 }}
@@ -569,7 +394,7 @@ export const Home = () => {
           </motion.h2>
           <motion.p 
             className="text-xl text-muted-foreground mb-8"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3, duration: 0.6 }}
@@ -578,7 +403,7 @@ export const Home = () => {
           </motion.p>
           <motion.div 
             className="flex flex-col sm:flex-row gap-4 justify-center"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.4, duration: 0.6 }}
@@ -595,6 +420,8 @@ export const Home = () => {
         </div>
       </motion.section>
 
+      <Footer />
+
       {/* Video Modals */}
       <VideoUploadModal
         open={showUploadModal}
@@ -610,8 +437,6 @@ export const Home = () => {
           title="SplitClub Demo"
         />
       )}
-
-      <Footer />
     </motion.div>
   );
 };
