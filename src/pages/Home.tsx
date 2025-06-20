@@ -353,7 +353,7 @@ export const Home = () => {
                     }} />
                       <div className="text-white font-bold text-xl tracking-wide flex items-center gap-2">
                         <Award className="w-6 h-6" />
-                        SplitClub Pro
+                        SplitClub
                       </div>
                       
                     </div>
