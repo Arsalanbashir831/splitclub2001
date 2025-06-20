@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { AuthState, User } from '../types';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,6 +48,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       if (data.session) {
         get().setSession(data.session);
+        
+        // Check for redirect after login
+        const redirectPath = sessionStorage.getItem('redirectAfterLogin');
+        if (redirectPath) {
+          sessionStorage.removeItem('redirectAfterLogin');
+          window.location.href = redirectPath;
+        } else {
+          window.location.href = '/deals';
+        }
       }
 
       return { error: null };

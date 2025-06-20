@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Navbar } from '../components/Navbar';
-import { Deal } from '../types';
-import { mockDeals } from '../data/mockData';
+import { useDeal } from '../hooks/useDeals';
+import { dealsService } from '../services/dealsService';
 import { 
   Clock, 
   Users, 
@@ -21,7 +21,8 @@ import {
   CheckCircle,
   Shield,
   Zap,
-  Mail
+  Mail,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '../store/authStore';
@@ -30,38 +31,45 @@ export const DealDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAuthenticated } = useAuthStore();
-  const [deal, setDeal] = useState<Deal | null>(null);
+  const { isAuthenticated, user } = useAuthStore();
+  const { deal, isLoading, error } = useDeal(id || '');
   const [isLiked, setIsLiked] = useState(false);
+  const [isClaimLoading, setIsClaimLoading] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      const foundDeal = mockDeals.find(d => d.id === id);
-      setDeal(foundDeal || null);
-    }
-  }, [id]);
-
-  if (!deal) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Deal not found</h1>
-          <Button onClick={() => navigate('/')}>Back to Deals</Button>
-        </div>
-      </div>
-    );
-  }
-
-  const handleClaim = () => {
+  const handleClaim = async () => {
     if (!isAuthenticated) {
+      // Store the current page for redirect after login
+      sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
       navigate('/login');
       return;
     }
 
-    toast({
-      title: "Deal claimed!",
-      description: `You've successfully claimed "${deal.title}". The owner will be notified.`,
-    });
+    if (!user || !deal) {
+      toast({
+        title: "Error",
+        description: "User information not available. Please try logging in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsClaimLoading(true);
+    try {
+      await dealsService.claimDeal(deal.id, user.id);
+      toast({
+        title: "Deal claimed!",
+        description: `You've successfully claimed "${deal.title}". The owner will be notified.`,
+      });
+    } catch (error) {
+      console.error('Error claiming deal:', error);
+      toast({
+        title: "Error claiming deal",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsClaimLoading(false);
+    }
   };
 
   const handleShare = () => {
@@ -79,6 +87,31 @@ export const DealDetail = () => {
       description: isLiked ? "Deal removed from your favorites" : "Deal saved to your favorites",
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="max-w-4xl mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading deal...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !deal) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Deal not found</h1>
+          <Button onClick={() => navigate('/deals')}>Back to Deals</Button>
+        </div>
+      </div>
+    );
+  }
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -142,9 +175,17 @@ export const DealDetail = () => {
           <div className="flex items-start space-x-4 mb-6">
             {/* Service Icon/Logo */}
             <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl font-bold text-primary-foreground">
-                {deal.title.charAt(0)}
-              </span>
+              {deal.imageUrl ? (
+                <img 
+                  src={deal.imageUrl} 
+                  alt={deal.title} 
+                  className="w-full h-full object-cover rounded-xl"
+                />
+              ) : (
+                <span className="text-2xl font-bold text-primary-foreground">
+                  {deal.title.charAt(0)}
+                </span>
+              )}
             </div>
             
             <div className="flex-1">
@@ -179,14 +220,12 @@ export const DealDetail = () => {
                     <p className="font-semibold capitalize">{deal.category}</p>
                   </div>
                   <div>
-                    <p className="font-medium text-sm text-muted-foreground">What's included</p>
-                    <p className="font-semibold">
-                      {deal.category === 'subscription' ? 'Full subscription access' : 'Complete access'}
-                    </p>
+                    <p className="font-medium text-sm text-muted-foreground">Source</p>
+                    <p className="font-semibold">{deal.source || 'Not specified'}</p>
                   </div>
                   <div>
-                    <p className="font-medium text-sm text-muted-foreground">Remaining duration</p>
-                    <p className="font-semibold">Renews monthly · No long-term contract</p>
+                    <p className="font-medium text-sm text-muted-foreground">Expires</p>
+                    <p className="font-semibold">{formatDate(deal.expiryDate)}</p>
                   </div>
                   <div>
                     <p className="font-medium text-sm text-muted-foreground">Availability</p>
@@ -211,6 +250,13 @@ export const DealDetail = () => {
                     />
                   </div>
                 </div>
+
+                {deal.usageNotes && (
+                  <div className="mt-4 p-4 bg-muted rounded-lg">
+                    <h4 className="font-medium mb-2">Usage Notes</h4>
+                    <p className="text-sm text-muted-foreground">{deal.usageNotes}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -247,12 +293,20 @@ export const DealDetail = () => {
                   </div>
                   <div className="flex items-start space-x-2">
                     <Calendar className="h-4 w-4 mt-1 text-blue-600" />
-                    <p className="text-sm">Cancel anytime before next billing</p>
+                    <p className="text-sm">Valid until {formatDate(deal.expiryDate)}</p>
                   </div>
-                  <div className="flex items-start space-x-2">
-                    <Mail className="h-4 w-4 mt-1 text-purple-600" />
-                    <p className="text-sm">Once accepted, you'll receive the invite by email or in-app</p>
-                  </div>
+                  {deal.redemptionType && (
+                    <div className="flex items-start space-x-2">
+                      <Mail className="h-4 w-4 mt-1 text-purple-600" />
+                      <p className="text-sm">Redemption type: {deal.redemptionType}</p>
+                    </div>
+                  )}
+                  {deal.isLocationBound && deal.locationDetails && (
+                    <div className="flex items-start space-x-2">
+                      <MapPin className="h-4 w-4 mt-1 text-orange-600" />
+                      <p className="text-sm">Location: {deal.locationDetails}</p>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="pt-4 border-t border-border">
@@ -295,8 +349,20 @@ export const DealDetail = () => {
                   )}
 
                   {deal.status === 'active' && deal.availableSlots > 0 ? (
-                    <Button className="w-full" size="lg" onClick={handleClaim}>
-                      💸 {deal.isFree ? 'Join for Free' : `Join Now for £${deal.sharePrice}/month`}
+                    <Button 
+                      className="w-full" 
+                      size="lg" 
+                      onClick={handleClaim}
+                      disabled={isClaimLoading}
+                    >
+                      {isClaimLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Claiming...
+                        </>
+                      ) : (
+                        <>💸 {deal.isFree ? 'Join for Free' : `Join Now for £${deal.sharePrice}/month`}</>
+                      )}
                     </Button>
                   ) : deal.status === 'claimed' ? (
                     <Button variant="secondary" className="w-full" size="lg" disabled>
@@ -341,9 +407,6 @@ export const DealDetail = () => {
                     </div>
                   </div>
                 </div>
-                <Button variant="outline" className="w-full mt-4" size="sm">
-                  View Profile
-                </Button>
               </CardContent>
             </Card>
 

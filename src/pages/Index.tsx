@@ -8,19 +8,23 @@ import { DealCard } from '../components/DealCard';
 import { DealFilters, FilterState } from '../components/DealFilters';
 import { WelcomeTip } from '../components/WelcomeTip';
 import { DemoVideoSection } from '../components/DemoVideoSection';
-import { Deal } from '../types';
-import { mockDeals } from '../data/mockData';
+import { useDeals } from '../hooks/useDeals';
 import { useAuthStore } from '../store/authStore';
-import { Search, Leaf, TrendingUp, Users, Gift } from 'lucide-react';
+import { dealsService } from '../services/dealsService';
+import { Search, Leaf, TrendingUp, Users, Gift, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [claimingDealId, setClaimingDealId] = useState<string | null>(null);
+  const { deals, isLoading, error } = useDeals();
+
   const [filters, setFilters] = useState<FilterState>({
     category: [],
     priceRange: [0, 100],
@@ -38,29 +42,54 @@ const Index = () => {
     }
   }, [searchParams]);
 
-  const handleDealClaim = (dealId: string) => {
+  const handleDealClaim = async (dealId: string) => {
     if (!isAuthenticated) {
+      // Store the current page for redirect after login
+      sessionStorage.setItem('redirectAfterLogin', window.location.pathname + window.location.search);
+      navigate('/login');
+      return;
+    }
+
+    if (!user) {
       toast({
-        title: "Sign in required",
-        description: "Please sign in to claim deals",
+        title: "Error",
+        description: "User information not available. Please try logging in again.",
         variant: "destructive",
       });
       return;
     }
-    // Handle claim logic here
+
+    setClaimingDealId(dealId);
+    try {
+      await dealsService.claimDeal(dealId, user.id);
+      toast({
+        title: "Deal claimed!",
+        description: "You've successfully claimed this deal. The owner will be notified.",
+      });
+    } catch (error) {
+      console.error('Error claiming deal:', error);
+      toast({
+        title: "Error claiming deal",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setClaimingDealId(null);
+    }
   };
 
   const handleDealView = (dealId: string) => {
-    // Handle view tracking here
-    console.log('Viewing deal:', dealId);
+    navigate(`/deal/${dealId}`);
   };
 
   const filteredDeals = useMemo(() => {
-    let deals = [...mockDeals];
+    if (!deals) return [];
+    
+    let filteredList = [...deals];
 
     // Search filter
     if (searchQuery) {
-      deals = deals.filter(deal =>
+      filteredList = filteredList.filter(deal =>
         deal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         deal.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         deal.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -69,21 +98,21 @@ const Index = () => {
 
     // Category filter
     if (filters.category.length > 0) {
-      deals = deals.filter(deal => filters.category.includes(deal.category));
+      filteredList = filteredList.filter(deal => filters.category.includes(deal.category));
     }
 
     // Price filter
     if (!filters.isFree) {
-      deals = deals.filter(deal => 
+      filteredList = filteredList.filter(deal => 
         deal.isFree || (deal.sharePrice >= filters.priceRange[0] && deal.sharePrice <= filters.priceRange[1])
       );
     } else {
-      deals = deals.filter(deal => deal.isFree);
+      filteredList = filteredList.filter(deal => deal.isFree);
     }
 
     // Available only filter
     if (filters.availableOnly) {
-      deals = deals.filter(deal => deal.status === 'active' && deal.availableSlots > 0);
+      filteredList = filteredList.filter(deal => deal.status === 'active' && deal.availableSlots > 0);
     }
 
     // Expiring within filter
@@ -92,7 +121,7 @@ const Index = () => {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() + days);
       
-      deals = deals.filter(deal => {
+      filteredList = filteredList.filter(deal => {
         const expiryDate = new Date(deal.expiryDate);
         return expiryDate <= cutoffDate;
       });
@@ -101,24 +130,24 @@ const Index = () => {
     // Sort
     switch (filters.sortBy) {
       case 'newest':
-        deals.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        filteredList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
       case 'expiring':
-        deals.sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
+        filteredList.sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
         break;
       case 'price-low':
-        deals.sort((a, b) => a.sharePrice - b.sharePrice);
+        filteredList.sort((a, b) => a.sharePrice - b.sharePrice);
         break;
       case 'price-high':
-        deals.sort((a, b) => b.sharePrice - a.sharePrice);
+        filteredList.sort((a, b) => b.sharePrice - a.sharePrice);
         break;
       case 'popular':
-        deals.sort((a, b) => (b.totalSlots - b.availableSlots) - (a.totalSlots - a.availableSlots));
+        filteredList.sort((a, b) => (b.totalSlots - b.availableSlots) - (a.totalSlots - a.availableSlots));
         break;
     }
 
-    return deals;
-  }, [searchQuery, filters]);
+    return filteredList;
+  }, [deals, searchQuery, filters]);
 
   const clearFilters = () => {
     setFilters({
@@ -133,11 +162,25 @@ const Index = () => {
   };
 
   const stats = {
-    totalDeals: mockDeals.length,
-    activeDeals: mockDeals.filter(d => d.status === 'active').length,
-    totalSavings: mockDeals.reduce((sum, deal) => sum + (deal.originalPrice - deal.sharePrice), 0),
-    freeDeals: mockDeals.filter(d => d.isFree).length
+    totalDeals: deals?.length || 0,
+    activeDeals: deals?.filter(d => d.status === 'active').length || 0,
+    totalSavings: deals?.reduce((sum, deal) => sum + (deal.originalPrice - deal.sharePrice), 0) || 0,
+    freeDeals: deals?.filter(d => d.isFree).length || 0
   };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-foreground mb-4">Error loading deals</h2>
+            <p className="text-muted-foreground">Please try refreshing the page</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -204,11 +247,11 @@ const Index = () => {
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">Available Deals</h2>
                   <p className="text-muted-foreground">
-                    {filteredDeals.length} deals found
+                    {isLoading ? 'Loading...' : `${filteredDeals.length} deals found`}
                   </p>
                 </div>
                 {!isAuthenticated && (
-                  <Button size="lg" className="sm:w-auto">
+                  <Button size="lg" className="sm:w-auto" onClick={() => navigate('/login')}>
                     Join SplitClub
                   </Button>
                 )}
@@ -266,8 +309,16 @@ const Index = () => {
               )}
             </div>
 
+            {/* Loading state */}
+            {isLoading && (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Loading deals...</span>
+              </div>
+            )}
+
             {/* Deals grid */}
-            {filteredDeals.length > 0 ? (
+            {!isLoading && filteredDeals.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredDeals.map((deal) => (
                   <DealCard
@@ -275,10 +326,11 @@ const Index = () => {
                     deal={deal}
                     onClaim={handleDealClaim}
                     onView={handleDealView}
+                    isClaimLoading={claimingDealId === deal.id}
                   />
                 ))}
               </div>
-            ) : (
+            ) : !isLoading && (
               <div className="text-center py-12">
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                   <Search className="h-8 w-8 text-muted-foreground" />

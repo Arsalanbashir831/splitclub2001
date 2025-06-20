@@ -12,31 +12,61 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GdprConsent } from '@/components/GdprConsent';
 import { DealStatusCard } from '@/components/DealStatusCard';
 import { useAuthStore } from '@/store/authStore';
+import { dealsService } from '@/services/dealsService';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User, Settings, Shield, History, Upload, Download, Trash2 } from 'lucide-react';
-import { mockDeals } from '@/data/mockData';
+import { User, Settings, Shield, History, Upload, Download, Trash2, Loader2 } from 'lucide-react';
 
 export const Profile = () => {
   const { user, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [userDeals, setUserDeals] = useState([]);
+  const [userClaims, setUserClaims] = useState([]);
   const [profileData, setProfileData] = useState({
     displayName: user?.name || '',
     email: user?.email || '',
     avatar: user?.avatar || ''
   });
 
-  // Mock user's deals and claims for demonstration
-  const userDeals = mockDeals.filter(deal => deal.sharedBy.id === user?.id).slice(0, 3);
-  const userClaims = mockDeals.filter(deal => deal.claimedBy?.some(c => c.id === user?.id)).slice(0, 3);
-
   useEffect(() => {
     if (!isAuthenticated) {
+      // Store the current page for redirect after login
+      sessionStorage.setItem('redirectAfterLogin', '/profile');
       navigate('/login');
+      return;
     }
-  }, [isAuthenticated, navigate]);
+
+    if (user) {
+      loadUserData();
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  const loadUserData = async () => {
+    if (!user) return;
+
+    try {
+      setIsLoading(true);
+      
+      // Load user deals
+      const deals = await dealsService.getUserDeals(user.id);
+      setUserDeals(deals);
+
+      // Load user claims
+      const claims = await dealsService.getUserClaims(user.id);
+      setUserClaims(claims);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load user data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleProfileUpdate = async () => {
     if (!user) return;
@@ -69,29 +99,46 @@ export const Profile = () => {
     }
   };
 
-  const handleDataExport = () => {
-    // Mock data export functionality
-    const userData = {
-      profile: profileData,
-      deals: userDeals,
-      claims: userClaims,
-      exportDate: new Date().toISOString()
-    };
+  const handleDataExport = async () => {
+    if (!user) return;
 
-    const blob = new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `splitclub-data-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      // Get user's complete data
+      const [deals, claims, profile] = await Promise.all([
+        dealsService.getUserDeals(user.id),
+        dealsService.getUserClaims(user.id),
+        supabase.from('profiles').select('*').eq('user_id', user.id).single()
+      ]);
 
-    toast({
-      title: "Data exported",
-      description: "Your data has been downloaded to your device.",
-    });
+      const userData = {
+        profile: profile.data,
+        deals,
+        claims,
+        exportDate: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `splitclub-data-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Data exported",
+        description: "Your data has been downloaded to your device.",
+      });
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to export data. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAccountDeletion = async () => {
@@ -121,7 +168,17 @@ export const Profile = () => {
   };
 
   if (!isAuthenticated || !user) {
-    return null;
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-center">
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -171,6 +228,9 @@ export const Profile = () => {
                   <div className="space-y-2">
                     <h3 className="text-lg font-semibold">{profileData.displayName}</h3>
                     <Badge variant="secondary">Member since 2024</Badge>
+                    {user.isAdmin && (
+                      <Badge variant="default">Admin</Badge>
+                    )}
                   </div>
                 </div>
 
@@ -203,51 +263,78 @@ export const Profile = () => {
           </TabsContent>
 
           <TabsContent value="activity" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your Shared Deals</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {userDeals.length > 0 ? (
-                    userDeals.map((deal) => (
-                      <DealStatusCard
-                        key={deal.id}
-                        deal={deal}
-                        compact
-                        showActions={false}
-                      />
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground text-center py-4">
-                      You haven't shared any deals yet.
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Loading activity...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Your Shared Deals ({userDeals.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {userDeals.length > 0 ? (
+                      userDeals.slice(0, 5).map((deal) => (
+                        <div key={deal.id} className="p-4 border rounded-lg">
+                          <h4 className="font-medium">{deal.title}</h4>
+                          <p className="text-sm text-muted-foreground">{deal.category}</p>
+                          <div className="flex items-center justify-between mt-2">
+                            <Badge variant={deal.status === 'active' ? 'default' : 'secondary'}>
+                              {deal.status}
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(deal.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground text-center py-4">
+                        You haven't shared any deals yet.
+                      </p>
+                    )}
+                    {userDeals.length > 5 && (
+                      <Button variant="outline" size="sm" className="w-full">
+                        View All ({userDeals.length})
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your Claimed Deals</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {userClaims.length > 0 ? (
-                    userClaims.map((deal) => (
-                      <DealStatusCard
-                        key={deal.id}
-                        deal={deal}
-                        compact
-                        showActions={false}
-                      />
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground text-center py-4">
-                      You haven't claimed any deals yet.
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Your Claimed Deals ({userClaims.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {userClaims.length > 0 ? (
+                      userClaims.slice(0, 5).map((claim) => (
+                        <div key={claim.id} className="p-4 border rounded-lg">
+                          <h4 className="font-medium">{claim.deals?.title || 'Deal'}</h4>
+                          <p className="text-sm text-muted-foreground">{claim.deals?.category}</p>
+                          <div className="flex items-center justify-between mt-2">
+                            <Badge variant="default">Claimed</Badge>
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(claim.claimed_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground text-center py-4">
+                        You haven't claimed any deals yet.
+                      </p>
+                    )}
+                    {userClaims.length > 5 && (
+                      <Button variant="outline" size="sm" className="w-full">
+                        View All ({userClaims.length})
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="privacy">
