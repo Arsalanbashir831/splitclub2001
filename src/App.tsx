@@ -58,7 +58,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <GdprConsent />
+     
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/deals" element={
