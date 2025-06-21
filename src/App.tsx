@@ -11,7 +11,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useAuthStore } from './store/authStore';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { GdprConsent } from './components/GdprConsent';
-import Index from './pages/Index';
+import Deals from './pages/Home';
 import Deals from './pages/Deals';
 import { Login } from './pages/Login';
 import ShareDeal from './pages/ShareDeal';
@@ -60,7 +60,7 @@ function AppContent() {
     <div className="min-h-screen bg-background">
      
       <Routes>
-        <Route path="/" element={<Index />} />
+        <Route path="/" element={<Home />} />
         <Route path="/deals" element={
           <ProtectedRoute>
             <Deals />
