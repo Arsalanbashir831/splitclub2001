@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import {
   BrowserRouter as Router,
@@ -10,7 +11,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useAuthStore } from './store/authStore';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { GdprConsent } from './components/GdprConsent';
-import Home from './pages/Home';
+import { Home } from './pages/Home';
 import Deals from './pages/Deals';
 import { Login } from './pages/Login';
 import ShareDeal from './pages/ShareDeal';
