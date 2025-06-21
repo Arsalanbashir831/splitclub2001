@@ -1,8 +1,10 @@
+
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Navbar } from '../components/Navbar';
 import { DealCard } from '../components/DealCard';
 import { DealFilters, FilterState } from '../components/DealFilters';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -273,6 +275,7 @@ const Deals = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
+        <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-foreground mb-4">Error loading deals</h2>
@@ -295,6 +298,8 @@ const Deals = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
+      <Navbar />
+      
       {/* Hero section */}
       <motion.div 
         className="bg-gradient-to-r from-primary/10 via-background to-accent/10 border-b border-border"
