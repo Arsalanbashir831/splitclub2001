@@ -23,7 +23,7 @@ import {
   Calendar,
   DollarSign,
   Star,
-  Plus,
+  Plus,  
   Edit,
   Trash2,
   Eye,
@@ -275,7 +275,7 @@ const Profile = () => {
 
       {/* Hero Section */}
       <motion.div 
-        className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 dark:from-slate-800 dark:via-slate-700 dark:to-slate-900 text-primary-foreground overflow-hidden"
+        className="relative bg-gradient-to-br from-gray-900 via-black to-gray-800 dark:from-slate-800 dark:via-slate-700 dark:to-slate-900 text-primary-foreground overflow-hidden"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.3 }}
