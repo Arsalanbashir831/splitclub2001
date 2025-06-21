@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Heart, Clock, MapPin, Users, Eye, Package } from 'lucide-react';
 import { Deal } from '@/types';
 import { cn } from '@/lib/utils';
-import { useFavorites } from '@/hooks/useFavorites';
 import { motion } from 'framer-motion';
 
 interface DealCardProps {
@@ -20,35 +19,56 @@ interface DealCardProps {
 export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: DealCardProps) => {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-  
-  // Safely handle favorites with error boundary
-  let isFav = false;
-  let handleFavoriteToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    console.log('Favorites not available');
-  };
 
-  try {
-    const { addFavorite, removeFavorite, isFavorite } = useFavorites();
-    isFav = isFavorite(deal.id);
-    handleFavoriteToggle = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (isFav) {
-        removeFavorite(deal.id);
-      } else {
-        addFavorite(deal.id);
-      }
-    };
-  } catch (error) {
-    console.error('Error with favorites hook:', error);
+  // Safely handle deal data with fallbacks
+  if (!deal || !deal.id) {
+    console.error('DealCard: Invalid deal data', deal);
+    return null;
   }
 
-  // Safely handle deal data
+  const safeTitle = deal.title || 'Untitled Deal';
+  const safeCategory = deal.category || 'other';
+  const safeSharePrice = Number(deal.sharePrice) || 0;
+  const safeOriginalPrice = Number(deal.originalPrice) || 0;
+  const safeIsFree = Boolean(deal.isFree);
   const safeExpiryDate = deal.expiryDate ? new Date(deal.expiryDate).toLocaleDateString() : 'No expiry';
-  const safeAvailableSlots = deal.availableSlots || 0;
-  const safeTotalSlots = deal.totalSlots || 5;
-  const safeSharedByName = deal.sharedBy?.name || 'Unknown User';
-  const safeSharedByAvatar = deal.sharedBy?.avatar;
+  const safeAvailableSlots = Number(deal.availableSlots) || 0;
+  const safeTotalSlots = Number(deal.totalSlots) || 5;
+  const safeStatus = deal.status || 'active';
+  const safeImageUrl = deal.imageUrl || deal.image;
+  const safeIsLocationBound = Boolean(deal.isLocationBound);
+  const safeLocationDetails = deal.locationDetails || '';
+  
+  // Safely handle sharedBy data
+  const safeSharedBy = deal.sharedBy || { id: '', name: 'Unknown User', email: '', avatar: undefined };
+  const safeSharedByName = safeSharedBy.name || 'Unknown User';
+  const safeSharedByAvatar = safeSharedBy.avatar;
+
+  const handleCardClick = () => {
+    try {
+      onView(deal.id);
+    } catch (error) {
+      console.error('Error viewing deal:', error);
+    }
+  };
+
+  const handleClaimClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      onClaim(deal.id);
+    } catch (error) {
+      console.error('Error claiming deal:', error);
+    }
+  };
+
+  const handleViewClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      onView(deal.id);
+    } catch (error) {
+      console.error('Error viewing deal:', error);
+    }
+  };
 
   return (
     <motion.div
@@ -56,28 +76,19 @@ export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: Deal
       transition={{ duration: 0.2 }}
       className="h-full"
     >
-      <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer" onClick={() => onView(deal.id)}>
+      <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer" onClick={handleCardClick}>
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start">
-            <CardTitle className="text-lg line-clamp-2 flex-1 pr-2 min-h-[3.5rem]">{deal.title}</CardTitle>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={handleFavoriteToggle}
-              className={cn(
-                "p-1 rounded-full transition-colors flex-shrink-0",
-                isFav ? "text-red-500" : "text-gray-400 hover:text-red-500"
-              )}
-            >
-              <Heart className={cn("h-5 w-5", isFav && "fill-current")} />
-            </motion.button>
+            <CardTitle className="text-lg line-clamp-2 flex-1 pr-2 min-h-[3.5rem]">
+              {safeTitle}
+            </CardTitle>
           </div>
         </CardHeader>
         
         <CardContent className="flex flex-col flex-1 space-y-4">
           {/* Image section with consistent height */}
           <div className="relative h-32 bg-gray-50 rounded-lg overflow-hidden">
-            {deal.imageUrl && !imageError ? (
+            {safeImageUrl && !imageError ? (
               <>
                 {!isImageLoaded && (
                   <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
@@ -85,8 +96,8 @@ export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: Deal
                   </div>
                 )}
                 <img
-                  src={deal.imageUrl}
-                  alt={deal.title}
+                  src={safeImageUrl}
+                  alt={safeTitle}
                   className={cn(
                     "w-full h-full object-cover transition-opacity duration-200",
                     isImageLoaded ? "opacity-100" : "opacity-0"
@@ -107,16 +118,16 @@ export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: Deal
 
           {/* Price and category section */}
           <div className="flex items-center justify-between">
-            <Badge variant="outline" className="text-xs">{deal.category}</Badge>
+            <Badge variant="outline" className="text-xs capitalize">{safeCategory}</Badge>
             <div className="text-right">
-              {deal.isFree ? (
+              {safeIsFree ? (
                 <span className="font-bold text-green-600 text-lg">FREE</span>
               ) : (
                 <div className="flex flex-col items-end">
-                  <span className="font-bold text-green-600 text-lg">${deal.sharePrice}</span>
-                  {deal.originalPrice > deal.sharePrice && (
+                  <span className="font-bold text-green-600 text-lg">${safeSharePrice}</span>
+                  {safeOriginalPrice > safeSharePrice && (
                     <span className="text-sm text-muted-foreground line-through">
-                      ${deal.originalPrice}
+                      ${safeOriginalPrice}
                     </span>
                   )}
                 </div>
@@ -147,10 +158,10 @@ export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: Deal
               <span>Expires {safeExpiryDate}</span>
             </div>
             
-            {deal.isLocationBound && deal.locationDetails && (
+            {safeIsLocationBound && safeLocationDetails && (
               <div className="flex items-center">
                 <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="truncate">{deal.locationDetails}</span>
+                <span className="truncate">{safeLocationDetails}</span>
               </div>
             )}
           </div>
@@ -161,10 +172,7 @@ export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: Deal
               variant="outline"
               size="sm"
               className="flex-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                onView(deal.id);
-              }}
+              onClick={handleViewClick}
             >
               <Eye className="h-4 w-4 mr-1" />
               View
@@ -172,11 +180,8 @@ export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: Deal
             <Button
               size="sm"
               className="flex-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                onClaim(deal.id);
-              }}
-              disabled={safeAvailableSlots === 0 || isClaimLoading}
+              onClick={handleClaimClick}
+              disabled={safeAvailableSlots === 0 || isClaimLoading || safeStatus !== 'active'}
             >
               {isClaimLoading ? 'Claiming...' : 'Claim'}
             </Button>

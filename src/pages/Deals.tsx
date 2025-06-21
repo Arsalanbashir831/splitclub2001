@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -116,38 +115,58 @@ const Deals = () => {
   };
 
   const filteredDeals = useMemo(() => {
-    if (!deals) return [];
+    if (!deals || !Array.isArray(deals)) {
+      console.log('No deals available or deals is not an array:', deals);
+      return [];
+    }
     
     console.log('Filtering deals, total:', deals.length);
     let filteredList = [...deals];
 
     // Filter out current user's own deals
     if (user) {
-      filteredList = filteredList.filter(deal => deal.sharedBy.id !== user.id);
+      filteredList = filteredList.filter(deal => {
+        if (!deal || !deal.sharedBy) return false;
+        return deal.sharedBy.id !== user.id;
+      });
     }
 
     if (searchQuery) {
-      filteredList = filteredList.filter(deal =>
-        deal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        deal.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        deal.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
+      filteredList = filteredList.filter(deal => {
+        if (!deal) return false;
+        const title = deal.title || '';
+        const description = deal.description || '';
+        const tags = Array.isArray(deal.tags) ? deal.tags : [];
+        
+        return title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               tags.some(tag => tag && tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      });
     }
 
     if (filters.category.length > 0) {
-      filteredList = filteredList.filter(deal => filters.category.includes(deal.category));
+      filteredList = filteredList.filter(deal => {
+        if (!deal || !deal.category) return false;
+        return filters.category.includes(deal.category);
+      });
     }
 
     if (!filters.isFree) {
-      filteredList = filteredList.filter(deal => 
-        deal.isFree || (deal.sharePrice >= filters.priceRange[0] && deal.sharePrice <= filters.priceRange[1])
-      );
+      filteredList = filteredList.filter(deal => {
+        if (!deal) return false;
+        const sharePrice = Number(deal.sharePrice) || 0;
+        return deal.isFree || (sharePrice >= filters.priceRange[0] && sharePrice <= filters.priceRange[1]);
+      });
     } else {
-      filteredList = filteredList.filter(deal => deal.isFree);
+      filteredList = filteredList.filter(deal => deal && deal.isFree);
     }
 
     if (filters.availableOnly) {
-      filteredList = filteredList.filter(deal => deal.status === 'active' && deal.availableSlots > 0);
+      filteredList = filteredList.filter(deal => {
+        if (!deal) return false;
+        const availableSlots = Number(deal.availableSlots) || 0;
+        return deal.status === 'active' && availableSlots > 0;
+      });
     }
 
     if (filters.expiringWithin !== 'any') {
@@ -156,36 +175,70 @@ const Deals = () => {
       cutoffDate.setDate(cutoffDate.getDate() + days);
       
       filteredList = filteredList.filter(deal => {
-        if (!deal.expiryDate) return false;
-        const expiryDate = new Date(deal.expiryDate);
-        return expiryDate <= cutoffDate;
+        if (!deal || !deal.expiryDate) return false;
+        try {
+          const expiryDate = new Date(deal.expiryDate);
+          return expiryDate <= cutoffDate;
+        } catch (error) {
+          console.error('Error parsing expiry date:', deal.expiryDate);
+          return false;
+        }
       });
     }
 
+    // Sort deals safely
     switch (filters.sortBy) {
       case 'newest':
-        filteredList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        filteredList.sort((a, b) => {
+          if (!a || !b || !a.createdAt || !b.createdAt) return 0;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
         break;
       case 'expiring':
         filteredList.sort((a, b) => {
+          if (!a || !b) return 0;
           if (!a.expiryDate) return 1;
           if (!b.expiryDate) return -1;
-          return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+          try {
+            return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+          } catch (error) {
+            console.error('Error sorting by expiry date');
+            return 0;
+          }
         });
         break;
       case 'price-low':
-        filteredList.sort((a, b) => a.sharePrice - b.sharePrice);
+        filteredList.sort((a, b) => {
+          if (!a || !b) return 0;
+          const priceA = Number(a.sharePrice) || 0;
+          const priceB = Number(b.sharePrice) || 0;
+          return priceA - priceB;
+        });
         break;
       case 'price-high':
-        filteredList.sort((a, b) => b.sharePrice - a.sharePrice);
+        filteredList.sort((a, b) => {
+          if (!a || !b) return 0;
+          const priceA = Number(a.sharePrice) || 0;
+          const priceB = Number(b.sharePrice) || 0;
+          return priceB - priceA;
+        });
         break;
       case 'popular':
-        filteredList.sort((a, b) => (b.totalSlots - b.availableSlots) - (a.totalSlots - a.availableSlots));
+        filteredList.sort((a, b) => {
+          if (!a || !b) return 0;
+          const totalA = Number(a.totalSlots) || 0;
+          const availableA = Number(a.availableSlots) || 0;
+          const totalB = Number(b.totalSlots) || 0;
+          const availableB = Number(b.availableSlots) || 0;
+          return (totalB - availableB) - (totalA - availableA);
+        });
         break;
     }
 
-    console.log('Filtered deals count:', filteredList.length);
-    return filteredList;
+    // Filter out any null or invalid deals
+    const validDeals = filteredList.filter(deal => deal && deal.id);
+    console.log('Filtered deals count:', validDeals.length);
+    return validDeals;
   }, [deals, searchQuery, filters, user]);
 
   const clearFilters = () => {
@@ -416,7 +469,13 @@ const Deals = () => {
                 transition={{ duration: 0.5 }}
               >
                 {filteredDeals.map((deal, index) => {
-                  const isOwnDeal = user && deal.sharedBy.id === user.id;
+                  // Safety check for deal data
+                  if (!deal || !deal.id) {
+                    console.error('Invalid deal in map:', deal);
+                    return null;
+                  }
+
+                  const isOwnDeal = user && deal.sharedBy && deal.sharedBy.id === user.id;
                   const hasClaimedThisDeal = hasClaimedDeal(deal.id);
                   
                   return (
@@ -434,29 +493,6 @@ const Deals = () => {
                         onView={handleDealView}
                         isClaimLoading={claimingDealId === deal.id}
                       />
-                      <motion.div
-                        className="absolute top-2 right-2"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.3 + index * 0.05 }}
-                      >
-                        <HoverScale>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="bg-white/80 hover:bg-white"
-                            onClick={() => handleFavoriteToggle(deal.id)}
-                          >
-                            <Heart 
-                              className={`h-4 w-4 ${
-                                isFavorite(deal.id) 
-                                  ? 'fill-red-500 text-red-500' 
-                                  : 'text-gray-400'
-                              }`}
-                            />
-                          </Button>
-                        </HoverScale>
-                      </motion.div>
                     </motion.div>
                   );
                 })}
