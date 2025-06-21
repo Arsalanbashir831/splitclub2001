@@ -275,49 +275,98 @@ const Profile = () => {
 
       {/* Hero Section */}
       <motion.div 
-        className="bg-gradient-to-r from-primary via-primary/80 to-primary/60 text-primary-foreground relative overflow-hidden"
+        className="relative bg-gradient-to-br from-primary via-primary/90 to-primary/70 text-primary-foreground overflow-hidden"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.3 }}
       >
-        <div className="absolute inset-0 bg-black/20 dark:bg-black/40"></div>
-        <div className="relative max-w-6xl mx-auto px-4 py-16">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center space-x-6 mb-8 md:mb-0">
-              <Avatar className="h-24 w-24 border-4 border-white/20 shadow-xl">
-                <AvatarImage src={user?.avatar} alt={user?.name} />
-                <AvatarFallback className="text-2xl bg-gradient-to-br from-primary to-primary/80">
-                  {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h1 className="text-4xl font-bold mb-2">{user?.name}</h1>
-                <p className="text-primary-foreground/80 text-lg">{user?.email}</p>
-                <div className="flex items-center mt-3">
-                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                    <User className="h-4 w-4 mr-1" />
-                    Member
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="4"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/10 dark:from-black/40 dark:via-black/20 dark:to-black/30"></div>
+        
+        <div className="relative max-w-6xl mx-auto px-4 py-20">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center space-x-8 flex-1">
+              {/* Avatar with Enhanced Styling */}
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-white/30 to-white/10 rounded-full blur-sm"></div>
+                <Avatar className="relative h-28 w-28 border-4 border-white/30 shadow-2xl ring-4 ring-white/20">
+                  <AvatarImage src={user?.avatar} alt={user?.name} />
+                  <AvatarFallback className="text-3xl bg-gradient-to-br from-primary-foreground/90 to-primary-foreground/70 text-primary font-bold">
+                    {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                {/* Online Status Indicator */}
+                <div className="absolute bottom-2 right-2 h-6 w-6 bg-green-500 border-3 border-white rounded-full shadow-lg"></div>
+              </div>
+              
+              {/* User Info with Enhanced Typography */}
+              <div className="flex-1">
+                <h1 className="text-4xl md:text-5xl font-bold mb-3 text-white drop-shadow-lg">
+                  {user?.name}
+                </h1>
+                <p className="text-primary-foreground/90 text-lg mb-4 font-medium">
+                  {user?.email}
+                </p>
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30 backdrop-blur-sm px-4 py-2 text-sm font-medium">
+                    <User className="h-4 w-4 mr-2" />
+                    Premium Member
+                  </Badge>
+                  <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-100 border-emerald-300/30 backdrop-blur-sm px-4 py-2 text-sm font-medium">
+                    <Crown className="h-4 w-4 mr-2" />
+                    Active
                   </Badge>
                 </div>
               </div>
             </div>
-            <div className="flex space-x-3">
-              <Button variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-foreground" onClick={() => navigate('/settings')}>
-                <Settings className="h-4 w-4 mr-2" />
+            
+            {/* Action Buttons with Enhanced Styling */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="bg-white/15 border-white/30 text-white hover:bg-white/25 hover:border-white/40 backdrop-blur-sm transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
+                onClick={() => navigate('/settings')}
+              >
+                <Settings className="h-5 w-5 mr-2" />
                 Edit Profile
               </Button>
-              <Button variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-foreground" onClick={() => signOut()}>
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="bg-red-500/15 border-red-300/30 text-red-100 hover:bg-red-500/25 hover:border-red-300/40 backdrop-blur-sm transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
+                onClick={() => signOut()}
+              >
                 Sign Out
               </Button>
+            </div>
+          </div>
+          
+          {/* Additional User Stats Row */}
+          <div className="mt-8 flex flex-wrap justify-center md:justify-start gap-6 text-center">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+              <div className="text-2xl font-bold text-white">{totalDealsCreated}</div>
+              <div className="text-sm text-white/80">Deals Created</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+              <div className="text-2xl font-bold text-white">{totalDealsClaimed}</div>
+              <div className="text-sm text-white/80">Deals Claimed</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+              <div className="text-2xl font-bold text-white">{totalFavorites}</div>
+              <div className="text-sm text-white/80">Favorites</div>
             </div>
           </div>
         </div>
       </motion.div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Stats Cards */}
+        {/* Stats Cards with Enhanced Positioning */}
         <motion.div 
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 -mt-8 relative z-10"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 -mt-12 relative z-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.3 }}
