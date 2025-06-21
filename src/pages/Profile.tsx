@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -276,7 +275,7 @@ const Profile = () => {
 
       {/* Hero Section */}
       <motion.div 
-        className="relative bg-gradient-to-br from-primary via-primary/90 to-primary/70 text-primary-foreground overflow-hidden"
+        className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 dark:from-slate-800 dark:via-slate-700 dark:to-slate-900 text-primary-foreground overflow-hidden"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.3 }}
@@ -285,7 +284,7 @@ const Profile = () => {
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%224%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30"></div>
         
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/10 dark:from-black/40 dark:via-black/20 dark:to-black/30"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-black/5 dark:from-black/30 dark:via-black/10 dark:to-black/20"></div>
         
         <div className="relative max-w-6xl mx-auto px-4 py-20">
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
@@ -308,7 +307,7 @@ const Profile = () => {
                 <h1 className="text-4xl md:text-5xl font-bold mb-3 text-white drop-shadow-lg">
                   {user?.name}
                 </h1>
-                <p className="text-primary-foreground/90 text-lg mb-4 font-medium">
+                <p className="text-white/90 text-lg mb-4 font-medium">
                   {user?.email}
                 </p>
                 <div className="flex items-center gap-3">
