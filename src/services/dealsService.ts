@@ -101,6 +101,7 @@ export const dealsService = {
           source: deal.source,
           redemptionType: deal.redemption_type as Deal['redemptionType'],
           voucherData: deal.voucher_data,
+          voucherFileUrl: deal.voucher_file_url,
           isLocationBound: deal.is_location_bound,
           locationDetails: deal.location_details,
           isForSale: deal.is_for_sale,
@@ -181,6 +182,7 @@ export const dealsService = {
         source: deal.source,
         redemptionType: deal.redemption_type as Deal['redemptionType'],
         voucherData: deal.voucher_data,
+        voucherFileUrl: deal.voucher_file_url,
         isLocationBound: deal.is_location_bound,
         locationDetails: deal.location_details,
         isForSale: deal.is_for_sale,
@@ -228,7 +230,8 @@ export const dealsService = {
         usage_notes: dealData.usageNotes,
         tags: dealData.tags,
         image_url: dealData.imageUrl,
-        image_file_name: dealData.imageFileName
+        image_file_name: dealData.imageFileName,
+        voucher_file_url: dealData.voucherFileUrl
       })
       .select()
       .single();

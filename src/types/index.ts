@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   name: string;
@@ -29,6 +28,7 @@ export interface Deal {
   source?: string;
   redemptionType?: 'voucher_code' | 'barcode' | 'pdf' | 'qr';
   voucherData?: string;
+  voucherFileUrl?: string;
   isLocationBound?: boolean;
   locationDetails?: string;
   isForSale?: boolean;

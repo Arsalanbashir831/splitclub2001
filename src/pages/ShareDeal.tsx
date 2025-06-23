@@ -20,7 +20,9 @@ export interface DealFormData {
   source: string;
   redemptionType: string;
   voucherFile?: File;
+  voucherFileUrl?: string;
   dealImage?: File;
+  dealImageUrl?: string;
   expiryDate: Date | undefined;
   isLocationBound: boolean;
   locationDetails: string;

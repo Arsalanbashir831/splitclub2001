@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,11 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Upload } from 'lucide-react';
+import { CalendarIcon, Upload, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DealFormData } from '@/pages/ShareDeal';
 import { ImageUpload } from '@/components/ImageUpload';
+import { storageService } from '@/services/storageService';
+import { useAuthStore } from '@/store/authStore';
+import { useToast } from '@/hooks/use-toast';
 
 const categoryTitles = {
   cinema: 'Cinema Ticket',
@@ -48,15 +50,99 @@ export const UploadRewardDetails = ({
   onPrev
 }: UploadRewardDetailsProps) => {
   const [dealImage, setDealImage] = useState<File | undefined>();
+  const [voucherFile, setVoucherFile] = useState<File | undefined>();
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingVoucher, setIsUploadingVoucher] = useState(false);
+  const { user } = useAuthStore();
+  const { toast } = useToast();
 
-  const handleImageSelected = (file: File) => {
+  const handleImageSelected = async (file: File) => {
+    if (!user) return;
+    
+    setIsUploadingImage(true);
     setDealImage(file);
-    onUpdateFormData({ dealImage: file });
+    
+    try {
+      const result = await storageService.uploadDealImage(file, user.id);
+      if (result) {
+        onUpdateFormData({ 
+          dealImage: file,
+          dealImageUrl: result.url
+        });
+        toast({
+          title: "Success",
+          description: "Deal image uploaded successfully",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to upload deal image",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload deal image",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const handleImageRemoved = () => {
     setDealImage(undefined);
-    onUpdateFormData({ dealImage: undefined });
+    onUpdateFormData({ 
+      dealImage: undefined,
+      dealImageUrl: undefined 
+    });
+  };
+
+  const handleVoucherFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setIsUploadingVoucher(true);
+    setVoucherFile(file);
+
+    try {
+      const result = await storageService.uploadVoucherFile(file, user.id);
+      if (result) {
+        onUpdateFormData({ 
+          voucherFile: file,
+          voucherFileUrl: result.url
+        });
+        toast({
+          title: "Success",
+          description: "Voucher file uploaded successfully",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to upload voucher file",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading voucher:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload voucher file",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingVoucher(false);
+    }
+  };
+
+  const handleRemoveVoucher = () => {
+    setVoucherFile(undefined);
+    onUpdateFormData({ 
+      voucherFile: undefined,
+      voucherFileUrl: undefined 
+    });
   };
 
   const isFormValid = formData.title && formData.source && formData.redemptionType && formData.expiryDate;
@@ -127,42 +213,73 @@ export const UploadRewardDetails = ({
               onImageSelected={handleImageSelected}
               onImageRemoved={handleImageRemoved}
               selectedImage={dealImage}
+              preview={formData.dealImageUrl}
             />
+            {isUploadingImage && (
+              <p className="text-sm text-muted-foreground">Uploading image...</p>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label>Upload Voucher</Label>
-            <div
-              className={cn(
-                "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
-                "border-muted-foreground/25 hover:border-primary hover:bg-primary/5"
-              )}
-            >
-              <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <div className="space-y-2">
-                <p className="text-sm font-medium">
-                  {formData.voucherFile ? formData.voucherFile.name : 'Drop your voucher file here'}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  or click to browse (PNG, JPG, PDF)
-                </p>
+            {formData.voucherFile || formData.voucherFileUrl ? (
+              <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Upload className="h-8 w-8 text-green-600" />
+                    <div className="text-left">
+                      <p className="text-sm font-medium">
+                        {formData.voucherFile?.name || 'Voucher file uploaded'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        File uploaded successfully
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRemoveVoucher}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <input
-                type="file"
-                className="hidden"
-                accept=".png,.jpg,.jpeg,.pdf"
-                onChange={(e) => e.target.files?.[0] && onUpdateFormData({ voucherFile: e.target.files[0] })}
-                id="file-upload"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4"
-                onClick={() => document.getElementById('file-upload')?.click()}
+            ) : (
+              <div
+                className={cn(
+                  "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
+                  "border-muted-foreground/25 hover:border-primary hover:bg-primary/5"
+                )}
               >
-                Browse Files
-              </Button>
-            </div>
+                <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">
+                    Drop your voucher file here
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    or click to browse (PNG, JPG, PDF)
+                  </p>
+                </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".png,.jpg,.jpeg,.pdf"
+                  onChange={handleVoucherFileChange}
+                  id="file-upload"
+                  disabled={isUploadingVoucher}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => document.getElementById('file-upload')?.click()}
+                  disabled={isUploadingVoucher}
+                >
+                  {isUploadingVoucher ? 'Uploading...' : 'Browse Files'}
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">

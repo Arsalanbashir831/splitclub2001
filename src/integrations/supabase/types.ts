@@ -118,6 +118,7 @@ export type Database = {
           usage_notes: string | null
           user_id: string
           voucher_data: string | null
+          voucher_file_url: string | null
         }
         Insert: {
           category: string
@@ -141,6 +142,7 @@ export type Database = {
           usage_notes?: string | null
           user_id: string
           voucher_data?: string | null
+          voucher_file_url?: string | null
         }
         Update: {
           category?: string
@@ -164,6 +166,7 @@ export type Database = {
           usage_notes?: string | null
           user_id?: string
           voucher_data?: string | null
+          voucher_file_url?: string | null
         }
         Relationships: []
       }

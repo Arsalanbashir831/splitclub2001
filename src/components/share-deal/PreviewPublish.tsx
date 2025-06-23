@@ -53,6 +53,7 @@ export const PreviewPublish = ({
         source: formData.source,
         redemption_type: formData.redemptionType,
         voucher_data: formData.voucherFile ? 'file_uploaded' : null,
+        voucher_file_url: formData.voucherFileUrl || null,
         expiry_date: formData.expiryDate?.toISOString(),
         is_location_bound: formData.isLocationBound,
         location_details: formData.locationDetails || null,
@@ -62,7 +63,9 @@ export const PreviewPublish = ({
         usage_notes: formData.usageNotes || null,
         tags: formData.tags.length > 0 ? formData.tags : null,
         max_claims: formData.maxClaims,
-        status: 'active'
+        status: 'active',
+        image_url: formData.dealImageUrl || null,
+        image_file_name: formData.dealImage?.name || null
       };
 
       const { error } = await supabase
@@ -132,6 +135,16 @@ export const PreviewPublish = ({
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {formData.dealImageUrl && (
+              <div className="w-full h-48 rounded-lg overflow-hidden">
+                <img 
+                  src={formData.dealImageUrl} 
+                  alt="Deal preview" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+
             <div className="flex items-center gap-2 text-sm">
               <Users className="h-4 w-4 text-muted-foreground" />
               <span>
@@ -169,6 +182,18 @@ export const PreviewPublish = ({
               <span className="font-medium">Redeemed as:</span>{' '}
               {redemptionTypeLabels[formData.redemptionType as keyof typeof redemptionTypeLabels]}
             </div>
+
+            {formData.voucherFileUrl && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <FileText className="h-4 w-4" />
+                  Voucher File Attached
+                </div>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded">
+                  Voucher file has been uploaded and will be available to claimers.
+                </p>
+              </div>
+            )}
 
             {formData.usageNotes && (
               <div className="space-y-2">
