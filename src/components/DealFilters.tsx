@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,10 +40,12 @@ export const DealFilters = ({
   onToggle
 }: DealFiltersProps) => {
   const categories = [
-    { value: 'subscription', label: 'Subscriptions' },
-    { value: 'membership', label: 'Memberships' },
-    { value: 'reward', label: 'Rewards' },
-    { value: 'other', label: 'Other' }
+    { value: 'cinema', label: 'Free Cinema Ticket', icon: '🎟️' },
+    { value: 'gym', label: 'Gym Guest Pass (1-Day)', icon: '🏋️‍♂️' },
+    { value: 'restaurant', label: 'Restaurant Meal Voucher', icon: '🍱' },
+    { value: 'vouchers', label: 'Amex/Amazon/Retail Vouchers', icon: '🎁' },
+    { value: 'discounts', label: 'Sales & Discounts', icon: '💸' },
+    { value: 'subscriptions', label: 'Subscriptions', icon: '📦' }
   ];
 
   const handleCategoryChange = (category: string, checked: boolean) => {
@@ -153,9 +156,10 @@ export const DealFilters = ({
                     />
                     <Label
                       htmlFor={category.value}
-                      className="text-sm font-normal cursor-pointer"
+                      className="text-sm font-normal cursor-pointer flex items-center space-x-2"
                     >
-                      {category.label}
+                      <span className="text-base">{category.icon}</span>
+                      <span>{category.label}</span>
                     </Label>
                   </div>
                 ))}
