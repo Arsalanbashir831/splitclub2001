@@ -2,7 +2,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, MapPin, Eye, Calendar, ExternalLink, Gift } from 'lucide-react';
+import { Clock, MapPin, Eye, Calendar, ExternalLink, Gift, Image } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface ClaimedDealCardProps {
@@ -52,6 +52,14 @@ export const ClaimedDealCard = ({ claim, onViewDetails }: ClaimedDealCardProps) 
                 </Badge>
               </div>
             )}
+            {deal.voucher_file_url && (
+              <div className="absolute bottom-3 right-3">
+                <Badge variant="secondary" className="bg-green-600 text-white">
+                  <Image className="h-3 w-3 mr-1" />
+                  Voucher Available
+                </Badge>
+              </div>
+            )}
           </div>
 
           {/* Content Section */}
@@ -98,16 +106,33 @@ export const ClaimedDealCard = ({ claim, onViewDetails }: ClaimedDealCardProps) 
                 )}
               </div>
 
+              {/* Voucher Section */}
+              {deal.voucher_file_url && (
+                <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-green-700 dark:text-green-400 font-medium flex items-center">
+                      <Image className="h-4 w-4 mr-1" />
+                      Voucher Available
+                    </span>
+                  </div>
+                  <img
+                    src={deal.voucher_file_url}
+                    alt="Voucher details"
+                    className="w-full max-h-32 object-contain rounded border"
+                  />
+                </div>
+              )}
+
               {/* Price Section */}
               {deal.is_for_sale && (
-                <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-green-700 dark:text-green-400 font-medium">Deal Price</span>
+                    <span className="text-sm text-blue-700 dark:text-blue-400 font-medium">Deal Price</span>
                     <div className="text-right">
-                      <span className="font-bold text-green-700 dark:text-green-400 text-lg">${deal.price}</span>
+                      <span className="font-bold text-blue-700 dark:text-blue-400 text-lg">£{deal.price}</span>
                       {deal.original_price && deal.original_price > deal.price && (
                         <div className="text-sm text-muted-foreground line-through">
-                          ${deal.original_price}
+                          £{deal.original_price}
                         </div>
                       )}
                     </div>

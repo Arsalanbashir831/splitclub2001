@@ -68,7 +68,7 @@ const DealDetailSkeleton = () => (
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-6 w-10" />
             </CardHeader>
             <CardContent className="space-y-4">
 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -180,7 +180,7 @@ export const DealDetail = () => {
       return;
     }
 
-if (!user || !deal) {
+    if (!user || !deal) {
       toast({
         title: "Error",
         description: "User information not available. Please try logging in again.",
@@ -198,7 +198,7 @@ if (!user || !deal) {
       return;
     }
 
-if (hasClaimedThisDeal) {
+    if (hasClaimedThisDeal) {
       toast({
         title: "Already claimed",
         description: "You have already claimed this deal.",
@@ -216,7 +216,7 @@ if (hasClaimedThisDeal) {
       return;
     }
 
-setIsClaimLoading(true);
+    setIsClaimLoading(true);
     try {
       await dealsService.claimDeal(deal.id, user.id);
       toast({
@@ -224,7 +224,7 @@ setIsClaimLoading(true);
 description: `You've successfully claimed "${deal.title}". The owner will be notified.`,
       });
 
-} catch (error) {
+    } catch (error) {
       console.error('Error claiming deal:', error);
       toast({
         title: "Error claiming deal",
@@ -236,7 +236,7 @@ description: "Something went wrong. Please try again.",
     }
   };
 
-const handleShare = () => {
+  const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast({
       title: "Link copied!",
@@ -264,7 +264,7 @@ const handleShare = () => {
     return <DealDetailSkeleton />;
   }
 
-if (error || !deal) {
+  if (error || !deal) {
     return (
       <motion.div 
         className="min-h-screen bg-background flex items-center justify-center"
@@ -289,7 +289,7 @@ if (error || !deal) {
     }
   };
 
-const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
       weekday: 'long',
@@ -307,7 +307,7 @@ const formatDate = (dateString: string) => {
     return diffDays <= 7;
   };
 
-return (
+  return (
     <motion.div 
       className="min-h-screen bg-background"
       initial={{ opacity: 0 }}
@@ -316,7 +316,7 @@ return (
     >
       <Navbar />
 
-{/* Header */}
+      {/* Header */}
       <motion.div 
         className="bg-card border-b border-border"
         initial={{ opacity: 0, y: -20 }}
@@ -346,13 +346,13 @@ return (
         </div>
       </motion.div>
 
- <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Deal Summary Header */}
         <motion.div 
           className="mb-8"
-initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-transition={{ delay: 0.2, duration: 0.3 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
         >
           <div className="flex items-start space-x-4 mb-6">
             {/* Service Icon/Logo */}
@@ -382,7 +382,7 @@ transition={{ delay: 0.2, duration: 0.3 }}
                 {hasClaimedThisDeal && !isOwnDeal && (
                   <Badge variant="default" className="bg-green-600">Claimed</Badge>
                 )}
-</div>
+              </div>
               
               {/* Short Subtitle */}
               <p className="text-muted-foreground text-lg mb-4">
@@ -400,6 +400,32 @@ transition={{ delay: 0.2, duration: 0.3 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.3 }}
           >
+            {/* Voucher Image Section - Show only if deal is claimed */}
+            {(hasClaimedThisDeal || isOwnDeal) && deal.voucherFileUrl && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Gift className="h-5 w-5" />
+                    <span>Voucher Details</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative">
+                    <img
+                      src={deal.voucherFileUrl}
+                      alt="Voucher details"
+                      className="w-full max-w-md mx-auto rounded-lg border shadow-sm"
+                    />
+                    <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                      <p className="text-sm text-green-700 dark:text-green-400 font-medium">
+                        ✓ Access granted - Use the details above to redeem your deal
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Offer Details */}
             <Card>
               <CardHeader>
@@ -408,7 +434,7 @@ transition={{ delay: 0.2, duration: 0.3 }}
                   <span>Offer Details</span>
                 </CardTitle>
               </CardHeader>
-<CardContent className="space-y-4">
+              <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="font-medium text-sm text-muted-foreground">Type</p>
@@ -430,7 +456,7 @@ transition={{ delay: 0.2, duration: 0.3 }}
                   </div>
                 </div>
 
-{/* Progress bar */}
+                {/* Progress bar */}
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <span>Claimed</span>
@@ -455,7 +481,7 @@ transition={{ delay: 0.2, duration: 0.3 }}
               </CardContent>
             </Card>
 
-{/* Optional Tags */}
+            {/* Optional Tags */}
             <div className="flex flex-wrap gap-3">
               {deal.tags.includes('verified') && (
                 <Badge variant="secondary" className="flex items-center space-x-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
@@ -478,7 +504,7 @@ transition={{ delay: 0.2, duration: 0.3 }}
             {/* Additional Info */}
             <Card>
               <CardHeader>
-<CardTitle>Additional Information</CardTitle>
+                <CardTitle>Additional Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
@@ -496,8 +522,8 @@ transition={{ delay: 0.2, duration: 0.3 }}
                       <p className="text-sm">Redemption type: {deal.redemptionType}</p>
                     </div>
                   )}
-{deal.isLocationBound && deal.locationDetails && (
-<div className="flex items-start space-x-2">
+                  {deal.isLocationBound && deal.locationDetails && (
+                    <div className="flex items-start space-x-2">
                       <MapPin className="h-4 w-4 mt-1 text-orange-600" />
                       <p className="text-sm">Location: {deal.locationDetails}</p>
                     </div>
@@ -513,7 +539,8 @@ transition={{ delay: 0.2, duration: 0.3 }}
               </CardContent>
             </Card>
           </motion.div>
-{/* Sidebar */}
+
+          {/* Sidebar */}
           <motion.div 
             className="space-y-6"
             initial={{ opacity: 0, x: 20 }}
@@ -540,7 +567,7 @@ transition={{ delay: 0.2, duration: 0.3 }}
                         <span className="text-sm text-muted-foreground line-through">
                           £{deal?.originalPrice}
                         </span>
-<Badge variant="secondary" className="text-green-600">
+                        <Badge variant="secondary" className="text-green-600">
                           Save £{deal ? (deal.originalPrice - deal.sharePrice).toFixed(2) : '0'}
                         </Badge>
                       </div>
@@ -563,7 +590,7 @@ transition={{ delay: 0.2, duration: 0.3 }}
                         <>💸 {getClaimButtonText()}</>
                       )}
                     </Button>
-) : isOwnDeal ? (
+                  ) : isOwnDeal ? (
                     <Button variant="secondary" className="w-full" size="lg" disabled>
                       Your Deal
                     </Button>
@@ -589,7 +616,8 @@ transition={{ delay: 0.2, duration: 0.3 }}
                 </div>
               </CardContent>
             </Card>
-{/* Owner Info */}
+
+            {/* Owner Info */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Owner Info</CardTitle>
@@ -617,7 +645,7 @@ transition={{ delay: 0.2, duration: 0.3 }}
               </CardContent>
             </Card>
 
-{/* Safety & Terms */}
+            {/* Safety & Terms */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Terms & Safety</CardTitle>
