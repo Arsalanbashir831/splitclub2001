@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Deal } from '@/types';
+import { storageService } from './storageService';
 
 export const dealsService = {
   async getDeals() {
@@ -242,6 +243,75 @@ export const dealsService = {
     }
 
     return data;
+  },
+
+  async deleteDeal(dealId: string, userId: string) {
+    try {
+      console.log(`Attempting to delete deal ${dealId} for user ${userId}`);
+      
+      // First, get the deal details to extract file information
+      const { data: deal, error: fetchError } = await supabase
+        .from('deals')
+        .select('image_file_name, voucher_file_url, user_id')
+        .eq('id', dealId)
+        .eq('user_id', userId) // Ensure user owns the deal
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching deal for deletion:', fetchError);
+        throw fetchError;
+      }
+
+      if (!deal) {
+        throw new Error('Deal not found or you do not have permission to delete it');
+      }
+
+      // Delete associated files from storage
+      await storageService.deleteDealFiles({
+        imageFileName: deal.image_file_name,
+        voucherFileUrl: deal.voucher_file_url
+      });
+
+      // Delete deal claims first (due to foreign key constraint)
+      const { error: claimsError } = await supabase
+        .from('deal_claims')
+        .delete()
+        .eq('deal_id', dealId);
+
+      if (claimsError) {
+        console.error('Error deleting deal claims:', claimsError);
+        // Don't throw here, continue with deal deletion
+      }
+
+      // Delete deal favorites
+      const { error: favoritesError } = await supabase
+        .from('deal_favorites')
+        .delete()
+        .eq('deal_id', dealId);
+
+      if (favoritesError) {
+        console.error('Error deleting deal favorites:', favoritesError);
+        // Don't throw here, continue with deal deletion
+      }
+
+      // Finally, delete the deal itself
+      const { error: deleteError } = await supabase
+        .from('deals')
+        .delete()
+        .eq('id', dealId)
+        .eq('user_id', userId);
+
+      if (deleteError) {
+        console.error('Error deleting deal:', deleteError);
+        throw deleteError;
+      }
+
+      console.log(`Successfully deleted deal ${dealId}`);
+      return true;
+    } catch (error) {
+      console.error('Error in deleteDeal:', error);
+      throw error;
+    }
   },
 
   async getUserDeals(userId: string) {

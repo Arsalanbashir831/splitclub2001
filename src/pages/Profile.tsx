@@ -6,6 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { EditDealModal } from '../components/DealEdit/EditDealModal';
@@ -13,7 +23,10 @@ import { ClaimedDealCard } from '../components/Profile/ClaimedDealCard';
 import { useUserDeals } from '../hooks/useUserDeals';
 import { useFavoriteDeals } from '../hooks/useFavoriteDeals';
 import { useAuthStore } from '../store/authStore';
+import { dealsService } from '../services/dealsService';
 import { Deal } from '../types';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import { 
   User, 
   Settings, 
@@ -211,6 +224,10 @@ const Profile = () => {
   const { data: favoriteDeals, isLoading: favoritesLoading } = useFavoriteDeals();
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [dealToDelete, setDealToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleEditDeal = (deal: Deal) => {
     setSelectedDeal(deal);
@@ -222,8 +239,35 @@ const Profile = () => {
     setSelectedDeal(null);
   };
 
-  const handleDeleteDeal = async (dealId: string) => {
-    console.log(`Deleting deal with ID: ${dealId}`);
+  const handleDeleteDeal = (dealId: string) => {
+    setDealToDelete(dealId);
+  };
+
+  const confirmDeleteDeal = async () => {
+    if (!dealToDelete || !user?.id) return;
+
+    setIsDeleting(true);
+    try {
+      await dealsService.deleteDeal(dealToDelete, user.id);
+      
+      // Invalidate queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['user-deals', user.id] });
+      
+      toast({
+        title: "Deal deleted successfully",
+        description: "Your deal and associated files have been removed.",
+      });
+    } catch (error) {
+      console.error('Error deleting deal:', error);
+      toast({
+        title: "Error deleting deal",
+        description: "Failed to delete the deal. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setDealToDelete(null);
+    }
   };
 
   const handleViewDeal = (dealId: string) => {
@@ -543,6 +587,29 @@ const Profile = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!dealToDelete} onOpenChange={() => setDealToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Deal</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this deal? This action cannot be undone. 
+              All associated images, voucher files, and claims will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteDeal}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {selectedDeal && (
         <EditDealModal 

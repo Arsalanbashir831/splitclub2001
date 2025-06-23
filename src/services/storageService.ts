@@ -98,5 +98,33 @@ export const storageService = {
       console.error('Error in deleteVoucherFile:', error);
       return false;
     }
+  },
+
+  async deleteDealFiles(deal: { imageFileName?: string; voucherFileUrl?: string }): Promise<void> {
+    const deletePromises: Promise<boolean>[] = [];
+
+    // Delete deal image if exists
+    if (deal.imageFileName) {
+      deletePromises.push(this.deleteDealImage(deal.imageFileName));
+    }
+
+    // Delete voucher file if exists
+    if (deal.voucherFileUrl) {
+      // Extract filename from URL for voucher files
+      const urlParts = deal.voucherFileUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      if (fileName) {
+        deletePromises.push(this.deleteVoucherFile(fileName));
+      }
+    }
+
+    if (deletePromises.length > 0) {
+      try {
+        await Promise.all(deletePromises);
+        console.log('Successfully deleted deal files from storage');
+      } catch (error) {
+        console.error('Error deleting some deal files:', error);
+      }
+    }
   }
 };
