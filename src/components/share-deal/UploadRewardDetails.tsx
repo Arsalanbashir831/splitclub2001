@@ -26,13 +26,18 @@ export const UploadRewardDetails = ({
 }: UploadRewardDetailsProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const handleImageUpload = (file: File) => {
+  const handleImageSelected = (file: File) => {
     onUpdateFormData({ dealImage: file });
     const reader = new FileReader();
     reader.onload = (e) => {
       setImagePreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleImageRemoved = () => {
+    onUpdateFormData({ dealImage: undefined });
+    setImagePreview(null);
   };
 
   const handleVoucherUpload = (file: File) => {
@@ -149,8 +154,10 @@ export const UploadRewardDetails = ({
         <div>
           <Label>Deal Image</Label>
           <ImageUpload
-            onImageUpload={handleImageUpload}
-            currentImage={imagePreview}
+            onImageSelected={handleImageSelected}
+            onImageRemoved={handleImageRemoved}
+            selectedImage={formData.dealImage}
+            preview={imagePreview}
             className="w-full h-48"
           />
         </div>
