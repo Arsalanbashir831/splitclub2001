@@ -82,6 +82,17 @@ export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: Deal
             <CardTitle className="text-lg line-clamp-2 flex-1 pr-2 min-h-[3.5rem]">
               {safeTitle}
             </CardTitle>
+            <div className="flex flex-col items-end gap-1">
+              {safeIsFree ? (
+                <Badge variant="secondary" className="text-green-600 bg-green-50 border-green-200">
+                  FREE
+                </Badge>
+              ) : (
+                <Badge variant="default" className="bg-blue-600">
+                  £{safeSharePrice.toFixed(2)}
+                </Badge>
+              )}
+            </div>
           </div>
         </CardHeader>
         
@@ -124,10 +135,10 @@ export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: Deal
                 <span className="font-bold text-green-600 text-lg">FREE</span>
               ) : (
                 <div className="flex flex-col items-end">
-                  <span className="font-bold text-green-600 text-lg">${safeSharePrice}</span>
-                  {safeOriginalPrice > safeSharePrice && (
+                  <span className="font-bold text-blue-600 text-lg">£{safeSharePrice.toFixed(2)}</span>
+                  {safeOriginalPrice > 0 && safeOriginalPrice > safeSharePrice && (
                     <span className="text-sm text-muted-foreground line-through">
-                      ${safeOriginalPrice}
+                      £{safeOriginalPrice.toFixed(2)}
                     </span>
                   )}
                 </div>
@@ -183,7 +194,7 @@ export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: Deal
               onClick={handleClaimClick}
               disabled={safeAvailableSlots === 0 || isClaimLoading || safeStatus !== 'active'}
             >
-              {isClaimLoading ? 'Claiming...' : 'Claim'}
+              {isClaimLoading ? 'Claiming...' : (safeIsFree ? 'Claim Free' : `Claim £${safeSharePrice.toFixed(2)}`)}
             </Button>
           </div>
         </CardContent>

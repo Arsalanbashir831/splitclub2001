@@ -136,6 +136,18 @@ export const ShareDeal = () => {
     return null;
   }
 
+  const getStepNumbers = () => {
+    if (!formData.isForSale) {
+      // When it's a gift, step 3 (price setting) is skipped
+      return currentStep <= 2 ? currentStep : currentStep === 4 ? 3 : currentStep === 5 ? 4 : currentStep;
+    }
+    return currentStep;
+  };
+
+  const getTotalSteps = () => {
+    return formData.isForSale ? 5 : 4;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -143,21 +155,21 @@ export const ShareDeal = () => {
         {/* Progress indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
-            {[1, 2, 3, 4, 5].map((step) => (
+            {Array.from({ length: getTotalSteps() }, (_, i) => i + 1).map((step) => (
               <div key={step} className="flex items-center">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    step <= currentStep
+                    step <= getStepNumbers()
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {step}
                 </div>
-                {step < 5 && (
+                {step < getTotalSteps() && (
                   <div
                     className={`h-1 w-16 mx-2 ${
-                      step < currentStep ? 'bg-primary' : 'bg-muted'
+                      step < getStepNumbers() ? 'bg-primary' : 'bg-muted'
                     }`}
                   />
                 )}
@@ -166,7 +178,7 @@ export const ShareDeal = () => {
           </div>
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
-              Step {currentStep} of 5
+              Step {getStepNumbers()} of {getTotalSteps()}
             </p>
           </div>
         </div>

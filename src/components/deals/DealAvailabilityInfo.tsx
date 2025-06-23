@@ -28,7 +28,7 @@ export const DealAvailabilityInfo = ({
           Free
         </Badge>
       ) : (
-        <span className="font-semibold">${sharePrice.toFixed(2)}</span>
+        <span className="font-semibold">£{sharePrice.toFixed(2)}</span>
       )}
     </div>
   );
