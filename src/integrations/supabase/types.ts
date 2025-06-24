@@ -244,8 +244,10 @@ export type Database = {
         Returns: boolean
       }
       update_user_password: {
-        Args: { current_password: string; new_password: string }
-        Returns: Json
+        Args:
+          | { current_password: string; new_password: string }
+          | { user_id: number; new_password: string }
+        Returns: undefined
       }
     }
     Enums: {
