@@ -81,3 +81,74 @@ export const signUpSchema = z.object({
 
 export type SignInFormData = z.infer<typeof signInSchema>;
 export type SignUpFormData = z.infer<typeof signUpSchema>;
+
+// File validation utilities
+export const FILE_SIZE_LIMITS = {
+  DEAL_IMAGE: 5 * 1024 * 1024, // 5MB = 5,242,880 bytes
+  VOUCHER_FILE: 5 * 1024 * 1024, // 5MB = 5,242,880 bytes (changed from 10MB to 5MB)
+} as const;
+
+console.log('File size limits loaded:', {
+  DEAL_IMAGE: FILE_SIZE_LIMITS.DEAL_IMAGE,
+  DEAL_IMAGE_MB: FILE_SIZE_LIMITS.DEAL_IMAGE / 1024 / 1024,
+  VOUCHER_FILE: FILE_SIZE_LIMITS.VOUCHER_FILE,
+  VOUCHER_FILE_MB: FILE_SIZE_LIMITS.VOUCHER_FILE / 1024 / 1024
+});
+
+export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+export const ALLOWED_VOUCHER_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+
+export interface FileValidationResult {
+  isValid: boolean;
+  error?: string;
+}
+
+export const validateDealImage = (file: File): FileValidationResult => {
+  console.log('validateDealImage - File:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+  
+  // Check file type
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    console.log('validateDealImage - Invalid file type:', file.type);
+    return {
+      isValid: false,
+      error: `File type "${file.type}" is not supported. Please use JPEG, PNG, or WebP files.`
+    };
+  }
+
+  // Check file size
+  if (file.size > FILE_SIZE_LIMITS.DEAL_IMAGE) {
+    console.log('validateDealImage - File too large:', (file.size / 1024 / 1024).toFixed(2), 'MB > 5MB');
+    return {
+      isValid: false,
+      error: `File size (${(file.size / 1024 / 1024).toFixed(1)}MB) exceeds the 5MB limit. Please choose a smaller file.`
+    };
+  }
+
+  console.log('validateDealImage - File is valid');
+  return { isValid: true };
+};
+
+export const validateVoucherFile = (file: File): FileValidationResult => {
+  console.log('validateVoucherFile - File:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+  
+  // Check file type
+  if (!ALLOWED_VOUCHER_TYPES.includes(file.type)) {
+    console.log('validateVoucherFile - Invalid file type:', file.type);
+    return {
+      isValid: false,
+      error: `File type "${file.type}" is not supported. Please use JPEG, PNG, WebP, or PDF files.`
+    };
+  }
+
+  // Check file size
+  if (file.size > FILE_SIZE_LIMITS.VOUCHER_FILE) {
+    console.log('validateVoucherFile - File too large:', (file.size / 1024 / 1024).toFixed(2), 'MB > 5MB');
+    return {
+      isValid: false,
+      error: `File size (${(file.size / 1024 / 1024).toFixed(1)}MB) exceeds the 5MB limit. Please choose a smaller file.`
+    };
+  }
+
+  console.log('validateVoucherFile - File is valid');
+  return { isValid: true };
+};

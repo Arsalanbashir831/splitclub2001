@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,8 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { validateVoucherFile } from "@/utils/validation";
+import { useToast } from "@/hooks/use-toast";
 
 interface UploadRewardDetailsProps {
 	formData: DealFormData;
@@ -44,6 +46,8 @@ export const UploadRewardDetails = ({
 	onPrev,
 }: UploadRewardDetailsProps) => {
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
+	const { toast } = useToast();
+	const voucherInputRef = useRef<HTMLInputElement>(null);
 
 	const handleImageSelected = (file: File) => {
 		onUpdateFormData({ dealImage: file });
@@ -60,6 +64,21 @@ export const UploadRewardDetails = ({
 	};
 
 	const handleVoucherUpload = (file: File) => {
+		console.log('UploadRewardDetails - Validating voucher file:', file.name, 'Size:', file.size, 'Type:', file.type);
+		const validation = validateVoucherFile(file);
+		console.log('UploadRewardDetails - Validation result:', validation);
+		if (!validation.isValid) {
+			toast({
+				title: "Invalid file",
+				description: validation.error,
+				variant: "destructive",
+			});
+			// Reset input value to allow selecting the same file again
+			if (voucherInputRef.current) {
+				voucherInputRef.current.value = '';
+			}
+			return;
+		}
 		onUpdateFormData({ voucherFile: file });
 	};
 
@@ -247,7 +266,7 @@ export const UploadRewardDetails = ({
 										Upload screenshot or document
 									</span>
 									<span className="mt-1 block text-xs text-muted-foreground">
-										PNG, JPG, PDF up to 10MB
+										PNG, JPG, PDF up to 5MB
 									</span>
 								</Label>
 								<Input
@@ -256,9 +275,16 @@ export const UploadRewardDetails = ({
 									accept="image/*,.pdf"
 									onChange={(e) => {
 										const file = e.target.files?.[0];
-										if (file) handleVoucherUpload(file);
+										if (file) {
+											handleVoucherUpload(file);
+											// Reset input value to allow selecting the same file again
+											if (e.target) {
+												e.target.value = '';
+											}
+										}
 									}}
 									className="hidden"
+									ref={voucherInputRef}
 								/>
 							</div>
 						</div>

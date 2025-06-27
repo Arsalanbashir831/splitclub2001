@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils';
 import { Deal } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { validateVoucherFile } from '@/utils/validation';
+import { validateDealImage } from '@/utils/validation';
 
 interface EditDealModalProps {
   deal: Deal;
@@ -50,6 +52,9 @@ export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalPr
   const [newTag, setNewTag] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const voucherInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const imageReplaceInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setFormData({
@@ -75,6 +80,29 @@ export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalPr
   }, [deal]);
 
   const handleImageSelected = (file: File) => {
+    console.log('EditDealModal - Image selected:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+    
+    const validation = validateDealImage(file);
+    console.log('EditDealModal - Image validation result:', validation);
+    
+    if (!validation.isValid) {
+      console.log('EditDealModal - Showing error toast for:', validation.error);
+      toast({
+        title: "Invalid file",
+        description: validation.error,
+        variant: "destructive",
+      });
+      // Reset input values to allow selecting the same file again
+      if (imageInputRef.current) {
+        imageInputRef.current.value = '';
+      }
+      if (imageReplaceInputRef.current) {
+        imageReplaceInputRef.current.value = '';
+      }
+      return;
+    }
+    
+    console.log('EditDealModal - Image validation passed');
     setSelectedImage(file);
     setImagePreview(URL.createObjectURL(file));
   };
@@ -85,6 +113,19 @@ export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalPr
   };
 
   const handleVoucherUpload = (file: File) => {
+    const validation = validateVoucherFile(file);
+    if (!validation.isValid) {
+      toast({
+        title: "Invalid file",
+        description: validation.error,
+        variant: "destructive",
+      });
+      // Reset input value to allow selecting the same file again
+      if (voucherInputRef.current) {
+        voucherInputRef.current.value = '';
+      }
+      return;
+    }
     setSelectedVoucherFile(file);
   };
 
@@ -477,9 +518,16 @@ export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalPr
                       accept="image/*"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleImageSelected(file);
+                        if (file) {
+                          handleImageSelected(file);
+                          // Reset input value to allow selecting the same file again
+                          if (e.target) {
+                            e.target.value = '';
+                          }
+                        }
                       }}
                       className="hidden"
+                      ref={imageReplaceInputRef}
                     />
                   </div>
                 </div>
@@ -502,9 +550,16 @@ export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalPr
                       accept="image/*"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleImageSelected(file);
+                        if (file) {
+                          handleImageSelected(file);
+                          // Reset input value to allow selecting the same file again
+                          if (e.target) {
+                            e.target.value = '';
+                          }
+                        }
                       }}
                       className="hidden"
+                      ref={imageInputRef}
                     />
                   </div>
                 </div>
@@ -572,7 +627,26 @@ export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalPr
                       accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleVoucherReplaced(file);
+                        if (file) {
+                          const validation = validateVoucherFile(file);
+                          if (!validation.isValid) {
+                            toast({
+                              title: "Invalid file",
+                              description: validation.error,
+                              variant: "destructive",
+                            });
+                            // Reset input value to allow selecting the same file again
+                            if (e.target) {
+                              e.target.value = '';
+                            }
+                            return;
+                          }
+                          handleVoucherReplaced(file);
+                          // Reset input value to allow selecting the same file again
+                          if (e.target) {
+                            e.target.value = '';
+                          }
+                        }
                       }}
                       className="hidden"
                     />
@@ -588,7 +662,7 @@ export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalPr
                         Upload screenshot or document
                       </span>
                       <span className="mt-1 block text-xs text-muted-foreground">
-                        JPEG, PNG, WebP, PDF up to 10MB
+                        JPEG, PNG, WebP, PDF up to 5MB
                       </span>
                     </Label>
                     <Input
@@ -597,9 +671,16 @@ export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalPr
                       accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleVoucherUpload(file);
+                        if (file) {
+                          handleVoucherUpload(file);
+                          // Reset input value to allow selecting the same file again
+                          if (e.target) {
+                            e.target.value = '';
+                          }
+                        }
                       }}
                       className="hidden"
+                      ref={voucherInputRef}
                     />
                   </div>
                 </div>

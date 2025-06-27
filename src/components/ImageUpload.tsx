@@ -1,9 +1,11 @@
-
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { validateDealImage } from '@/utils/validation';
+import { useToast } from '@/hooks/use-toast';
+import React from 'react';
 
 interface ImageUploadProps {
   onImageSelected: (file: File) => void;
@@ -22,6 +24,50 @@ export const ImageUpload = ({
 }: ImageUploadProps) => {
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  // Simple test to verify validation is working
+  const testValidation = () => {
+    const mockFile = {
+      name: 'test-large.jpg',
+      size: 6 * 1024 * 1024, // 6MB
+      type: 'image/jpeg'
+    } as File;
+    
+    console.log('Testing validation with mock file...');
+    const result = validateDealImage(mockFile);
+    console.log('Test result:', result);
+    
+    if (!result.isValid) {
+      toast({
+        title: "Test - Invalid file",
+        description: result.error,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Test on component mount
+  React.useEffect(() => {
+    testValidation();
+  }, []);
+
+  const handleFileValidation = (file: File) => {
+    console.log('ImageUpload - Validating file:', file.name, 'Size:', file.size, 'Type:', file.type);
+    const validation = validateDealImage(file);
+    console.log('ImageUpload - Validation result:', validation);
+    if (!validation.isValid) {
+      console.log('ImageUpload - Showing error toast for:', validation.error);
+      toast({
+        title: "Invalid file",
+        description: validation.error,
+        variant: "destructive",
+      });
+      return false;
+    }
+    console.log('ImageUpload - File validation passed');
+    return true;
+  };
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -40,18 +86,29 @@ export const ImageUpload = ({
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
+      console.log('ImageUpload - File dropped:', file.name, file.size, file.type);
       if (file.type.startsWith('image/')) {
-        onImageSelected(file);
+        if (handleFileValidation(file)) {
+          onImageSelected(file);
+        }
       }
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('ImageUpload - File selected event triggered');
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      console.log('ImageUpload - File selected:', file.name, file.size, file.type);
       if (file.type.startsWith('image/')) {
-        onImageSelected(file);
+        if (handleFileValidation(file)) {
+          onImageSelected(file);
+        }
       }
+    }
+    // Reset input value to allow selecting the same file again
+    if (e.target) {
+      e.target.value = '';
     }
   };
 
