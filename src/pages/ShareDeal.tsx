@@ -11,7 +11,7 @@ export interface DealFormData {
 	category: string;
 	title: string;
 	source: string;
-	redemptionType: string;
+	sharingMethod: string;
 	voucherFile?: File;
 	voucherFileUrl?: string;
 	dealImage?: File;
@@ -35,8 +35,8 @@ export const ShareDeal = () => {
 		category: "",
 		title: "",
 		source: "",
-		redemptionType: "",
-		expiryDate: undefined,
+		sharingMethod: "",
+		expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)),
 		isLocationBound: false,
 		locationDetails: "",
 		isForSale: false,

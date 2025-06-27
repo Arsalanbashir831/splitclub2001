@@ -6,9 +6,9 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { Share, Calendar, MapPin, DollarSign, Tag, FileText, Users } from 'lucide-react';
 import { DealFormData } from '@/pages/ShareDeal';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
+import { dealsService } from '@/services/dealsService';
 
 const categoryIcons = {
   cinema: '🎟️',
@@ -19,11 +19,11 @@ const categoryIcons = {
   subscriptions: '📦'
 };
 
-const redemptionTypeLabels = {
-  voucher_code: 'Voucher Code',
-  barcode: 'Barcode',
-  pdf: 'PDF',
-  qr: 'QR Code'
+const sharingMethodLabels = {
+  login: 'Share login credentials',
+  invite: 'Send invite link',
+  voucher: 'Provide voucher code',
+  other: 'Other method'
 };
 
 interface PreviewPublishProps {
@@ -47,40 +47,24 @@ export const PreviewPublish = ({
     setIsPublishing(true);
     try {
       const dealData = {
-        user_id: user.id,
         title: formData.title,
         category: formData.category,
         source: formData.source,
-        redemption_type: formData.redemptionType,
-        voucher_data: formData.voucherFile ? 'file_uploaded' : null,
-        voucher_file_url: formData.voucherFileUrl || null,
-        expiry_date: formData.expiryDate?.toISOString(),
-        is_location_bound: formData.isLocationBound,
-        location_details: formData.locationDetails || null,
-        is_for_sale: formData.isForSale,
-        price: formData.isForSale ? parseFloat(formData.price) : null,
-        original_price: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
-        usage_notes: formData.usageNotes || null,
-        tags: formData.tags.length > 0 ? formData.tags : null,
-        max_claims: formData.maxClaims,
-        status: 'active',
-        image_url: formData.dealImageUrl || null,
-        image_file_name: formData.dealImage?.name || null
+        sharingMethod: formData.sharingMethod,
+        dealImage: formData.dealImage,
+        voucherFile: formData.voucherFile,
+        expiryDate: formData.expiryDate,
+        isLocationBound: formData.isLocationBound,
+        locationDetails: formData.locationDetails || null,
+        isForSale: formData.isForSale,
+        price: formData.price,
+        originalPrice: formData.originalPrice,
+        usageNotes: formData.usageNotes || null,
+        tags: formData.tags.length > 0 ? formData.tags : [],
+        maxClaims: formData.maxClaims
       };
 
-      const { error } = await supabase
-        .from('deals')
-        .insert([dealData]);
-
-      if (error) {
-        console.error('Error creating deal:', error);
-        toast({
-          title: "Error",
-          description: "Failed to publish your deal. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
+      await dealsService.createDeal(dealData, user.id);
 
       toast({
         title: "Success!",
@@ -92,7 +76,7 @@ export const PreviewPublish = ({
       console.error('Error publishing deal:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -180,7 +164,7 @@ export const PreviewPublish = ({
 
             <div className="text-sm">
               <span className="font-medium">Redeemed as:</span>{' '}
-              {redemptionTypeLabels[formData.redemptionType as keyof typeof redemptionTypeLabels]}
+              {sharingMethodLabels[formData.sharingMethod as keyof typeof sharingMethodLabels]}
             </div>
 
             {formData.voucherFileUrl && (

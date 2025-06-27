@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/store/authStore';
@@ -79,8 +78,9 @@ export const useFavoriteDeals = () => {
           imageUrl: deal.image_url,
           imageFileName: deal.image_file_name,
           source: deal.source,
-          redemptionType: deal.redemption_type as Deal['redemptionType'],
+          sharingMethod: deal.sharing_method as Deal['sharingMethod'],
           voucherData: deal.voucher_data,
+          voucherFileUrl: deal.voucher_file_url,
           isLocationBound: deal.is_location_bound,
           locationDetails: deal.location_details,
           isForSale: deal.is_for_sale,

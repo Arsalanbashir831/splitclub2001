@@ -100,7 +100,7 @@ export const dealsService = {
           imageUrl: deal.image_url,
           imageFileName: deal.image_file_name,
           source: deal.source,
-          redemptionType: deal.redemption_type as Deal['redemptionType'],
+          sharingMethod: deal.sharing_method as Deal['sharingMethod'],
           voucherData: deal.voucher_data,
           voucherFileUrl: deal.voucher_file_url,
           isLocationBound: deal.is_location_bound,
@@ -181,7 +181,7 @@ export const dealsService = {
         imageUrl: deal.image_url,
         imageFileName: deal.image_file_name,
         source: deal.source,
-        redemptionType: deal.redemption_type as Deal['redemptionType'],
+        sharingMethod: deal.sharing_method as Deal['sharingMethod'],
         voucherData: deal.voucher_data,
         voucherFileUrl: deal.voucher_file_url,
         isLocationBound: deal.is_location_bound,
@@ -214,87 +214,152 @@ export const dealsService = {
   },
 
   async createDeal(dealData: any, userId: string) {
-    const { data, error } = await supabase
-      .from('deals')
-      .insert({
-        user_id: userId,
-        title: dealData.title,
-        category: dealData.category,
-        source: dealData.source,
-        redemption_type: dealData.redemptionType,
-        expiry_date: dealData.expiryDate?.toISOString(),
-        is_location_bound: dealData.isLocationBound,
-        location_details: dealData.locationDetails,
-        is_for_sale: dealData.isForSale,
-        price: dealData.isForSale ? Number(dealData.price) : 0,
-        original_price: Number(dealData.originalPrice),
-        usage_notes: dealData.usageNotes,
-        tags: dealData.tags,
-        image_url: dealData.imageUrl,
-        image_file_name: dealData.imageFileName,
-        voucher_file_url: dealData.voucherFileUrl
-      })
-      .select()
-      .single();
+    try {
+      let imageUrl = null;
+      let imageFileName = null;
+      let voucherFileUrl = null;
 
-    if (error) {
-      console.error('Error creating deal:', error);
+      // Upload deal image if provided
+      if (dealData.dealImage) {
+        console.log('Creating deal - uploading image:', dealData.dealImage.name);
+        const uploadResult = await storageService.uploadDealImage(dealData.dealImage, userId);
+        if ('error' in uploadResult) {
+          console.error('Failed to upload deal image:', uploadResult.error);
+          throw new Error(uploadResult.error);
+        } else {
+          imageUrl = uploadResult.url;
+          imageFileName = uploadResult.fileName;
+          console.log('Creating deal - image uploaded successfully:', imageUrl);
+        }
+      }
+
+      // Upload voucher file if provided
+      if (dealData.voucherFile) {
+        console.log('Creating deal - uploading voucher file:', dealData.voucherFile.name);
+        const uploadResult = await storageService.uploadVoucherFile(dealData.voucherFile, userId);
+        if ('error' in uploadResult) {
+          console.error('Failed to upload voucher file:', uploadResult.error);
+          throw new Error(uploadResult.error);
+        } else {
+          voucherFileUrl = uploadResult.url;
+          console.log('Creating deal - voucher file uploaded successfully:', voucherFileUrl);
+        }
+      }
+
+      // Create the deal in the database
+      const { data, error } = await supabase
+        .from('deals')
+        .insert({
+          user_id: userId,
+          title: dealData.title,
+          category: dealData.category,
+          source: dealData.source,
+          sharing_method: dealData.sharingMethod,
+          voucher_file_url: voucherFileUrl,
+          expiry_date: dealData.expiryDate?.toISOString(),
+          is_location_bound: dealData.isLocationBound,
+          location_details: dealData.locationDetails,
+          is_for_sale: dealData.isForSale,
+          price: dealData.isForSale ? Number(dealData.price) : 0,
+          original_price: Number(dealData.originalPrice),
+          usage_notes: dealData.usageNotes,
+          tags: dealData.tags,
+          max_claims: dealData.maxClaims,
+          status: 'active',
+          image_url: imageUrl,
+          image_file_name: imageFileName
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating deal:', error);
+        throw error;
+      }
+
+      console.log('Creating deal - deal created successfully:', data.id);
+      return data;
+    } catch (error) {
+      console.error('Error in createDeal:', error);
       throw error;
     }
-
-    return data;
   },
 
   async deleteDeal(dealId: string, userId: string) {
     try {
-      console.log(`Attempting to delete deal ${dealId} for user ${userId}`);
+      console.log('Deleting deal:', dealId, 'for user:', userId);
       
-      // First, get the deal details to extract file information
+      // First, get the deal to check ownership and get file URLs
       const { data: deal, error: fetchError } = await supabase
         .from('deals')
-        .select('image_file_name, voucher_file_url, user_id')
+        .select('*')
         .eq('id', dealId)
-        .eq('user_id', userId) // Ensure user owns the deal
+        .eq('user_id', userId)
         .single();
 
       if (fetchError) {
         console.error('Error fetching deal for deletion:', fetchError);
-        throw fetchError;
-      }
-
-      if (!deal) {
         throw new Error('Deal not found or you do not have permission to delete it');
       }
 
+      if (!deal) {
+        throw new Error('Deal not found');
+      }
+
+      console.log('Deal found for deletion:', deal);
+
       // Delete associated files from storage
-      await storageService.deleteDealFiles({
-        imageFileName: deal.image_file_name,
-        voucherFileUrl: deal.voucher_file_url
-      });
+      const fileDeletionPromises = [];
 
-      // Delete deal claims first (due to foreign key constraint)
-      const { error: claimsError } = await supabase
-        .from('deal_claims')
-        .delete()
-        .eq('deal_id', dealId);
-
-      if (claimsError) {
-        console.error('Error deleting deal claims:', claimsError);
-        // Don't throw here, continue with deal deletion
+      if (deal.image_file_name) {
+        console.log('Deleting image file:', deal.image_file_name);
+        fileDeletionPromises.push(
+          storageService.deleteDealImage(deal.image_file_name)
+            .then(() => console.log('Image file deleted successfully'))
+            .catch(error => console.error('Error deleting image file:', error))
+        );
       }
 
-      // Delete deal favorites
-      const { error: favoritesError } = await supabase
-        .from('deal_favorites')
-        .delete()
-        .eq('deal_id', dealId);
-
-      if (favoritesError) {
-        console.error('Error deleting deal favorites:', favoritesError);
-        // Don't throw here, continue with deal deletion
+      if (deal.voucher_file_url) {
+        console.log('Deleting voucher file from URL:', deal.voucher_file_url);
+        try {
+          // Extract filename from URL for voucher files
+          let fileName = '';
+          if (deal.voucher_file_url.includes('voucher-files/')) {
+            // Extract from Supabase storage URL
+            const urlParts = deal.voucher_file_url.split('voucher-files/');
+            if (urlParts.length > 1) {
+              fileName = urlParts[1].split('?')[0]; // Remove query parameters
+            }
+          } else {
+            // Fallback to simple filename extraction
+            const urlPartsFallback = deal.voucher_file_url.split('/');
+            fileName = urlPartsFallback[urlPartsFallback.length - 1].split('?')[0]; // Remove query parameters
+          }
+          
+          if (fileName) {
+            console.log('Extracted voucher filename:', fileName);
+            fileDeletionPromises.push(
+              storageService.deleteVoucherFile(fileName)
+                .then(() => console.log('Voucher file deleted successfully'))
+                .catch(error => console.error('Error deleting voucher file:', error))
+            );
+          } else {
+            console.log('Could not extract filename from voucher URL');
+          }
+        } catch (error) {
+          console.error('Error processing voucher file URL:', error);
+        }
       }
 
-      // Finally, delete the deal itself
+      // Wait for all file deletions to complete (but don't fail if they don't)
+      if (fileDeletionPromises.length > 0) {
+        await Promise.allSettled(fileDeletionPromises);
+      }
+
+      // Delete the deal (this will cascade delete all claims due to ON DELETE CASCADE)
+      // Note: deal_favorites will also be automatically deleted due to CASCADE constraint
+      console.log('Deleting deal from database');
       const { error: deleteError } = await supabase
         .from('deals')
         .delete()
@@ -306,10 +371,236 @@ export const dealsService = {
         throw deleteError;
       }
 
-      console.log(`Successfully deleted deal ${dealId}`);
+      console.log('Deal deleted successfully');
       return true;
     } catch (error) {
       console.error('Error in deleteDeal:', error);
+      throw error;
+    }
+  },
+
+  async updateDeal(dealId: string, userId: string, updateData: any) {
+    try {
+      // First, get the current deal to check ownership and get existing file URLs
+      const { data: currentDeal, error: fetchError } = await supabase
+        .from('deals')
+        .select('*')
+        .eq('id', dealId)
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching deal for update:', fetchError);
+        throw new Error('Deal not found or you do not have permission to update it');
+      }
+
+      if (!currentDeal) {
+        throw new Error('Deal not found');
+      }
+
+      // Handle image file updates
+      let imageUrl = currentDeal.image_url;
+      let imageFileName = currentDeal.image_file_name;
+      
+      if (updateData.selectedImage) {
+        // Delete old image if it exists
+        if (currentDeal.image_file_name) {
+          try {
+            await storageService.deleteDealImage(currentDeal.image_file_name);
+          } catch (error) {
+            console.error('Error deleting old image:', error);
+          }
+        }
+        
+        // Upload new image
+        const uploadResult = await storageService.uploadDealImage(
+          updateData.selectedImage,
+          userId
+        );
+        if ('error' in uploadResult) {
+          console.error('Failed to upload image:', uploadResult.error);
+          throw new Error(uploadResult.error);
+        } else {
+          imageUrl = uploadResult.url;
+          imageFileName = uploadResult.fileName;
+        }
+      } else if (updateData.imageRemoved && currentDeal.image_file_name) {
+        // Delete existing image if marked for removal
+        try {
+          await storageService.deleteDealImage(currentDeal.image_file_name);
+        } catch (error) {
+          console.error('Error deleting image:', error);
+        }
+        imageUrl = null;
+        imageFileName = null;
+      }
+
+      // Handle voucher file updates
+      let voucherFileUrl = currentDeal.voucher_file_url;
+      
+      if (updateData.selectedVoucherFile) {
+        console.log('Voucher replacement - current voucher URL:', currentDeal.voucher_file_url);
+        // Delete old voucher file if it exists
+        if (currentDeal.voucher_file_url) {
+          try {
+            // Extract filename from URL for voucher files
+            // Handle different URL formats
+            let fileName = '';
+            if (currentDeal.voucher_file_url.includes('voucher-files/')) {
+              // Extract from Supabase storage URL
+              const urlParts = currentDeal.voucher_file_url.split('voucher-files/');
+              if (urlParts.length > 1) {
+                fileName = urlParts[1].split('?')[0]; // Remove query parameters
+              }
+            } else {
+              // Fallback to simple filename extraction
+              const urlPartsFallback = currentDeal.voucher_file_url.split('/');
+              fileName = urlPartsFallback[urlPartsFallback.length - 1].split('?')[0]; // Remove query parameters
+            }
+            
+            console.log('Voucher replacement - extracted filename:', fileName);
+            if (fileName) {
+              const deleteResult = await storageService.deleteVoucherFile(fileName);
+              console.log('Voucher replacement - delete result:', deleteResult);
+            } else {
+              console.log('Voucher replacement - could not extract filename from URL');
+            }
+          } catch (error) {
+            console.error('Error deleting old voucher file:', error);
+          }
+        }
+        
+        // Upload new voucher file
+        const uploadResult = await storageService.uploadVoucherFile(
+          updateData.selectedVoucherFile,
+          userId
+        );
+        if ('error' in uploadResult) {
+          console.error('Failed to upload voucher file:', uploadResult.error);
+          throw new Error(uploadResult.error);
+        } else {
+          voucherFileUrl = uploadResult.url;
+          console.log('Voucher replacement - new URL:', uploadResult.url);
+        }
+      } else if (updateData.voucherRemoved && currentDeal.voucher_file_url) {
+        // Delete existing voucher file if marked for removal
+        try {
+          // Extract filename from URL for voucher files
+          let fileName = '';
+          if (currentDeal.voucher_file_url.includes('voucher-files/')) {
+            // Extract from Supabase storage URL
+            const urlParts = currentDeal.voucher_file_url.split('voucher-files/');
+            if (urlParts.length > 1) {
+              fileName = urlParts[1].split('?')[0]; // Remove query parameters
+            }
+          } else {
+            // Fallback to simple filename extraction
+            const urlPartsFallback = currentDeal.voucher_file_url.split('/');
+            fileName = urlPartsFallback[urlPartsFallback.length - 1].split('?')[0]; // Remove query parameters
+          }
+          
+          if (fileName) {
+            await storageService.deleteVoucherFile(fileName);
+          }
+        } catch (error) {
+          console.error('Error deleting voucher file:', error);
+        }
+        voucherFileUrl = null;
+      }
+
+      // Prepare update data
+      const updatePayload = {
+        title: updateData.title,
+        category: updateData.category,
+        original_price: updateData.originalPrice,
+        price: updateData.sharePrice,
+        is_for_sale: !updateData.isFree,
+        max_claims: updateData.maxClaims,
+        expiry_date: updateData.expiryDate,
+        tags: updateData.tags,
+        source: updateData.source,
+        sharing_method: updateData.sharingMethod,
+        voucher_file_url: voucherFileUrl,
+        is_location_bound: updateData.isLocationBound,
+        location_details: updateData.locationDetails,
+        usage_notes: updateData.usageNotes,
+        image_url: imageUrl,
+        image_file_name: imageFileName,
+        updated_at: new Date().toISOString()
+      };
+
+      // Update the deal
+      const { data: updatedDeal, error: updateError } = await supabase
+        .from('deals')
+        .update(updatePayload)
+        .eq('id', dealId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Error updating deal:', updateError);
+        throw updateError;
+      }
+
+      // Transform the updated deal to match the Deal type
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, avatar_url')
+        .eq('user_id', updatedDeal.user_id)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      }
+
+      // Get claims count for this deal
+      const { data: claims, error: claimsError } = await supabase
+        .from('deal_claims')
+        .select('deal_id')
+        .eq('deal_id', updatedDeal.id);
+
+      if (claimsError) {
+        console.error('Error fetching claims:', claimsError);
+      }
+
+      const claimsCount = claims?.length || 0;
+      const maxClaims = updatedDeal.max_claims || 5;
+
+      return {
+        id: updatedDeal.id,
+        title: updatedDeal.title || 'Untitled Deal',
+        description: updatedDeal.usage_notes || updatedDeal.category || 'No description',
+        category: updatedDeal.category as Deal['category'],
+        originalPrice: Number(updatedDeal.original_price || 0),
+        sharePrice: Number(updatedDeal.price || 0),
+        isFree: !updatedDeal.is_for_sale,
+        availableSlots: Math.max(0, maxClaims - claimsCount),
+        totalSlots: maxClaims,
+        expiryDate: updatedDeal.expiry_date,
+        tags: updatedDeal.tags || [],
+        sharedBy: {
+          id: updatedDeal.user_id,
+          name: profile?.display_name || 'Unknown User',
+          email: '',
+          avatar: profile?.avatar_url
+        },
+        status: updatedDeal.status as Deal['status'],
+        createdAt: updatedDeal.created_at,
+        image: updatedDeal.image_url,
+        imageUrl: updatedDeal.image_url,
+        imageFileName: updatedDeal.image_file_name,
+        source: updatedDeal.source,
+        sharingMethod: updatedDeal.sharing_method as Deal['sharingMethod'],
+        voucherData: updatedDeal.voucher_data,
+        voucherFileUrl: updatedDeal.voucher_file_url,
+        isLocationBound: updatedDeal.is_location_bound,
+        locationDetails: updatedDeal.location_details,
+        isForSale: updatedDeal.is_for_sale,
+        usageNotes: updatedDeal.usage_notes
+      };
+    } catch (error) {
+      console.error('Error in updateDeal:', error);
       throw error;
     }
   },

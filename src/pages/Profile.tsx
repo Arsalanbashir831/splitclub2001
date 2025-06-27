@@ -38,7 +38,6 @@ import {
 	Heart,
 	TrendingUp,
 	Calendar,
-	DollarSign,
 	Star,
 	Plus,
 	Edit,
@@ -48,8 +47,6 @@ import {
 	Clock,
 	Users,
 	Crown,
-	Award,
-	Target,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -276,6 +273,8 @@ const Profile = () => {
 
 			// Invalidate queries to refresh the data
 			queryClient.invalidateQueries({ queryKey: ["user-deals", user.id] });
+			queryClient.invalidateQueries({ queryKey: ["favorite-deals", user.id] });
+			queryClient.invalidateQueries({ queryKey: ["deal", dealToDelete] });
 
 			toast({
 				title: "Deal deleted successfully",
@@ -298,9 +297,51 @@ const Profile = () => {
 		navigate(`/deal/${dealId}`);
 	};
 
-	const handleSaveDeal = async (updatedDeal: Deal) => {
-		console.log("Saving deal:", updatedDeal);
-		handleCloseEditModal();
+	const handleSaveDeal = async (updateData: any) => {
+		try {
+			if (!user) {
+				toast({
+					title: "Error",
+					description: "User not authenticated",
+					variant: "destructive",
+				});
+				return;
+			}
+
+			if (!selectedDeal) {
+				toast({
+					title: "Error",
+					description: "No deal selected for editing",
+					variant: "destructive",
+				});
+				return;
+			}
+
+			// Call the updateDeal service function
+			const result = await dealsService.updateDeal(selectedDeal.id, user.id, updateData);
+			
+			if (result) {
+				toast({
+					title: "Success",
+					description: "Deal updated successfully",
+				});
+				
+				// Invalidate queries to refresh the data
+				queryClient.invalidateQueries({ queryKey: ["user-deals", user.id] });
+				queryClient.invalidateQueries({ queryKey: ["favorite-deals", user.id] });
+				queryClient.invalidateQueries({ queryKey: ["deal", selectedDeal.id] });
+			}
+		} catch (error) {
+			console.error("Error updating deal:", error);
+			const errorMessage = error instanceof Error ? error.message : "Failed to update deal. Please try again.";
+			toast({
+				title: "Error",
+				description: errorMessage,
+				variant: "destructive",
+			});
+		} finally {
+			handleCloseEditModal();
+		}
 	};
 
 	if (!isAuthenticated) {
@@ -413,35 +454,13 @@ const Profile = () => {
 							</Button>
 						</div>
 					</div>
-
-					{/* Additional User Stats Row */}
-					<div className="mt-8 flex flex-wrap justify-center md:justify-start gap-6 text-center">
-						<div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-							<div className="text-2xl font-bold text-white">
-								{totalDealsCreated}
-							</div>
-							<div className="text-sm text-white/80">Deals Created</div>
-						</div>
-						<div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-							<div className="text-2xl font-bold text-white">
-								{totalDealsClaimed}
-							</div>
-							<div className="text-sm text-white/80">Deals Claimed</div>
-						</div>
-						<div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-							<div className="text-2xl font-bold text-white">
-								{totalFavorites}
-							</div>
-							<div className="text-sm text-white/80">Favorites</div>
-						</div>
-					</div>
 				</div>
 			</motion.div>
 
 			<div className="max-w-6xl mx-auto px-4 py-8">
 				{/* Stats Cards with Enhanced Positioning */}
 				<motion.div
-					className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 -mt-12 relative z-10"
+					className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 -mt-16 relative z-10"
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.2, duration: 0.3 }}>

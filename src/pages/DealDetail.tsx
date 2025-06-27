@@ -290,13 +290,18 @@ export const DealDetail = () => {
 	};
 
 	const formatDate = (dateString: string) => {
-		const date = new Date(dateString);
-		return date.toLocaleDateString("en-US", {
-			weekday: "long",
-			year: "numeric",
-			month: "long",
+		return new Date(dateString).toLocaleDateString("en-GB", {
 			day: "numeric",
+			month: "short",
+			year: "numeric",
 		});
+	};
+
+	const sharingMethodLabels = {
+		login: 'Share login credentials',
+		invite: 'Send invite link',
+		voucher: 'Provide voucher code',
+		other: 'Other method'
 	};
 
 	const isExpiringSoon = () => {
@@ -544,11 +549,11 @@ export const DealDetail = () => {
 											Valid until {formatDate(deal.expiryDate)}
 										</p>
 									</div>
-									{deal.redemptionType && (
+									{deal.sharingMethod && (
 										<div className="flex items-start space-x-2">
 											<Mail className="h-4 w-4 mt-1 text-purple-600" />
 											<p className="text-sm">
-												Redemption type: {deal.redemptionType}
+												Sharing method: {sharingMethodLabels[deal.sharingMethod as keyof typeof sharingMethodLabels] || deal.sharingMethod}
 											</p>
 										</div>
 									)}

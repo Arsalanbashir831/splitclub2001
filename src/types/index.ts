@@ -26,7 +26,7 @@ export interface Deal {
   imageUrl?: string;
   imageFileName?: string;
   source?: string;
-  redemptionType?: 'voucher_code' | 'barcode' | 'pdf' | 'qr';
+  sharingMethod?: 'login' | 'invite' | 'voucher' | 'other';
   voucherData?: string;
   voucherFileUrl?: string;
   isLocationBound?: boolean;

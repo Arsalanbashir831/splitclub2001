@@ -1,9 +1,16 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export const storageService = {
-  async uploadDealImage(file: File, userId: string): Promise<{ url: string; fileName: string } | null> {
+  async uploadDealImage(file: File, userId: string): Promise<{ url: string; fileName: string } | { error: string }> {
     try {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        return {
+          error: `File type "${file.type}" is not supported. Please use JPEG, PNG, or WebP files.`
+        };
+      }
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${userId}/deal-${Date.now()}.${fileExt}`;
       
@@ -16,7 +23,17 @@ export const storageService = {
 
       if (error) {
         console.error('Error uploading deal image:', error);
-        return null;
+        
+        // Handle specific error types
+        if (error.message?.includes('mime type') && error.message?.includes('is not supported')) {
+          return {
+            error: `File type "${file.type}" is not supported. Please use JPEG, PNG, or WebP files.`
+          };
+        }
+        
+        return {
+          error: error.message || 'Failed to upload image. Please try again.'
+        };
       }
 
       const { data: { publicUrl } } = supabase.storage
@@ -29,12 +46,22 @@ export const storageService = {
       };
     } catch (error) {
       console.error('Error in uploadDealImage:', error);
-      return null;
+      return {
+        error: 'An unexpected error occurred while uploading the image. Please try again.'
+      };
     }
   },
 
-  async uploadVoucherFile(file: File, userId: string): Promise<{ url: string; fileName: string } | null> {
+  async uploadVoucherFile(file: File, userId: string): Promise<{ url: string; fileName: string } | { error: string }> {
     try {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        return {
+          error: `File type "${file.type}" is not supported. Please use JPEG, PNG, WebP, or PDF files.`
+        };
+      }
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${userId}/voucher-${Date.now()}.${fileExt}`;
       
@@ -47,7 +74,17 @@ export const storageService = {
 
       if (error) {
         console.error('Error uploading voucher file:', error);
-        return null;
+        
+        // Handle specific error types
+        if (error.message?.includes('mime type') && error.message?.includes('is not supported')) {
+          return {
+            error: `File type "${file.type}" is not supported. Please use JPEG, PNG, WebP, or PDF files.`
+          };
+        }
+        
+        return {
+          error: error.message || 'Failed to upload voucher file. Please try again.'
+        };
       }
 
       const { data: { publicUrl } } = supabase.storage
@@ -60,7 +97,9 @@ export const storageService = {
       };
     } catch (error) {
       console.error('Error in uploadVoucherFile:', error);
-      return null;
+      return {
+        error: 'An unexpected error occurred while uploading the file. Please try again.'
+      };
     }
   },
 
@@ -84,6 +123,7 @@ export const storageService = {
 
   async deleteVoucherFile(fileName: string): Promise<boolean> {
     try {
+      console.log('StorageService - Attempting to delete voucher file:', fileName);
       const { error } = await supabase.storage
         .from('voucher-files')
         .remove([fileName]);
@@ -93,6 +133,7 @@ export const storageService = {
         return false;
       }
 
+      console.log('StorageService - Successfully deleted voucher file:', fileName);
       return true;
     } catch (error) {
       console.error('Error in deleteVoucherFile:', error);
