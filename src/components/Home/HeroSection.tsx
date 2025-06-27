@@ -133,49 +133,6 @@ export default function HeroSection() {
 								</Button>
 							</motion.div>
 
-							<motion.div
-								// Responsive layout for partners section
-								className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4"
-								initial={{ opacity: 0, y: 20 }}
-								animate={{ opacity: 1, y: 0 }}
-								transition={{ delay: 0.7, duration: 0.6 }}>
-								<div className="flex -space-x-3">
-									{[
-										{ name: "Goldman Sachs", bg: "bg-blue-900", text: "GS" },
-										{ name: "JP Morgan", bg: "bg-slate-800", text: "JPM" },
-										{ name: "BlackRock", bg: "bg-gray-900", text: "BR" },
-										{ name: "Morgan Stanley", bg: "bg-blue-800", text: "MS" },
-										{ name: "Citadel", bg: "bg-indigo-900", text: "C" },
-									].map((company, i) => (
-										<motion.div
-											key={company.name}
-											// Responsive avatar size
-											className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full ${company.bg} border-3 border-white dark:border-slate-800 flex items-center justify-center text-xs font-bold text-white shadow-lg`}
-											initial={{ opacity: 0, scale: 0 }}
-											animate={{ opacity: 1, scale: 1 }}
-											transition={{ delay: 0.8 + i * 0.1, duration: 0.3 }}
-											title={company.name}>
-											{company.text}
-										</motion.div>
-									))}
-								</div>
-								<div className="text-sm">
-									<div className="flex items-center justify-center sm:justify-start gap-1 mb-1">
-										{[1, 2, 3, 4, 5].map((i) => (
-											<motion.div
-												key={i}
-												initial={{ opacity: 0, rotate: -180 }}
-												animate={{ opacity: 1, rotate: 0 }}
-												transition={{ delay: 0.9 + i * 0.05, duration: 0.3 }}>
-												<Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-											</motion.div>
-										))}
-									</div>
-									<p className="text-muted-foreground font-medium">
-										Trusted by leading Community Partners
-									</p>
-								</div>
-							</motion.div>
 						</motion.div>
 
 						{/* Right Content - The already responsive HeroWidgets component */}
