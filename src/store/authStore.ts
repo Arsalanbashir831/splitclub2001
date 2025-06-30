@@ -85,18 +85,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           }
         }
       });
+      
       if (error) {
         return { error: error.message };
       }
-      // Also insert into profiles table for extra fields
-      if (data.user) {
-        await supabase.from('profiles').upsert({
-          user_id: data.user.id,
-          display_name: displayName,
-          phone,
-          location
-        });
-      }
+      
+      // The profile will be created by the database trigger with the metadata
+      // If the trigger doesn't work, we'll create it when the user first logs in
+      
       return { error: null };
     } catch (error: any) {
       return { error: error.message || 'An unexpected error occurred' };
@@ -142,21 +138,20 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             .single();
 
           if (profileError) {
-            console.error('Error fetching profile:', profileError);
-            // If profile doesn't exist, create one
             if (profileError.code === 'PGRST116') {
               const { data: newProfile, error: createError } = await supabase
                 .from('profiles')
                 .insert({
                   user_id: session.user.id,
-                  display_name: session.user.email,
+                  display_name: session.user.user_metadata?.display_name || session.user.email,
+                  phone: session.user.user_metadata?.phone || null,
+                  location: session.user.user_metadata?.location || null,
                   is_admin: false
                 })
                 .select()
                 .single();
 
               if (createError) {
-                console.error('Error creating profile:', createError);
                 set({ 
                   user: null, 
                   isAuthenticated: false, 
@@ -193,6 +188,41 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             return;
           }
 
+          // Profile exists, check if we need to update it with metadata
+          const needsUpdate = (
+            !profile.phone && session.user.user_metadata?.phone ||
+            !profile.location && session.user.user_metadata?.location ||
+            !profile.display_name && session.user.user_metadata?.display_name
+          );
+
+          if (needsUpdate) {
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({
+                display_name: profile.display_name || session.user.user_metadata?.display_name || session.user.email,
+                phone: profile.phone || session.user.user_metadata?.phone || null,
+                location: profile.location || session.user.user_metadata?.location || null,
+              })
+              .eq('user_id', session.user.id);
+
+            if (updateError) {
+              console.error('Error updating profile:', updateError);
+            } else {
+              // Fetch the updated profile
+              const { data: updatedProfile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .single();
+              
+              if (updatedProfile) {
+                profile.display_name = updatedProfile.display_name;
+                profile.phone = updatedProfile.phone;
+                profile.location = updatedProfile.location;
+              }
+            }
+          }
+
           // Verify admin status using the secure database function
           const { data: isAdminResult, error: adminError } = await supabase
             .rpc('is_admin', { user_uuid: session.user.id });
@@ -211,7 +241,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             location: profile.location,
           };
 
-
           set({ 
             user, 
             isAuthenticated: true, 
@@ -219,7 +248,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             loading: false 
           });
         } catch (error) {
-          console.error('Unexpected error during profile fetch:', error);
           set({ 
             user: null, 
             isAuthenticated: false, 
@@ -250,7 +278,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         .single();
 
       if (profileError) {
-        console.error('Error fetching updated profile:', profileError);
         return;
       }
 

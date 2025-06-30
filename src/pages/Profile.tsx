@@ -47,8 +47,13 @@ import {
 	Clock,
 	Users,
 	Crown,
+	Camera,
+	Key,
+	Loader2,
+	RefreshCw,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProfileSkeleton = () => (
 	<div className="space-y-6">
@@ -232,9 +237,12 @@ const DealCard = ({
 	</motion.div>
 );
 
-const Profile = () => {
+export const Profile = () => {
+	const { user, isAuthenticated, signOut, fixProfileWithMetadata } = useAuthStore();
 	const navigate = useNavigate();
-	const { user, isAuthenticated, signOut } = useAuthStore();
+	const { toast } = useToast();
+	const queryClient = useQueryClient();
+	
 	const {
 		userDeals,
 		claimedDeals,
@@ -243,38 +251,52 @@ const Profile = () => {
 	} = useUserDeals();
 	const { data: favoriteDeals, isLoading: favoritesLoading } =
 		useFavoriteDeals();
-	const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+	
+	const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-	const [dealToDelete, setDealToDelete] = useState<string | null>(null);
-	const [isDeleting, setIsDeleting] = useState(false);
-	const { toast } = useToast();
-	const queryClient = useQueryClient();
+	const [deletingDealId, setDeletingDealId] = useState<string | null>(null);
+	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+	const handleFixProfile = async () => {
+		try {
+			await fixProfileWithMetadata();
+			toast({
+				title: "Profile Updated",
+				description: "Your profile has been updated with phone and location data.",
+			});
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to update profile. Please try again.",
+				variant: "destructive",
+			});
+		}
+	};
 
 	const handleEditDeal = (deal: Deal) => {
-		setSelectedDeal(deal);
+		setEditingDeal(deal);
 		setIsEditModalOpen(true);
 	};
 
 	const handleCloseEditModal = () => {
+		setEditingDeal(null);
 		setIsEditModalOpen(false);
-		setSelectedDeal(null);
 	};
 
 	const handleDeleteDeal = (dealId: string) => {
-		setDealToDelete(dealId);
+		setDeletingDealId(dealId);
 	};
 
 	const confirmDeleteDeal = async () => {
-		if (!dealToDelete || !user?.id) return;
+		if (!deletingDealId || !user?.id) return;
 
-		setIsDeleting(true);
 		try {
-			await dealsService.deleteDeal(dealToDelete, user.id);
+			await dealsService.deleteDeal(deletingDealId, user.id);
 
 			// Invalidate queries to refresh the data
 			queryClient.invalidateQueries({ queryKey: ["user-deals", user.id] });
 			queryClient.invalidateQueries({ queryKey: ["favorite-deals", user.id] });
-			queryClient.invalidateQueries({ queryKey: ["deal", dealToDelete] });
+			queryClient.invalidateQueries({ queryKey: ["deal", deletingDealId] });
 
 			toast({
 				title: "Deal deleted successfully",
@@ -288,8 +310,7 @@ const Profile = () => {
 				variant: "destructive",
 			});
 		} finally {
-			setIsDeleting(false);
-			setDealToDelete(null);
+			setDeletingDealId(null);
 		}
 	};
 
@@ -308,7 +329,7 @@ const Profile = () => {
 				return;
 			}
 
-			if (!selectedDeal) {
+			if (!editingDeal) {
 				toast({
 					title: "Error",
 					description: "No deal selected for editing",
@@ -318,7 +339,7 @@ const Profile = () => {
 			}
 
 			// Call the updateDeal service function
-			const result = await dealsService.updateDeal(selectedDeal.id, user.id, updateData);
+			const result = await dealsService.updateDeal(editingDeal.id, user.id, updateData);
 			
 			if (result) {
 				toast({
@@ -329,7 +350,7 @@ const Profile = () => {
 				// Invalidate queries to refresh the data
 				queryClient.invalidateQueries({ queryKey: ["user-deals", user.id] });
 				queryClient.invalidateQueries({ queryKey: ["favorite-deals", user.id] });
-				queryClient.invalidateQueries({ queryKey: ["deal", selectedDeal.id] });
+				queryClient.invalidateQueries({ queryKey: ["deal", editingDeal.id] });
 			}
 		} catch (error) {
 			console.error("Error updating deal:", error);
@@ -347,25 +368,6 @@ const Profile = () => {
 	if (!isAuthenticated) {
 		navigate("/login");
 		return null;
-	}
-
-	const isLoading = userDealsLoading || favoritesLoading;
-
-	if (error) {
-		return (
-			<div className="min-h-screen bg-background">
-				<div className="max-w-4xl mx-auto px-4 py-8">
-					<Card className="border-0 shadow-xl bg-destructive/10 border-destructive/20">
-						<CardContent className="text-center p-12">
-							<h1 className="text-2xl font-bold text-destructive">
-								Error loading profile
-							</h1>
-							<p className="text-destructive/80 mt-2">{error.message}</p>
-						</CardContent>
-					</Card>
-				</div>
-			</div>
-		);
 	}
 
 	// Calculate stats
@@ -549,7 +551,7 @@ const Profile = () => {
 					</div>
 
 					<TabsContent value="deals" className="space-y-6">
-						{isLoading ? (
+						{userDealsLoading ? (
 							<ProfileSkeleton />
 						) : (
 							<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -594,7 +596,7 @@ const Profile = () => {
 					</TabsContent>
 
 					<TabsContent value="claimed" className="space-y-6">
-						{isLoading ? (
+						{userDealsLoading ? (
 							<ProfileSkeleton />
 						) : (
 							<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -635,7 +637,7 @@ const Profile = () => {
 					</TabsContent>
 
 					<TabsContent value="favorites" className="space-y-6">
-						{isLoading ? (
+						{favoritesLoading ? (
 							<ProfileSkeleton />
 						) : (
 							<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -680,8 +682,8 @@ const Profile = () => {
 
 			{/* Delete Confirmation Dialog */}
 			<AlertDialog
-				open={!!dealToDelete}
-				onOpenChange={() => setDealToDelete(null)}>
+				open={!!deletingDealId}
+				onOpenChange={() => setDeletingDealId(null)}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>Delete Deal</AlertDialogTitle>
@@ -692,22 +694,22 @@ const Profile = () => {
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+						<AlertDialogCancel disabled={isDeleteModalOpen}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={confirmDeleteDeal}
-							disabled={isDeleting}
+							disabled={isDeleteModalOpen}
 							className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-							{isDeleting ? "Deleting..." : "Delete"}
+							{isDeleteModalOpen ? "Deleting..." : "Delete"}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
 
-			{selectedDeal && (
+			{editingDeal && (
 				<EditDealModal
 					isOpen={isEditModalOpen}
 					onClose={handleCloseEditModal}
-					deal={selectedDeal}
+					deal={editingDeal}
 					onSave={handleSaveDeal}
 				/>
 			)}

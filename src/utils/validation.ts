@@ -78,7 +78,7 @@ export const signUpSchema = z.object({
   password: z.string().min(8, { message: "Password must be at least 8 characters" }),
   confirmPassword: z.string().min(8, { message: "Confirm your password" }),
   displayName: z.string().min(1, { message: "Display name is required" }),
-  phone: z.string().min(1, { message: "Phone number is required" }).regex(/^\+\d{10,15}$/, { message: "Invalid phone number format. Include country code." }),
+  phone: z.string().min(1, { message: "Phone number is required" }).regex(/^\+[1-9]\d{1,14}$/, { message: "Invalid phone number format. Please include country code (e.g., +447911123456)." }),
   location: z.string().min(1, { message: "Location is required" })
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",

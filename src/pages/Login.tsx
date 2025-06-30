@@ -95,11 +95,26 @@ export const Login = () => {
 
 	const validateSignUpForm = (): boolean => {
 		try {
+			// Check if all required fields are filled
+			if (!email || !password || !confirmPassword || !displayName || !phone || !location) {
+				const errors: Record<string, string> = {};
+				if (!email) errors.email = "Email is required";
+				if (!password) errors.password = "Password is required";
+				if (!confirmPassword) errors.confirmPassword = "Confirm password is required";
+				if (!displayName) errors.displayName = "Display name is required";
+				if (!phone) errors.phone = "Phone number is required";
+				if (!location) errors.location = "Location is required";
+				setValidationErrors(errors);
+				return false;
+			}
+
 			const sanitizedData = {
 				email: sanitizeInput(email),
 				password: password,
-				displayName: displayName ? sanitizeInput(displayName) : undefined,
-				location: location ? sanitizeInput(location) : undefined,
+				confirmPassword: confirmPassword,
+				displayName: sanitizeInput(displayName),
+				phone: phone,
+				location: sanitizeInput(location),
 			};
 
 			signUpSchema.parse(sanitizedData);
@@ -182,14 +197,14 @@ export const Login = () => {
 		setIsLoading(true);
 
 		try {
-			const sanitizedDisplayName = displayName
-				? sanitizeInput(displayName)
-				: undefined;
-			const sanitizedLocation = location ? sanitizeInput(location) : undefined;
+			const sanitizedDisplayName = sanitizeInput(displayName);
+			const sanitizedLocation = sanitizeInput(location);
+			
 			const { error } = await signUp(
 				sanitizeInput(email),
 				password,
 				sanitizedDisplayName,
+				phone,
 				sanitizedLocation
 			);
 			if (!error) {
@@ -203,6 +218,8 @@ export const Login = () => {
 				setPassword("");
 				setDisplayName("");
 				setLocation("");
+				setPhone("");
+				setConfirmPassword("");
 			} else {
 				toast({
 					title: "Sign up failed",
@@ -321,9 +338,10 @@ export const Login = () => {
 								</TabsContent>
 
 								<TabsContent value="signup" className="space-y-4">
+									
 									<form onSubmit={handleSignUp} className="space-y-4">
 										<div className="space-y-2">
-											<Label htmlFor="signup-name">Display Name</Label>
+											<Label htmlFor="signup-name">Display Name *</Label>
 											<Input
 												id="signup-name"
 												type="text"
@@ -338,7 +356,7 @@ export const Login = () => {
 											)}
 										</div>
 										<div className="space-y-2">
-											<Label htmlFor="signup-email">Email</Label>
+											<Label htmlFor="signup-email">Email *</Label>
 											<Input
 												id="signup-email"
 												type="email"
@@ -353,13 +371,15 @@ export const Login = () => {
 											)}
 										</div>
 										<div className="space-y-2">
-											<Label htmlFor="signup-phone">Phone Number</Label>
+											<Label htmlFor="signup-phone">Phone Number *</Label>
 											<div className="flex">
 												<PhoneInput
 													id="signup-phone"
 													placeholder="Enter phone number"
 													value={phone}
-													onChange={setPhone}
+													onChange={(value) => {
+														setPhone(value || "");
+													}}
 													defaultCountry="GB"
 													required
 													className="shadcn-phone-input w-full"
@@ -371,7 +391,7 @@ export const Login = () => {
 											)}
 										</div>
 										<div className="space-y-2">
-											<Label htmlFor="signup-location">Location</Label>
+											<Label htmlFor="signup-location">Location *</Label>
 											<Input
 												id="signup-location"
 												type="text"
@@ -386,7 +406,7 @@ export const Login = () => {
 											)}
 										</div>
 										<div className="space-y-2">
-											<Label htmlFor="signup-password">Password</Label>
+											<Label htmlFor="signup-password">Password *</Label>
 											<Input
 												id="signup-password"
 												type="password"
@@ -403,9 +423,9 @@ export const Login = () => {
 												Password must be at least 8 characters with uppercase,
 												lowercase, number, and special character
 											</p>
-										</div>										
+										</div>
 										<div className="space-y-2">
-											<Label htmlFor="signup-confirm-password">Confirm Password</Label>
+											<Label htmlFor="signup-confirm-password">Confirm Password *</Label>
 											<Input
 												id="signup-confirm-password"
 												type="password"
