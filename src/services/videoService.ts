@@ -48,7 +48,6 @@ export const videoService = {
         .from('demo-videos')
         .getPublicUrl(filePath);
 
-      console.log('Found demo video:', publicUrl);
 
       return {
         id: latestFile.id || 'demo-video',
@@ -86,8 +85,7 @@ export const videoService = {
       const fileName = `demo-${Date.now()}.${fileExt}`;
       const filePath = `demos/${fileName}`;
 
-      console.log('Uploading video to path:', filePath);
-
+     
       const { error: uploadError } = await supabase.storage
         .from('demo-videos')
         .upload(filePath, file, {
@@ -107,7 +105,6 @@ export const videoService = {
         .from('demo-videos')
         .getPublicUrl(filePath);
 
-      console.log('Video uploaded successfully to:', publicUrl);
       
       return publicUrl;
     } catch (error) {

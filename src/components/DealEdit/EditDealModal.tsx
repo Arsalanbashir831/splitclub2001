@@ -80,13 +80,10 @@ export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalPr
   }, [deal]);
 
   const handleImageSelected = (file: File) => {
-    console.log('EditDealModal - Image selected:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
     
     const validation = validateDealImage(file);
-    console.log('EditDealModal - Image validation result:', validation);
     
     if (!validation.isValid) {
-      console.log('EditDealModal - Showing error toast for:', validation.error);
       toast({
         title: "Invalid file",
         description: validation.error,
@@ -102,7 +99,6 @@ export const EditDealModal = ({ deal, isOpen, onClose, onSave }: EditDealModalPr
       return;
     }
     
-    console.log('EditDealModal - Image validation passed');
     setSelectedImage(file);
     setImagePreview(URL.createObjectURL(file));
   };

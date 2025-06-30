@@ -15,7 +15,6 @@ export default function HeroSection() {
 	const { data: demoVideo, isLoading: isLoadingVideo, error: videoError } = useDemoVideo();
 
 	const handleWatchDemo = () => {
-		console.log("Watch demo clicked, video URL:", demoVideo?.url);
 		if (demoVideo?.url) {
 			setShowVideoPlayer(true);
 		} else {

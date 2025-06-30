@@ -134,7 +134,6 @@ const Index = () => {
 	const filteredDeals = useMemo(() => {
 		if (!deals) return [];
 
-		console.log("Filtering deals, total:", deals.length);
 		let filteredList = [...deals];
 
 		// Filter out current user's own deals
@@ -219,8 +218,6 @@ const Index = () => {
 				);
 				break;
 		}
-
-		console.log("Filtered deals count:", filteredList.length);
 		return filteredList;
 	}, [deals, searchQuery, filters, user]);
 

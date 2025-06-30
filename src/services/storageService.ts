@@ -123,7 +123,6 @@ export const storageService = {
 
   async deleteVoucherFile(fileName: string): Promise<boolean> {
     try {
-      console.log('StorageService - Attempting to delete voucher file:', fileName);
       const { error } = await supabase.storage
         .from('voucher-files')
         .remove([fileName]);
@@ -133,7 +132,6 @@ export const storageService = {
         return false;
       }
 
-      console.log('StorageService - Successfully deleted voucher file:', fileName);
       return true;
     } catch (error) {
       console.error('Error in deleteVoucherFile:', error);
@@ -162,7 +160,6 @@ export const storageService = {
     if (deletePromises.length > 0) {
       try {
         await Promise.all(deletePromises);
-        console.log('Successfully deleted deal files from storage');
       } catch (error) {
         console.error('Error deleting some deal files:', error);
       }

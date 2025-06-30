@@ -130,11 +130,9 @@ const Deals = () => {
 
 	const filteredDeals = useMemo(() => {
 		if (!deals || !Array.isArray(deals)) {
-			console.log("No deals available or deals is not an array:", deals);
 			return [];
 		}
 
-		console.log("Filtering deals, total:", deals.length);
 		let filteredList = [...deals];
 
 		// Filter out current user's own deals
@@ -265,7 +263,6 @@ const Deals = () => {
 
 		// Filter out any null or invalid deals
 		const validDeals = filteredList.filter((deal) => deal && deal.id);
-		console.log("Filtered deals count:", validDeals.length);
 		return validDeals;
 	}, [deals, searchQuery, filters, user]);
 

@@ -22,7 +22,6 @@ export const useDeals = () => {
 
     // Clean up existing channel first
     if (channelRef.current) {
-      console.log('Cleaning up existing channel');
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
       isSubscribedRef.current = false;
@@ -30,7 +29,6 @@ export const useDeals = () => {
 
     // Create new channel with unique name
     const channelName = `deals-${Date.now()}-${Math.random()}`;
-    console.log('Creating new channel:', channelName);
     
     const channel = supabase.channel(channelName);
     channelRef.current = channel;
@@ -44,19 +42,16 @@ export const useDeals = () => {
           table: 'deals'
         },
         (payload) => {
-          console.log('Deals change detected:', payload);
           queryClient.invalidateQueries({ queryKey: ['deals'] });
         }
       )
       .subscribe((status: string) => {
-        console.log('Channel subscription status:', status);
         if (status === 'SUBSCRIBED') {
           isSubscribedRef.current = true;
         }
       });
 
     return () => {
-      console.log('Cleaning up channel on unmount');
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;

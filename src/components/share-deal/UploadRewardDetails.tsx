@@ -64,9 +64,7 @@ export const UploadRewardDetails = ({
 	};
 
 	const handleVoucherUpload = (file: File) => {
-		console.log('UploadRewardDetails - Validating voucher file:', file.name, 'Size:', file.size, 'Type:', file.type);
 		const validation = validateVoucherFile(file);
-		console.log('UploadRewardDetails - Validation result:', validation);
 		if (!validation.isValid) {
 			toast({
 				title: "Invalid file",

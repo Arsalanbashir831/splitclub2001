@@ -130,7 +130,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   setSession: (session: Session | null) => {
-    console.log('Setting session:', session);
     
     if (session?.user) {
       // Fetch user profile data with proper error handling
@@ -212,7 +211,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             location: profile.location,
           };
 
-          console.log('User created with admin status:', user.isAdmin);
 
           set({ 
             user, 
@@ -284,14 +282,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state changed:', event, session);
         get().setSession(session);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session);
       get().setSession(session);
     });
 

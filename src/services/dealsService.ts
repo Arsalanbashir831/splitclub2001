@@ -5,7 +5,6 @@ import { storageService } from './storageService';
 export const dealsService = {
   async getDeals() {
     try {
-      console.log('Fetching deals...');
       const { data: deals, error } = await supabase
         .from('deals')
         .select('*')
@@ -18,12 +17,10 @@ export const dealsService = {
       }
 
       if (!deals || deals.length === 0) {
-        console.log('No deals found');
         return [];
       }
 
-      console.log('Found', deals.length, 'deals');
-
+     
       // Get unique user IDs from deals
       const userIds = [...new Set(deals.map(deal => deal.user_id).filter(Boolean))];
       
@@ -110,7 +107,6 @@ export const dealsService = {
         };
       });
 
-      console.log('Transformed deals:', transformedDeals);
       return transformedDeals;
     } catch (error) {
       console.error('Error in getDeals:', error);
@@ -221,7 +217,6 @@ export const dealsService = {
 
       // Upload deal image if provided
       if (dealData.dealImage) {
-        console.log('Creating deal - uploading image:', dealData.dealImage.name);
         const uploadResult = await storageService.uploadDealImage(dealData.dealImage, userId);
         if ('error' in uploadResult) {
           console.error('Failed to upload deal image:', uploadResult.error);
@@ -229,20 +224,18 @@ export const dealsService = {
         } else {
           imageUrl = uploadResult.url;
           imageFileName = uploadResult.fileName;
-          console.log('Creating deal - image uploaded successfully:', imageUrl);
-        }
+          }
       }
 
       // Upload voucher file if provided
       if (dealData.voucherFile) {
-        console.log('Creating deal - uploading voucher file:', dealData.voucherFile.name);
         const uploadResult = await storageService.uploadVoucherFile(dealData.voucherFile, userId);
         if ('error' in uploadResult) {
           console.error('Failed to upload voucher file:', uploadResult.error);
           throw new Error(uploadResult.error);
         } else {
           voucherFileUrl = uploadResult.url;
-          console.log('Creating deal - voucher file uploaded successfully:', voucherFileUrl);
+        
         }
       }
 
@@ -277,7 +270,6 @@ export const dealsService = {
         throw error;
       }
 
-      console.log('Creating deal - deal created successfully:', data.id);
       return data;
     } catch (error) {
       console.error('Error in createDeal:', error);
@@ -287,7 +279,6 @@ export const dealsService = {
 
   async deleteDeal(dealId: string, userId: string) {
     try {
-      console.log('Deleting deal:', dealId, 'for user:', userId);
       
       // First, get the deal to check ownership and get file URLs
       const { data: deal, error: fetchError } = await supabase
@@ -306,13 +297,11 @@ export const dealsService = {
         throw new Error('Deal not found');
       }
 
-      console.log('Deal found for deletion:', deal);
-
+      
       // Delete associated files from storage
       const fileDeletionPromises = [];
 
       if (deal.image_file_name) {
-        console.log('Deleting image file:', deal.image_file_name);
         fileDeletionPromises.push(
           storageService.deleteDealImage(deal.image_file_name)
             .then(() => console.log('Image file deleted successfully'))
@@ -321,7 +310,6 @@ export const dealsService = {
       }
 
       if (deal.voucher_file_url) {
-        console.log('Deleting voucher file from URL:', deal.voucher_file_url);
         try {
           // Extract filename from URL for voucher files
           let fileName = '';
@@ -338,7 +326,6 @@ export const dealsService = {
           }
           
           if (fileName) {
-            console.log('Extracted voucher filename:', fileName);
             fileDeletionPromises.push(
               storageService.deleteVoucherFile(fileName)
                 .then(() => console.log('Voucher file deleted successfully'))
@@ -359,7 +346,6 @@ export const dealsService = {
 
       // Delete the deal (this will cascade delete all claims due to ON DELETE CASCADE)
       // Note: deal_favorites will also be automatically deleted due to CASCADE constraint
-      console.log('Deleting deal from database');
       const { error: deleteError } = await supabase
         .from('deals')
         .delete()
@@ -371,7 +357,6 @@ export const dealsService = {
         throw deleteError;
       }
 
-      console.log('Deal deleted successfully');
       return true;
     } catch (error) {
       console.error('Error in deleteDeal:', error);
@@ -439,7 +424,6 @@ export const dealsService = {
       let voucherFileUrl = currentDeal.voucher_file_url;
       
       if (updateData.selectedVoucherFile) {
-        console.log('Voucher replacement - current voucher URL:', currentDeal.voucher_file_url);
         // Delete old voucher file if it exists
         if (currentDeal.voucher_file_url) {
           try {
@@ -458,10 +442,8 @@ export const dealsService = {
               fileName = urlPartsFallback[urlPartsFallback.length - 1].split('?')[0]; // Remove query parameters
             }
             
-            console.log('Voucher replacement - extracted filename:', fileName);
             if (fileName) {
               const deleteResult = await storageService.deleteVoucherFile(fileName);
-              console.log('Voucher replacement - delete result:', deleteResult);
             } else {
               console.log('Voucher replacement - could not extract filename from URL');
             }
@@ -480,7 +462,6 @@ export const dealsService = {
           throw new Error(uploadResult.error);
         } else {
           voucherFileUrl = uploadResult.url;
-          console.log('Voucher replacement - new URL:', uploadResult.url);
         }
       } else if (updateData.voucherRemoved && currentDeal.voucher_file_url) {
         // Delete existing voucher file if marked for removal
