@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { AuthState, User } from '../types';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,10 +7,11 @@ interface AuthStore extends AuthState {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, displayName?: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, displayName?: string, phone?: string, location?: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   initialize: () => { unsubscribe: () => void };
   setSession: (session: Session | null) => void;
+  refreshUserProfile: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -46,6 +46,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         return { error: error.message };
       }
 
+      // Check if email is confirmed
+      if (data.user && !data.user.email_confirmed_at) {
+        return { error: 'Please verify your email before logging in.' };
+      }
+
       if (data.session) {
         get().setSession(data.session);
         
@@ -65,23 +70,33 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
   },
 
-  signUp: async (email: string, password: string, displayName?: string) => {
+  signUp: async (email: string, password: string, displayName?: string, phone?: string, location?: string) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: displayName ? { display_name: displayName } : {}
+          data: {
+            display_name: displayName,
+            phone,
+            location
+          }
         }
       });
-
       if (error) {
         return { error: error.message };
       }
-
+      // Also insert into profiles table for extra fields
+      if (data.user) {
+        await supabase.from('profiles').upsert({
+          user_id: data.user.id,
+          display_name: displayName,
+          phone,
+          location
+        });
+      }
       return { error: null };
     } catch (error: any) {
       return { error: error.message || 'An unexpected error occurred' };
@@ -158,6 +173,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
                 name: newProfile.display_name || session.user.email!,
                 avatar: newProfile.avatar_url,
                 isAdmin: newProfile.is_admin || false,
+                phone: newProfile.phone,
+                location: newProfile.location,
               };
 
               set({ 
@@ -191,6 +208,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             name: profile.display_name || session.user.email!,
             avatar: profile.avatar_url,
             isAdmin: isAdminResult || false,
+            phone: profile.phone,
+            location: profile.location,
           };
 
           console.log('User created with admin status:', user.isAdmin);
@@ -218,6 +237,46 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         session: null, 
         loading: false 
       });
+    }
+  },
+
+  refreshUserProfile: async () => {
+    const { session } = get();
+    if (!session?.user) return;
+    
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching updated profile:', profileError);
+        return;
+      }
+
+      // Verify admin status using the secure database function
+      const { data: isAdminResult, error: adminError } = await supabase
+        .rpc('is_admin', { user_uuid: session.user.id });
+
+      if (adminError) {
+        console.error('Error checking admin status:', adminError);
+      }
+
+      const user: User = {
+        id: session.user.id,
+        email: session.user.email!,
+        name: profile.display_name || session.user.email!,
+        avatar: profile.avatar_url,
+        isAdmin: isAdminResult || false,
+        phone: profile.phone,
+        location: profile.location,
+      };
+
+      set({ user, isAuthenticated: true, session, loading: false });
+    } catch (error) {
+      console.error('Error refreshing user profile:', error);
     }
   },
 

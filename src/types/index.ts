@@ -4,6 +4,8 @@ export interface User {
   email: string;
   avatar?: string;
   isAdmin?: boolean;
+  phone?: string;
+  location?: string;
 }
 
 export interface Deal {

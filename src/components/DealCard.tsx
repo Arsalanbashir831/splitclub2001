@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Heart, Clock, MapPin, Users, Eye, Package } from 'lucide-react';
+import { Heart, Clock, MapPin, Users, Eye, Package, CheckCircle } from 'lucide-react';
 import { Deal } from '@/types';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -14,9 +13,10 @@ interface DealCardProps {
   onClaim: (dealId: string) => void;
   onView: (dealId: string) => void;
   isClaimLoading?: boolean;
+  isSubscribed?: boolean;
 }
 
-export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: DealCardProps) => {
+export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false, isSubscribed = false }: DealCardProps) => {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -83,7 +83,12 @@ export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: Deal
               {safeTitle}
             </CardTitle>
             <div className="flex flex-col items-end gap-1">
-              {safeIsFree ? (
+              {isSubscribed ? (
+                <Badge variant="secondary" className="text-green-600 bg-green-50 border-green-200 flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3" />
+                  Subscribed
+                </Badge>
+              ) : safeIsFree ? (
                 <Badge variant="secondary" className="text-green-600 bg-green-50 border-green-200">
                   FREE
                 </Badge>
@@ -192,9 +197,9 @@ export const DealCard = ({ deal, onClaim, onView, isClaimLoading = false }: Deal
               size="sm"
               className="flex-1"
               onClick={handleClaimClick}
-              disabled={safeAvailableSlots === 0 || isClaimLoading || safeStatus !== 'active'}
+              disabled={safeAvailableSlots === 0 || isClaimLoading || safeStatus !== 'active' || isSubscribed}
             >
-              {isClaimLoading ? 'Claiming...' : (safeIsFree ? 'Claim Free' : `Claim £${safeSharePrice.toFixed(2)}`)}
+              {isClaimLoading ? 'Claiming...' : (safeIsFree ? 'Claim Free' : isSubscribed ? 'Subscribed': `Claim £${safeSharePrice.toFixed(2)}`)} 
             </Button>
           </div>
         </CardContent>

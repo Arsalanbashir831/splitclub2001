@@ -24,6 +24,7 @@ import { Search, Leaf, TrendingUp, Users, Gift, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useDemoVideo } from "@/hooks/useDemoVideo";
 
 const Index = () => {
 	const { isAuthenticated, user } = useAuthStore();
@@ -33,7 +34,7 @@ const Index = () => {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 	const [claimingDealId, setClaimingDealId] = useState<string | null>(null);
-	const [demoVideoUrl, setDemoVideoUrl] = useState<string | null>(null);
+	const { data: demoVideo } = useDemoVideo();
 	const { deals, isLoading, error } = useDeals();
 	const { hasClaimedDeal } = useUserClaims();
 	const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
@@ -46,21 +47,6 @@ const Index = () => {
 		expiringWithin: "any",
 		sortBy: "newest",
 	});
-
-	// Load demo video
-	useEffect(() => {
-		const loadDemoVideo = async () => {
-			try {
-				const video = await videoService.getActiveDemoVideo();
-				if (video) {
-					setDemoVideoUrl(video.url);
-				}
-			} catch (error) {
-				console.error("Error loading demo video:", error);
-			}
-		};
-		loadDemoVideo();
-	}, []);
 
 	// Handle search from URL parameters
 	useEffect(() => {
@@ -365,7 +351,7 @@ const Index = () => {
 				viewport={{ once: true }}
 				transition={{ duration: 0.6 }}
 				className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				<DemoVideoSection videoUrl={demoVideoUrl} />
+				<DemoVideoSection />
 			</motion.div>
 
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

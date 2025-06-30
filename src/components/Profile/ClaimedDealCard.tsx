@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +41,7 @@ export const ClaimedDealCard = ({ claim, onViewDetails }: ClaimedDealCardProps) 
             <div className="absolute top-3 left-3">
               <Badge variant="secondary" className="bg-background/90 text-foreground">
                 <Calendar className="h-3 w-3 mr-1" />
-                Claimed
+                Subscribed
               </Badge>
             </div>
             {isExpired && (
@@ -83,7 +82,7 @@ export const ClaimedDealCard = ({ claim, onViewDetails }: ClaimedDealCardProps) 
               <div className="space-y-3 mb-4">
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Clock className="h-4 w-4 mr-2 text-primary" />
-                  <span>Claimed: {new Date(claim.claimed_at).toLocaleDateString()}</span>
+                  <span>Subscribed: {new Date(claim.claimed_at).toLocaleDateString()}</span>
                 </div>
                 
                 <div className="flex items-center text-sm">

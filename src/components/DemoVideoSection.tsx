@@ -1,17 +1,15 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Maximize, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { useDemoVideo } from "@/hooks/useDemoVideo";
 
-interface DemoVideoSectionProps {
-	videoUrl?: string | null;
-}
-
-export const DemoVideoSection = ({ videoUrl }: DemoVideoSectionProps) => {
+export const DemoVideoSection = () => {
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [isMuted, setIsMuted] = useState(true);
 	const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null);
+	const { data: demoVideo, isLoading: isLoadingVideo, error: videoError } = useDemoVideo();
 
 	const togglePlay = () => {
 		if (videoRef) {
@@ -82,7 +80,22 @@ export const DemoVideoSection = ({ videoUrl }: DemoVideoSectionProps) => {
 					<Card className="overflow-hidden">
 						<CardContent className="p-0">
 							<div className="relative group">
-								{videoUrl ? (
+								{isLoadingVideo ? (
+									<div className="w-full h-64 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+										<div className="text-center space-y-4">
+											<div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+											<p className="text-muted-foreground">Loading demo video...</p>
+										</div>
+									</div>
+								) : videoError ? (
+									<div className="w-full h-64 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 flex items-center justify-center">
+										<div className="text-center space-y-4">
+											<AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
+											<p className="text-red-600 dark:text-red-400 font-medium">Failed to load demo video</p>
+											<p className="text-sm text-red-500 dark:text-red-400">Please try refreshing the page</p>
+										</div>
+									</div>
+								) : demoVideo?.url ? (
 									<video
 										ref={setVideoRef}
 										className="w-full h-auto aspect-video bg-black"
@@ -92,7 +105,7 @@ export const DemoVideoSection = ({ videoUrl }: DemoVideoSectionProps) => {
 										poster="/placeholder.svg"
 										onPlay={() => setIsPlaying(true)}
 										onPause={() => setIsPlaying(false)}>
-										<source src={videoUrl} type="video/mp4" />
+										<source src={demoVideo.url} type="video/mp4" />
 										Your browser does not support the video tag.
 									</video>
 								) : (
@@ -111,7 +124,7 @@ export const DemoVideoSection = ({ videoUrl }: DemoVideoSectionProps) => {
 									</div>
 								)}
 
-								{videoUrl && (
+								{demoVideo?.url && (
 									<>
 										{/* Video Controls Overlay */}
 										<div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200">
@@ -211,13 +224,13 @@ export const DemoVideoSection = ({ videoUrl }: DemoVideoSectionProps) => {
 										backgroundColor: "hsl(var(--primary))",
 									}}
 									transition={{ duration: 0.2 }}>
-									<motion.span
-										className="text-primary font-bold"
-										whileHover={{ color: "hsl(var(--primary-foreground))" }}>
+									<span className="text-lg font-bold text-primary">
 										{item.step}
-									</motion.span>
+									</span>
 								</motion.div>
-								<h3 className="font-semibold">{item.title}</h3>
+								<h3 className="text-lg font-semibold text-foreground">
+									{item.title}
+								</h3>
 								<p className="text-sm text-muted-foreground">
 									{item.description}
 								</p>

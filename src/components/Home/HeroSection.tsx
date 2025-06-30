@@ -3,44 +3,26 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, Play, Star } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { VideoPlayer } from "../VideoPlayer";
-import { videoService } from "@/services/videoService";
+import { useDemoVideo } from "@/hooks/useDemoVideo";
 import HeroWidgets from "./HeroWidgets";
 
 export default function HeroSection() {
 	const { toast } = useToast();
 	const [showVideoPlayer, setShowVideoPlayer] = useState(false);
-	const [demoVideoUrl, setDemoVideoUrl] = useState<string | null>(null);
-
-	const [isLoadingVideo, setIsLoadingVideo] = useState(true);
-
-	useEffect(() => {
-		const loadDemoVideo = async () => {
-			setIsLoadingVideo(true);
-			try {
-				const video = await videoService.getActiveDemoVideo();
-				if (video) {
-					setDemoVideoUrl(video.url);
-				}
-			} catch (error) {
-				console.error("Error loading demo video:", error);
-			} finally {
-				setIsLoadingVideo(false);
-			}
-		};
-		loadDemoVideo();
-	}, []);
+	const { data: demoVideo, isLoading: isLoadingVideo, error: videoError } = useDemoVideo();
 
 	const handleWatchDemo = () => {
-		console.log("Watch demo clicked, video URL:", demoVideoUrl);
-		if (demoVideoUrl) {
+		console.log("Watch demo clicked, video URL:", demoVideo?.url);
+		if (demoVideo?.url) {
 			setShowVideoPlayer(true);
 		} else {
 			toast({
 				title: "Demo Coming Soon",
-				description: "The demo video is not available yet.",
+				description: videoError ? "Unable to load demo video. Please try again later." : "The demo video is not available yet.",
+				variant: videoError ? "destructive" : "default",
 			});
 		}
 	};
@@ -97,6 +79,7 @@ export default function HeroSection() {
 								</motion.p>
 							</div>
 
+							{/* CTA Buttons */}
 							<motion.div
 								// Responsive button layout (stack on mobile, row on desktop)
 								className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
@@ -119,7 +102,7 @@ export default function HeroSection() {
 									disabled={isLoadingVideo}>
 									{isLoadingVideo ? (
 										<>Loading...</>
-									) : demoVideoUrl ? (
+									) : demoVideo?.url ? (
 										<>
 											<Play className="w-4 h-4" />
 											Watch Demo
@@ -141,11 +124,11 @@ export default function HeroSection() {
 				</div>
 			</motion.section>
 
-			{demoVideoUrl && (
+			{demoVideo?.url && (
 				<VideoPlayer
 					open={showVideoPlayer}
 					onOpenChange={setShowVideoPlayer}
-					videoUrl={demoVideoUrl}
+					videoUrl={demoVideo.url}
 					title="SplitClub Demo"
 				/>
 			)}

@@ -34,9 +34,7 @@ export const ImageUpload = ({
       type: 'image/jpeg'
     } as File;
     
-    console.log('Testing validation with mock file...');
     const result = validateDealImage(mockFile);
-    console.log('Test result:', result);
     
     if (!result.isValid) {
       toast({
@@ -53,11 +51,8 @@ export const ImageUpload = ({
   }, []);
 
   const handleFileValidation = (file: File) => {
-    console.log('ImageUpload - Validating file:', file.name, 'Size:', file.size, 'Type:', file.type);
     const validation = validateDealImage(file);
-    console.log('ImageUpload - Validation result:', validation);
     if (!validation.isValid) {
-      console.log('ImageUpload - Showing error toast for:', validation.error);
       toast({
         title: "Invalid file",
         description: validation.error,
@@ -65,7 +60,6 @@ export const ImageUpload = ({
       });
       return false;
     }
-    console.log('ImageUpload - File validation passed');
     return true;
   };
 
@@ -86,7 +80,6 @@ export const ImageUpload = ({
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      console.log('ImageUpload - File dropped:', file.name, file.size, file.type);
       if (file.type.startsWith('image/')) {
         if (handleFileValidation(file)) {
           onImageSelected(file);
@@ -96,10 +89,8 @@ export const ImageUpload = ({
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('ImageUpload - File selected event triggered');
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      console.log('ImageUpload - File selected:', file.name, file.size, file.type);
       if (file.type.startsWith('image/')) {
         if (handleFileValidation(file)) {
           onImageSelected(file);

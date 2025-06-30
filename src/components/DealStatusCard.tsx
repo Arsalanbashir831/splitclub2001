@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -101,7 +100,7 @@ export const DealStatusCard = ({
           <div className="flex items-center justify-between text-sm">
             <span className="flex items-center space-x-1">
               <Users className="h-4 w-4" />
-              <span>{slotsUsed}/{deal.totalSlots} claimed</span>
+              <span>{slotsUsed}/{deal.totalSlots} subscribed</span>
             </span>
             <span className="text-muted-foreground">{deal.availableSlots} left</span>
           </div>
@@ -169,7 +168,7 @@ export const DealStatusCard = ({
                 className="flex-1"
                 disabled={deal.status !== 'active'}
               >
-                {deal.isFree ? 'Claim Free' : `Claim $${deal.sharePrice}`}
+                {deal.isFree ? 'Claim Free' : deal.status === 'active' ? `Claim $${deal.sharePrice}` : 'Subscribed'}
               </Button>
             )}
           </div>

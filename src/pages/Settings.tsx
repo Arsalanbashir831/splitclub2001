@@ -15,9 +15,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Camera, Trash2, Key, Loader2 } from "lucide-react";
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 export const Settings = () => {
-	const { user, isAuthenticated } = useAuthStore();
+	const { user, isAuthenticated, refreshUserProfile } = useAuthStore();
 	const navigate = useNavigate();
 	const { toast } = useToast();
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,6 +27,8 @@ export const Settings = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [profileData, setProfileData] = useState({
 		displayName: user?.name || "",
+		phone: user?.phone || "",
+		location: user?.location || "",
 		currentPassword: "",
 		newPassword: "",
 		confirmPassword: "",
@@ -51,10 +55,15 @@ export const Settings = () => {
 				.from("profiles")
 				.update({
 					display_name: profileData.displayName.trim(),
+					phone: profileData.phone,
+					location: profileData.location,
 				})
 				.eq("user_id", user.id);
 
 			if (error) throw error;
+
+			// Refresh the user profile in the auth store
+			await refreshUserProfile();
 
 			toast({
 				title: "Profile updated",
@@ -264,93 +273,46 @@ export const Settings = () => {
 
 				<div className="space-y-6">
 					{/* Profile Settings */}
-					<Card>
+					<Card className="mb-6">
 						<CardHeader>
-							<CardTitle className="flex items-center space-x-2">
-								<User className="h-5 w-5" />
-								<span>Profile Settings</span>
-							</CardTitle>
+							<CardTitle>Profile Information</CardTitle>
+							<CardDescription>Update your profile details below.</CardDescription>
 						</CardHeader>
-						<CardContent className="space-y-6">
-							<div className="flex items-center space-x-4">
-								<Avatar className="h-20 w-20">
-									<AvatarImage src={user.avatar} />
-									<AvatarFallback className="text-xl">
-										{user.name
-											.split(" ")
-											.map((n) => n[0])
-											.join("")}
-									</AvatarFallback>
-								</Avatar>
-								<div className="space-y-2">
-									<div className="flex space-x-2">
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => fileInputRef.current?.click()}
-											disabled={isLoading}>
-											<Camera className="h-4 w-4 mr-2" />
-											Change Photo
-										</Button>
-										{user.avatar && (
-											<Button
-												variant="outline"
-												size="sm"
-												onClick={handleDeleteAvatar}
-												disabled={isLoading}>
-												<Trash2 className="h-4 w-4 mr-2" />
-												Remove
-											</Button>
-										)}
-									</div>
-									<p className="text-sm text-muted-foreground">
-										JPG, PNG, GIF or WEBP. Max size 2MB.
-									</p>
-								</div>
-								<input
-									ref={fileInputRef}
-									type="file"
-									accept="image/*"
-									onChange={handleAvatarUpload}
-									className="hidden"
+						<CardContent className="space-y-4">
+							<div className="space-y-2">
+								<Label htmlFor="displayName">Display Name</Label>
+								<Input
+									id="displayName"
+									value={profileData.displayName}
+									onChange={(e) => setProfileData((prev) => ({ ...prev, displayName: e.target.value }))}
+									required
 								/>
 							</div>
-
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								<div className="space-y-2">
-									<Label htmlFor="displayName">Display Name</Label>
-									<Input
-										id="displayName"
-										value={profileData.displayName}
-										onChange={(e) =>
-											setProfileData((prev) => ({
-												...prev,
-												displayName: e.target.value,
-											}))
-										}
-									/>
-								</div>
-								<div className="space-y-2">
-									<Label htmlFor="email">Email Address</Label>
-									<Input
-										id="email"
-										type="email"
-										value={user.email}
-										disabled
-										className="bg-muted"
-									/>
-								</div>
+							<div className="space-y-2">
+								<Label htmlFor="phone">Phone Number</Label>
+								<PhoneInput
+									id="phone"
+									placeholder="Enter phone number"
+									value={profileData.phone}
+									onChange={(value) => setProfileData((prev) => ({ ...prev, phone: value || "" }))}
+									defaultCountry="GB"
+									required
+									className="shadcn-phone-input"
+									inputComponent={Input}
+								/>
 							</div>
-
+							<div className="space-y-2">
+								<Label htmlFor="location">Location</Label>
+								<Input
+									id="location"
+									value={profileData.location}
+									onChange={(e) => setProfileData((prev) => ({ ...prev, location: e.target.value }))}
+									required
+								/>
+							</div>
 							<Button onClick={handleProfileUpdate} disabled={isLoading}>
-								{isLoading ? (
-									<>
-										<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-										Updating...
-									</>
-								) : (
-									"Update Profile"
-								)}
+								{isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+								Save Changes
 							</Button>
 						</CardContent>
 					</Card>

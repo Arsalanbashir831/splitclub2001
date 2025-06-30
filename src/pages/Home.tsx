@@ -19,7 +19,7 @@ export const Home = () => {
 			}}>
 			<HeroSection />
 			<StatsSection />
-			<DemoVideoSection videoUrl={null} />
+			<DemoVideoSection />
 			<CTASection />
 		</motion.div>
 	);

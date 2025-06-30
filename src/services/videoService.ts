@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DemoVideo {
@@ -8,6 +7,13 @@ export interface DemoVideo {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export class VideoServiceError extends Error {
+  constructor(message: string, public code?: string) {
+    super(message);
+    this.name = 'VideoServiceError';
+  }
 }
 
 export const videoService = {
@@ -23,7 +29,10 @@ export const videoService = {
 
       if (error) {
         console.error('Error fetching demo videos:', error);
-        return null;
+        throw new VideoServiceError(
+          'Failed to fetch demo videos from storage',
+          error.code || 'STORAGE_ERROR'
+        );
       }
 
       if (!files || files.length === 0) {
@@ -51,12 +60,28 @@ export const videoService = {
       };
     } catch (error) {
       console.error('Error in getActiveDemoVideo:', error);
-      return null;
+      if (error instanceof VideoServiceError) {
+        throw error;
+      }
+      throw new VideoServiceError(
+        'An unexpected error occurred while fetching the demo video',
+        'UNKNOWN_ERROR'
+      );
     }
   },
 
   async uploadDemoVideo(file: File, title: string): Promise<string | null> {
     try {
+      // Validate file type
+      if (!file.type.startsWith('video/')) {
+        throw new VideoServiceError('Invalid file type. Please upload a video file.', 'INVALID_FILE_TYPE');
+      }
+
+      // Validate file size (max 100MB)
+      if (file.size > 100 * 1024 * 1024) {
+        throw new VideoServiceError('File too large. Please upload a video smaller than 100MB.', 'FILE_TOO_LARGE');
+      }
+
       const fileExt = file.name.split('.').pop();
       const fileName = `demo-${Date.now()}.${fileExt}`;
       const filePath = `demos/${fileName}`;
@@ -72,7 +97,10 @@ export const videoService = {
 
       if (uploadError) {
         console.error('Error uploading video:', uploadError);
-        throw uploadError;
+        throw new VideoServiceError(
+          `Failed to upload video: ${uploadError.message}`,
+          uploadError.code || 'UPLOAD_ERROR'
+        );
       }
 
       const { data: { publicUrl } } = supabase.storage
@@ -84,25 +112,44 @@ export const videoService = {
       return publicUrl;
     } catch (error) {
       console.error('Error in uploadDemoVideo:', error);
-      return null;
+      if (error instanceof VideoServiceError) {
+        throw error;
+      }
+      throw new VideoServiceError(
+        'An unexpected error occurred while uploading the video',
+        'UNKNOWN_ERROR'
+      );
     }
   },
 
   async deleteDemoVideo(filePath: string): Promise<boolean> {
     try {
+      if (!filePath) {
+        throw new VideoServiceError('File path is required for deletion', 'INVALID_PATH');
+      }
+
       const { error } = await supabase.storage
         .from('demo-videos')
         .remove([filePath]);
 
       if (error) {
         console.error('Error deleting video:', error);
-        return false;
+        throw new VideoServiceError(
+          `Failed to delete video: ${error.message}`,
+          error.code || 'DELETE_ERROR'
+        );
       }
 
       return true;
     } catch (error) {
       console.error('Error in deleteDemoVideo:', error);
-      return false;
+      if (error instanceof VideoServiceError) {
+        throw error;
+      }
+      throw new VideoServiceError(
+        'An unexpected error occurred while deleting the video',
+        'UNKNOWN_ERROR'
+      );
     }
   }
 };

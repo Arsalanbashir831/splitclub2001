@@ -33,6 +33,8 @@ import { WhoAreWe } from "./pages/WhoAreWe";
 import NotFound from "./pages/NotFound";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
+import ResetPassword from './pages/ResetPassword';
+import ForgotPassword from './pages/ForgotPassword';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -116,6 +118,8 @@ function AppContent() {
 				<Route path="/press" element={<Press />} />
 				<Route path="/recruiting" element={<Recruiting />} />
 				<Route path="/who-are-we" element={<WhoAreWe />} />
+				<Route path="/reset-password" element={<ResetPassword />} />
+				<Route path="/forgot-password" element={<ForgotPassword />} />
 				<Route path="*" element={<NotFound />} />
 			</Routes>
 			<Footer />

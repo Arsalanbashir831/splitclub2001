@@ -1,4 +1,3 @@
-
 import { Badge } from '@/components/ui/badge';
 
 interface DealStatusBadgeProps {
@@ -24,8 +23,8 @@ export const DealStatusBadge = ({
         {status}
       </Badge>
       {hasClaimedDeal && !isOwnDeal && (
-        <Badge variant="default" className="bg-green-600 text-xs">
-          Claimed
+        <Badge variant="secondary" className="text-green-600 bg-green-50 border-green-200">
+          Subscribed
         </Badge>
       )}
       {isOwnDeal && (

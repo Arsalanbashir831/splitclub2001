@@ -21,11 +21,13 @@ import { Search, TrendingUp, Users, Gift, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Deals = () => {
 	const { isAuthenticated, user } = useAuthStore();
 	const { toast } = useToast();
 	const navigate = useNavigate();
+	const queryClient = useQueryClient();
 	const [searchParams] = useSearchParams();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -82,6 +84,13 @@ const Deals = () => {
 		setClaimingDealId(dealId);
 		try {
 			await dealsService.claimDeal(dealId, user.id);
+			
+			// Invalidate queries to update UI immediately
+			queryClient.invalidateQueries({ queryKey: ['user-claims', user.id] });
+			queryClient.invalidateQueries({ queryKey: ['deals'] });
+			queryClient.invalidateQueries({ queryKey: ['deal', dealId] });
+			queryClient.invalidateQueries({ queryKey: ['deal-subscribers', dealId] });
+			
 			toast({
 				title: "Deal claimed!",
 				description:
@@ -516,6 +525,7 @@ const Deals = () => {
 												onClaim={handleDealClaim}
 												onView={handleDealView}
 												isClaimLoading={claimingDealId === deal.id}
+												isSubscribed={hasClaimedThisDeal}
 											/>
 										</motion.div>
 									);

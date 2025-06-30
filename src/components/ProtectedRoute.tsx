@@ -13,21 +13,15 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
   const { user, isAuthenticated, loading } = useAuthStore();
   const navigate = useNavigate();
 
-  console.log('ProtectedRoute - user:', user);
-  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated);
-  console.log('ProtectedRoute - loading:', loading);
-  console.log('ProtectedRoute - requireAdmin:', requireAdmin);
 
   useEffect(() => {
     if (!loading) {
       if (!isAuthenticated || !user) {
-        console.log('Not authenticated, redirecting to login');
         navigate('/login');
         return;
       }
       
       if (requireAdmin && !user?.isAdmin) {
-        console.log('Admin required but user is not admin, redirecting to home');
         navigate('/');
         return;
       }

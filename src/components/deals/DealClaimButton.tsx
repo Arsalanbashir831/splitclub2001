@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle } from 'lucide-react';
 
@@ -39,7 +38,7 @@ export const DealClaimButton = ({
         className="w-full"
       >
         <CheckCircle className="h-3 w-3 mr-1" />
-        Already Claimed
+        Subscribed
       </Button>
     );
   }

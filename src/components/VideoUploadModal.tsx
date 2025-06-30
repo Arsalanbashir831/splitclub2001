@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Upload, Play, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Upload, Play, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { videoService, VideoServiceError } from '@/services/videoService';
 
 interface VideoUploadModalProps {
   open: boolean;
@@ -21,57 +19,48 @@ export const VideoUploadModal = ({ open, onOpenChange, onVideoUploaded }: VideoU
   const handleFileUpload = async (file: File) => {
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('video/')) {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload a video file",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Validate file size (max 100MB)
-    if (file.size > 100 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please upload a video smaller than 100MB",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setUploading(true);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `demo-${Date.now()}.${fileExt}`;
-      const filePath = `demos/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('demo-videos')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('demo-videos')
-        .getPublicUrl(filePath);
-
-      onVideoUploaded(publicUrl);
-      onOpenChange(false);
+      const videoUrl = await videoService.uploadDemoVideo(file, 'Demo Video');
       
-      toast({
-        title: "Success",
-        description: "Demo video uploaded successfully!",
-      });
+      if (videoUrl) {
+        onVideoUploaded(videoUrl);
+        onOpenChange(false);
+        
+        toast({
+          title: "Success",
+          description: "Demo video uploaded successfully!",
+        });
+      } else {
+        throw new Error('Failed to get video URL after upload');
+      }
     } catch (error) {
       console.error('Error uploading video:', error);
+      
+      let errorMessage = 'Failed to upload video. Please try again.';
+      let errorTitle = 'Upload failed';
+      
+      if (error instanceof VideoServiceError) {
+        errorTitle = 'Upload Error';
+        switch (error.code) {
+          case 'INVALID_FILE_TYPE':
+            errorMessage = 'Please upload a valid video file.';
+            break;
+          case 'FILE_TOO_LARGE':
+            errorMessage = 'Please upload a video smaller than 100MB.';
+            break;
+          case 'UPLOAD_ERROR':
+            errorMessage = `Upload failed: ${error.message}`;
+            break;
+          default:
+            errorMessage = error.message;
+        }
+      }
+      
       toast({
-        title: "Upload failed",
-        description: "Failed to upload video. Please try again.",
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -117,53 +106,59 @@ export const VideoUploadModal = ({ open, onOpenChange, onVideoUploaded }: VideoU
         
         <div className="space-y-4">
           <div
-            className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              dragActive 
-                ? 'border-primary bg-primary/5' 
-                : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+            className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+              dragActive
+                ? 'border-primary bg-primary/5'
+                : 'border-muted-foreground/25 hover:border-primary/50'
             }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
           >
+            <Upload className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground mb-2">
+              Drag and drop a video file here, or click to select
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Supported formats: MP4, MOV, AVI (Max 100MB)
+            </p>
             <input
               type="file"
-              id="video-upload"
               accept="video/*"
               onChange={handleInputChange}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              className="hidden"
+              id="video-upload"
               disabled={uploading}
             />
-            
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
-                <Upload className="w-6 h-6 text-primary" />
-              </div>
-              
-              <div>
-                <p className="text-sm font-medium">
-                  {uploading ? 'Uploading...' : 'Drag and drop your video here'}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  or click to browse files
-                </p>
-              </div>
-              
-              <div className="text-xs text-muted-foreground">
-                Supports: MP4, MOV, AVI, WebM (max 100MB)
-              </div>
-            </div>
+            <label
+              htmlFor="video-upload"
+              className="inline-block mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md cursor-pointer hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploading ? 'Uploading...' : 'Select Video File'}
+            </label>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={uploading}
-            >
-              Cancel
-            </Button>
+          {uploading && (
+            <div className="flex items-center justify-center py-4">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2"></div>
+              <span className="text-sm text-muted-foreground">Uploading video...</span>
+            </div>
+          )}
+
+          <div className="bg-muted/50 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-muted-foreground">
+                <p className="font-medium mb-1">Upload Guidelines:</p>
+                <ul className="space-y-1 text-xs">
+                  <li>• Maximum file size: 100MB</li>
+                  <li>• Supported formats: MP4, MOV, AVI</li>
+                  <li>• Video will replace the current demo video</li>
+                  <li>• Upload may take a few minutes for large files</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>

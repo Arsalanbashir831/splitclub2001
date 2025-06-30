@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useDeal } from "../hooks/useDeals";
 import { dealsService } from "../services/dealsService";
 import { useUserClaims } from "../hooks/useUserClaims";
+import { useDealSubscribers } from "../hooks/useDealSubscribers";
+import { useQueryClient } from "@tanstack/react-query";
 import {
 	Clock,
 	Users,
@@ -159,9 +161,11 @@ export const DealDetail = () => {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
 	const { toast } = useToast();
+	const queryClient = useQueryClient();
 	const { isAuthenticated, user } = useAuthStore();
 	const { deal, isLoading, error } = useDeal(id || "");
 	const { hasClaimedDeal } = useUserClaims();
+	const { data: subscribers, isLoading: subscribersLoading } = useDealSubscribers(id || "");
 	const [isLiked, setIsLiked] = useState(false);
 	const [isClaimLoading, setIsClaimLoading] = useState(false);
 
@@ -196,8 +200,8 @@ export const DealDetail = () => {
 
 		if (hasClaimedThisDeal) {
 			toast({
-				title: "Already claimed",
-				description: "You have already claimed this deal.",
+				title: "Already subscribed",
+				description: "You have already subscribed to this deal.",
 				variant: "destructive",
 			});
 			return;
@@ -215,6 +219,13 @@ export const DealDetail = () => {
 		setIsClaimLoading(true);
 		try {
 			await dealsService.claimDeal(deal.id, user.id);
+			
+			// Invalidate queries to update UI immediately
+			queryClient.invalidateQueries({ queryKey: ['user-claims', user.id] });
+			queryClient.invalidateQueries({ queryKey: ['deals'] });
+			queryClient.invalidateQueries({ queryKey: ['deal', deal.id] });
+			queryClient.invalidateQueries({ queryKey: ['deal-subscribers', deal.id] });
+			
 			toast({
 				title: "Deal claimed!",
 				description: `You've successfully claimed "${deal.title}". The owner will be notified.`,
@@ -251,8 +262,8 @@ export const DealDetail = () => {
 
 	const getClaimButtonText = () => {
 		if (isOwnDeal) return "Your Deal";
-		if (hasClaimedThisDeal) return "Already Claimed";
-		if (deal?.availableSlots === 0) return "Fully Claimed";
+		if (hasClaimedThisDeal) return "Subscribed";
+		if (deal?.availableSlots === 0) return "Fully Subscribed";
 		if (deal?.isFree) return "Join for Free";
 		return `Join Now for £${deal?.sharePrice}/month`;
 	};
@@ -381,8 +392,10 @@ export const DealDetail = () => {
 								</h1>
 								{isOwnDeal && <Badge variant="secondary">Your Deal</Badge>}
 								{hasClaimedThisDeal && !isOwnDeal && (
-									<Badge variant="default" className="bg-green-600">
-										Claimed
+									<Badge
+										variant="secondary"
+										className="text-green-600 bg-green-50 border-green-200">
+										Subscribed
 									</Badge>
 								)}
 							</div>
@@ -474,7 +487,7 @@ export const DealDetail = () => {
 								{/* Progress bar */}
 								<div>
 									<div className="flex justify-between text-sm mb-2">
-										<span>Claimed</span>
+										<span>Subscribed</span>
 										<span>
 											{deal.totalSlots - deal.availableSlots}/{deal.totalSlots}
 										</span>
@@ -580,6 +593,63 @@ export const DealDetail = () => {
 								</div>
 							</CardContent>
 						</Card>
+
+						{/* Subscribers List - Only show for deal owners */}
+						{isOwnDeal && (
+							<Card>
+								<CardHeader>
+									<CardTitle className="flex items-center space-x-2">
+										<Users className="h-5 w-5" />
+										<span>Subscribers ({subscribers?.length || 0})</span>
+									</CardTitle>
+								</CardHeader>
+								<CardContent>
+									{subscribersLoading ? (
+										<div className="space-y-3">
+											{[1, 2, 3].map((i) => (
+												<div key={i} className="flex items-center space-x-3">
+													<Skeleton className="h-10 w-10 rounded-full" />
+													<div className="space-y-2">
+														<Skeleton className="h-4 w-32" />
+														<Skeleton className="h-3 w-24" />
+													</div>
+												</div>
+											))}
+										</div>
+									) : subscribers && subscribers.length > 0 ? (
+										<div className="space-y-4">
+											{subscribers.map((subscriber) => (
+												<div key={subscriber.id} className="flex items-start space-x-3 p-3 border rounded-lg">
+													<Avatar className="h-10 w-10">
+														<AvatarFallback>
+															{subscriber.name.split(" ").map((n) => n[0]).join("")}
+														</AvatarFallback>
+													</Avatar>
+													<div className="flex-1 min-w-0">
+														<p className="font-medium text-sm">{subscriber.name}</p>
+														<div className="text-xs text-muted-foreground space-y-1 mt-1">
+															{subscriber.phone && (
+																<p>📞 {subscriber.phone}</p>
+															)}
+															{subscriber.location && (
+																<p>📍 {subscriber.location}</p>
+															)}
+															<p>Subscribed: {new Date(subscriber.subscribedAt).toLocaleDateString()}</p>
+														</div>
+													</div>
+												</div>
+											))}
+										</div>
+									) : (
+										<div className="text-center py-6">
+											<Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+											<p className="text-muted-foreground">No subscribers yet</p>
+											<p className="text-sm text-muted-foreground">When users claim your deal, they'll appear here</p>
+										</div>
+									)}
+								</CardContent>
+							</Card>
+						)}
 					</motion.div>
 
 					{/* Sidebar */}
@@ -657,7 +727,7 @@ export const DealDetail = () => {
 											size="lg"
 											disabled>
 											<CheckCircle className="h-4 w-4 mr-2" />
-											Already Claimed
+											Subscribed
 										</Button>
 									) : deal?.availableSlots === 0 ? (
 										<Button
@@ -665,7 +735,7 @@ export const DealDetail = () => {
 											className="w-full"
 											size="lg"
 											disabled>
-											Fully Claimed
+											Fully Subscribed
 										</Button>
 									) : (
 										<Button

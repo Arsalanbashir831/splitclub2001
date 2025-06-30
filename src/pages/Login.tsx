@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,10 @@ import {
 	sanitizeInput,
 	RateLimiter,
 } from "../utils/validation";
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 // Rate limiter for authentication attempts
 const rateLimiter = new RateLimiter(5, 15 * 60 * 1000); // 5 attempts per 15 minutes
@@ -29,6 +33,7 @@ export const Login = () => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [displayName, setDisplayName] = useState("");
+	const [location, setLocation] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [activeTab, setActiveTab] = useState("signin");
 	const [validationErrors, setValidationErrors] = useState<
@@ -39,6 +44,8 @@ export const Login = () => {
 	const { signIn, signUp, isAuthenticated } = useAuthStore();
 	const { toast } = useToast();
 	const navigate = useNavigate();
+	const [phone, setPhone] = useState("");
+	const [confirmPassword, setConfirmPassword] = useState("");
 
 	useEffect(() => {
 		// Redirect if already authenticated
@@ -92,6 +99,7 @@ export const Login = () => {
 				email: sanitizeInput(email),
 				password: password,
 				displayName: displayName ? sanitizeInput(displayName) : undefined,
+				location: location ? sanitizeInput(location) : undefined,
 			};
 
 			signUpSchema.parse(sanitizedData);
@@ -177,10 +185,12 @@ export const Login = () => {
 			const sanitizedDisplayName = displayName
 				? sanitizeInput(displayName)
 				: undefined;
+			const sanitizedLocation = location ? sanitizeInput(location) : undefined;
 			const { error } = await signUp(
 				sanitizeInput(email),
 				password,
-				sanitizedDisplayName
+				sanitizedDisplayName,
+				sanitizedLocation
 			);
 			if (!error) {
 				toast({
@@ -192,6 +202,7 @@ export const Login = () => {
 				setEmail("");
 				setPassword("");
 				setDisplayName("");
+				setLocation("");
 			} else {
 				toast({
 					title: "Sign up failed",
@@ -294,6 +305,9 @@ export const Login = () => {
 												</p>
 											)}
 										</div>
+										<div className="flex justify-end">
+											<Link to='/forgot-password' className="text-primary text-sm hover:underline">Forgot Password?</Link>
+										</div>
 										<Button
 											type="submit"
 											className="w-full"
@@ -309,25 +323,18 @@ export const Login = () => {
 								<TabsContent value="signup" className="space-y-4">
 									<form onSubmit={handleSignUp} className="space-y-4">
 										<div className="space-y-2">
-											<Label htmlFor="signup-name">
-												Display Name (Optional)
-											</Label>
+											<Label htmlFor="signup-name">Display Name</Label>
 											<Input
 												id="signup-name"
 												type="text"
 												placeholder="Enter your display name"
 												value={displayName}
 												onChange={(e) => setDisplayName(e.target.value)}
-												className={
-													validationErrors.displayName
-														? "border-destructive"
-														: ""
-												}
+												required
+												className={validationErrors.displayName ? "border-destructive" : ""}
 											/>
 											{validationErrors.displayName && (
-												<p className="text-sm text-destructive">
-													{validationErrors.displayName}
-												</p>
+												<p className="text-sm text-destructive">{validationErrors.displayName}</p>
 											)}
 										</div>
 										<div className="space-y-2">
@@ -339,14 +346,43 @@ export const Login = () => {
 												value={email}
 												onChange={(e) => setEmail(e.target.value)}
 												required
-												className={
-													validationErrors.email ? "border-destructive" : ""
-												}
+												className={validationErrors.email ? "border-destructive" : ""}
 											/>
 											{validationErrors.email && (
-												<p className="text-sm text-destructive">
-													{validationErrors.email}
-												</p>
+												<p className="text-sm text-destructive">{validationErrors.email}</p>
+											)}
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="signup-phone">Phone Number</Label>
+											<div className="flex">
+												<PhoneInput
+													id="signup-phone"
+													placeholder="Enter phone number"
+													value={phone}
+													onChange={setPhone}
+													defaultCountry="GB"
+													required
+													className="shadcn-phone-input w-full"
+													inputComponent={Input}
+												/>
+											</div>
+											{validationErrors.phone && (
+												<p className="text-sm text-destructive">{validationErrors.phone}</p>
+											)}
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="signup-location">Location</Label>
+											<Input
+												id="signup-location"
+												type="text"
+												placeholder="Enter your location"
+												value={location}
+												onChange={(e) => setLocation(e.target.value)}
+												required
+												className={validationErrors.location ? "border-destructive" : ""}
+											/>
+											{validationErrors.location && (
+												<p className="text-sm text-destructive">{validationErrors.location}</p>
 											)}
 										</div>
 										<div className="space-y-2">
@@ -358,20 +394,33 @@ export const Login = () => {
 												value={password}
 												onChange={(e) => setPassword(e.target.value)}
 												required
-												className={
-													validationErrors.password ? "border-destructive" : ""
-												}
+												className={validationErrors.password ? "border-destructive" : ""}
 											/>
 											{validationErrors.password && (
-												<p className="text-sm text-destructive">
-													{validationErrors.password}
-												</p>
+												<p className="text-sm text-destructive">{validationErrors.password}</p>
 											)}
 											<p className="text-xs text-muted-foreground">
 												Password must be at least 8 characters with uppercase,
 												lowercase, number, and special character
 											</p>
+										</div>										
+										<div className="space-y-2">
+											<Label htmlFor="signup-confirm-password">Confirm Password</Label>
+											<Input
+												id="signup-confirm-password"
+												type="password"
+												placeholder="Confirm your password"
+												value={confirmPassword}
+												onChange={(e) => setConfirmPassword(e.target.value)}
+												required
+												className={validationErrors.confirmPassword ? "border-destructive" : ""}
+											/>
+											{validationErrors.confirmPassword && (
+												<p className="text-sm text-destructive">{validationErrors.confirmPassword}</p>
+											)}
 										</div>
+
+										
 										<Button
 											type="submit"
 											className="w-full"

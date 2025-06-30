@@ -432,6 +432,10 @@ const Profile = () => {
 										Active
 									</Badge>
 								</div>
+								<div className="space-y-2 mt-4 text-white/90">
+									<div><strong>Phone:</strong> {user?.phone || <span className="text-muted-foreground">Not set</span>}</div>
+									<div><strong>Location:</strong> {user?.location || <span className="text-muted-foreground">Not set</span>}</div>
+								</div>
 							</div>
 						</div>
 
@@ -490,7 +494,7 @@ const Profile = () => {
 								</div>
 								<div>
 									<p className="text-sm font-medium text-muted-foreground">
-										Deals Claimed
+										Deals Subscribed
 									</p>
 									<p className="text-3xl font-bold text-foreground">
 										{totalDealsClaimed}
@@ -533,7 +537,7 @@ const Profile = () => {
 								value="claimed"
 								className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
 								<TrendingUp className="h-4 w-4" />
-								Claimed ({totalDealsClaimed})
+								Subscribed ({totalDealsClaimed})
 							</TabsTrigger>
 							<TabsTrigger
 								value="favorites"
@@ -609,7 +613,7 @@ const Profile = () => {
 													<TrendingUp className="h-10 w-10 text-green-600 dark:text-green-400" />
 												</div>
 												<h3 className="text-2xl font-bold mb-4 text-foreground">
-													No deals claimed yet
+													No deals subscribed yet
 												</h3>
 												<p className="text-muted-foreground mb-8 max-w-md mx-auto">
 													Browse amazing deals from the community and start

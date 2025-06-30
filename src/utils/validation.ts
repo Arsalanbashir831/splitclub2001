@@ -74,9 +74,15 @@ export const signInSchema = z.object({
 });
 
 export const signUpSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-  displayName: displayNameSchema.optional(),
+  email: z.string().email({ message: "Invalid email address" }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+  confirmPassword: z.string().min(8, { message: "Confirm your password" }),
+  displayName: z.string().min(1, { message: "Display name is required" }),
+  phone: z.string().min(1, { message: "Phone number is required" }).regex(/^\+\d{10,15}$/, { message: "Invalid phone number format. Include country code." }),
+  location: z.string().min(1, { message: "Location is required" })
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 export type SignInFormData = z.infer<typeof signInSchema>;
