@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "../ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight} from "lucide-react";
-import HeroWidgets from "./HeroWidgets";
+import HeroMobileWidget from "./HeroMobileWidget";
 
 export default function HeroSection() {
 	// const { toast } = useToast();
@@ -32,10 +32,10 @@ export default function HeroSection() {
 				{/* Responsive vertical and horizontal padding */}
 				<div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 sm:pt-28 sm:pb-20">
 					{/* Responsive grid and gap */}
-					<div className="grid grid-cols-1 lg:grid-cols-2 gap-y-16 lg:gap-x-12 lg:gap-y-0 items-center">
+					<div className="grid grid-cols-1 lg:grid-cols-2 gap-y-16 lg:gap-x-12 lg:gap-y-0">
 						{/* Left Content */}
 						<motion.div
-							className="space-y-6 md:space-y-8 text-center lg:text-left" // Center text on mobile, left-align on desktop
+							className="space-y-6 md:space-y-8 text-center lg:text-left md:mt-16" // Center text on mobile, left-align on desktop
 							initial={{ opacity: 0, x: -50 }}
 							animate={{ opacity: 1, x: 0 }}
 							transition={{ delay: 0.2, duration: 0.6 }}>
@@ -111,7 +111,7 @@ export default function HeroSection() {
 						</motion.div>
 
 						{/* Right Content - The already responsive HeroWidgets component */}
-						<HeroWidgets />
+						<HeroMobileWidget />
 					</div>
 				</div>
 			</motion.section>

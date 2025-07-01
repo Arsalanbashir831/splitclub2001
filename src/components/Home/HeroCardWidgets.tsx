@@ -42,7 +42,7 @@ const StatCard = ({ icon, label, value, colorClass, delay = 0 }) => (
 );
 
 // --- Main HeroWidgets Component ---
-export default function HeroWidgets() {
+export default function HeroCardWidgets() {
 	const [activityFeed, setActivityFeed] = useState([
 		{
 			id: 1,
