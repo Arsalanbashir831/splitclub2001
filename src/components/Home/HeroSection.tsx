@@ -1,30 +1,25 @@
 import { motion } from "framer-motion";
-import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Play, Star } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { VideoPlayer } from "../VideoPlayer";
-import { useDemoVideo } from "@/hooks/useDemoVideo";
+import { ArrowRight} from "lucide-react";
 import HeroWidgets from "./HeroWidgets";
 
 export default function HeroSection() {
-	const { toast } = useToast();
-	const [showVideoPlayer, setShowVideoPlayer] = useState(false);
-	const { data: demoVideo, isLoading: isLoadingVideo, error: videoError } = useDemoVideo();
+	// const { toast } = useToast();
+	// const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+	// const { data: demoVideo, isLoading: isLoadingVideo, error: videoError } = useDemoVideo();
 
-	const handleWatchDemo = () => {
-		if (demoVideo?.url) {
-			setShowVideoPlayer(true);
-		} else {
-			toast({
-				title: "Demo Coming Soon",
-				description: videoError ? "Unable to load demo video. Please try again later." : "The demo video is not available yet.",
-				variant: videoError ? "destructive" : "default",
-			});
-		}
-	};
+	// const handleWatchDemo = () => {
+	// 	if (demoVideo?.url) {
+	// 		setShowVideoPlayer(true);
+	// 	} else {
+	// 		toast({
+	// 			title: "Demo Coming Soon",
+	// 			description: videoError ? "Unable to load demo video. Please try again later." : "The demo video is not available yet.",
+	// 			variant: videoError ? "destructive" : "default",
+	// 		});
+	// 	}
+	// };
 
 	return (
 		<>
@@ -46,17 +41,16 @@ export default function HeroSection() {
 							transition={{ delay: 0.2, duration: 0.6 }}>
 							{/* Responsive content spacing */}
 							<div className="space-y-4">
-								<motion.div
+								{/* <motion.div
 									initial={{ opacity: 0, scale: 0.9 }}
 									animate={{ opacity: 1, scale: 1 }}
 									transition={{ delay: 0.3, duration: 0.5 }}>
-									{/* Center badge on mobile */}
 									<Badge
 										variant="secondary"
 										className="w-fit mx-auto lg:mx-0 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
 										🏆 Trusted by Fortune 500 Companies
 									</Badge>
-								</motion.div>
+								</motion.div> */}
 								<motion.h1
 									// Responsive typography
 									className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground leading-tight"
@@ -73,8 +67,7 @@ export default function HeroSection() {
 									animate={{ opacity: 1, y: 0 }}
 									transition={{ delay: 0.5, duration: 0.6 }}>
 									The world's most sophisticated marketplace for high-value
-									subscriptions, memberships, and exclusive rewards. Trusted by
-									institutional investors and premium members worldwide.
+									subscriptions, memberships, and exclusive rewards.
 								</motion.p>
 							</div>
 
@@ -93,7 +86,7 @@ export default function HeroSection() {
 										Access Platform <ArrowRight className="w-4 h-4" />
 									</Link>
 								</Button>
-								<Button
+								{/* <Button
 									variant="outline"
 									size="lg"
 									className="gap-2 border-primary/30 hover:bg-primary/5 dark:border-primary/40 dark:hover:bg-primary/10"
@@ -112,7 +105,7 @@ export default function HeroSection() {
 											Request Demo
 										</>
 									)}
-								</Button>
+								</Button> */}
 							</motion.div>
 
 						</motion.div>
@@ -123,14 +116,14 @@ export default function HeroSection() {
 				</div>
 			</motion.section>
 
-			{demoVideo?.url && (
+			{/* {demoVideo?.url && (
 				<VideoPlayer
 					open={showVideoPlayer}
 					onOpenChange={setShowVideoPlayer}
 					videoUrl={demoVideo.url}
 					title="SplitClub Demo"
 				/>
-			)}
+			)} */}
 		</>
 	);
 }

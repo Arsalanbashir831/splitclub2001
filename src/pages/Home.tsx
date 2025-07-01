@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { DemoVideoSection } from "@/components/DemoVideoSection";
+import { DemoVideoSection } from "@/components/Home/DemoVideoSection";
 import HeroSection from "@/components/Home/HeroSection";
 import StatsSection from "@/components/Home/StatsSection";
 import CTASection from "@/components/Home/CTASection";

@@ -99,12 +99,14 @@ export const DemoVideoSection = () => {
 									<video
 										ref={setVideoRef}
 										className="w-full h-auto aspect-video bg-black"
+										autoPlay={true}	
 										muted={isMuted}
 										loop
 										preload="metadata"
 										poster="/placeholder.svg"
 										onPlay={() => setIsPlaying(true)}
-										onPause={() => setIsPlaying(false)}>
+										onPause={() => setIsPlaying(false)}
+										>
 										<source src={demoVideo.url} type="video/mp4" />
 										Your browser does not support the video tag.
 									</video>

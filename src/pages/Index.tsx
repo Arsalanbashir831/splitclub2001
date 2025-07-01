@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { DealCard } from "../components/DealCard";
 import { DealFilters, FilterState } from "../components/DealFilters";
 import { WelcomeTip } from "../components/WelcomeTip";
-import { DemoVideoSection } from "../components/DemoVideoSection";
+import { DemoVideoSection } from "../components/Home/DemoVideoSection";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { StatCard } from "@/components/ui/StatCard";
 import { AnimatedContainer } from "@/components/animations/AnimatedContainer";

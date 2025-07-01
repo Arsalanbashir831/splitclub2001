@@ -38,7 +38,7 @@ export default function StatsSection() {
 							duration: 0.5,
 						}}>
 						<div className="text-3xl md:text-4xl font-bold text-primary mb-2">
-							<CountUp end={10000} duration={2} suffix="+" />
+							<CountUp end={2000} duration={2} suffix="+" />
 						</div>
 						<div className="text-muted-foreground">Active Users</div>
 					</motion.div>
@@ -59,7 +59,7 @@ export default function StatsSection() {
 							duration: 0.5,
 						}}>
 						<div className="text-3xl md:text-4xl font-bold text-primary mb-2">
-							<CountUp end={500000} duration={2} prefix="$" />
+							<CountUp end={150000} duration={2} prefix="£" />
 						</div>
 						<div className="text-muted-foreground">Money Saved</div>
 					</motion.div>
