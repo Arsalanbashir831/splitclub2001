@@ -33,7 +33,7 @@ export default function HeroMobileWidgets() {
 		{
 			id: 3,
 			user: "Emma L.",
-			action: "saved $500 on gym",
+			action: "share resturant voucher",
 			time: "8m ago",
 			avatar: "bg-purple-500",
 		},
@@ -63,12 +63,12 @@ export default function HeroMobileWidgets() {
 				},
 				{
 					user: "David P.",
-					action: "earned $200 cashback",
+					action: "subscribed to your deal",
 					avatar: "bg-indigo-500",
 				},
 				{
 					user: "Maya S.",
-					action: "unlocked VIP status",
+					action: "shareed new deal",
 					avatar: "bg-pink-500",
 				},
 			];
