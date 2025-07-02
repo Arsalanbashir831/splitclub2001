@@ -57,7 +57,7 @@ export const DemoVideoSection = () => {
 			}}
 			className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 			<div className="w-full max-w-4xl mx-auto py-12">
-				<motion.div
+				{/* <motion.div
 					className="text-center mb-8"
 					initial={{ opacity: 0, y: 20 }}
 					whileInView={{ opacity: 1, y: 0 }}
@@ -70,7 +70,7 @@ export const DemoVideoSection = () => {
 						Watch how easy it is to share deals, save money, and reduce waste in
 						our community marketplace.
 					</p>
-				</motion.div>
+				</motion.div> */}
 
 				<motion.div
 					initial={{ opacity: 0, y: 30 }}
