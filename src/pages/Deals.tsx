@@ -349,7 +349,7 @@ const Deals = () => {
 							<StatCard
 								icon={TrendingUp}
 								label="saved"
-								value={`$${stats.totalSavings.toFixed(0)}+`}
+								value={`£${stats.totalSavings.toFixed(0)}+`}
 								iconColor="text-green-600"
 								delay={0.3}
 							/>

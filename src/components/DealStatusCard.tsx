@@ -76,17 +76,17 @@ export const DealStatusCard = ({
               <p className="text-lg font-bold text-green-600">FREE</p>
             ) : (
               <div className="flex items-center space-x-2">
-                <p className="text-lg font-bold">${deal.sharePrice}</p>
+                <p className="text-lg font-bold">£{deal.sharePrice}</p>
                 {deal.originalPrice > deal.sharePrice && (
                   <p className="text-sm text-muted-foreground line-through">
-                    ${deal.originalPrice}
+                    £{deal.originalPrice}
                   </p>
                 )}
               </div>
             )}
             {deal.originalPrice > deal.sharePrice && (
               <p className="text-xs text-green-600">
-                Save ${(deal.originalPrice - deal.sharePrice).toFixed(2)}
+                Save £{(deal.originalPrice - deal.sharePrice).toFixed(2)}
               </p>
             )}
           </div>
@@ -168,7 +168,7 @@ export const DealStatusCard = ({
                 className="flex-1"
                 disabled={deal.status !== 'active'}
               >
-                {deal.isFree ? 'Claim Free' : deal.status === 'active' ? `Claim $${deal.sharePrice}` : 'Subscribed'}
+                {deal.isFree ? 'Claim Free' : deal.status === 'active' ? `Claim £{deal.sharePrice}` : 'Subscribed'}
               </Button>
             )}
           </div>
