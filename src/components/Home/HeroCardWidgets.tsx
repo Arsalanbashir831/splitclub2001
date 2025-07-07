@@ -61,7 +61,7 @@ export default function HeroCardWidgets() {
 		{
 			id: 3,
 			user: "Sara L.",
-			action: "saved $15 on Spotify",
+			action: "saved £15 on Spotify",
 			avatar: "bg-green-500",
 			time: "8m ago",
 		},
@@ -150,12 +150,12 @@ export default function HeroCardWidgets() {
 									<div>
 										{/* Responsive typography */}
 										<p className="text-2xl sm:text-3xl font-bold tracking-tight">
-											$35
+										£35
 											{/* <span className="text-lg font-normal text-white/70">
 												/month
 											</span> */}
 										</p>
-										<p className="text-sm line-through text-red-400">$60</p>
+										<p className="text-sm line-through text-red-400">£60</p>
 									</div>
 									<motion.button
 										whileHover={{ scale: 1.05 }}

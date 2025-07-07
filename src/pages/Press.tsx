@@ -92,7 +92,7 @@ export const Press = () => {
 										title: "Series A Funding Round Completed",
 										date: "November 2024",
 										content:
-											"SplitClub raises $5M to expand platform features and community reach.",
+											"SplitClub raises £5M to expand platform features and community reach.",
 									},
 								].map((news, index) => (
 									<motion.div
@@ -125,10 +125,10 @@ export const Press = () => {
 						<CardContent>
 							<div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
 								{[
-									{ value: "2024", label: "Founded" },
-									{ value: "10k+", label: "Active Users" },
-									{ value: "$100k+", label: "Community Savings" },
-									{ value: "25+", label: "Team Members" },
+									{ value: "2000+", label: "Active Users" },
+									{ value: "£150,000", label: "Money Saved" },
+									{ value: "2500+", label: "Deals Shared" },
+									{ value: "95%", label: "User Satisfaction" },
 								].map((stat, index) => (
 									<motion.div
 										key={index}

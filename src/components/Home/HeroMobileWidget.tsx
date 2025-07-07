@@ -199,21 +199,21 @@ export default function HeroMobileWidgets() {
 							{[
 								{
 									title: "Goldman Sachs Access",
-									value: "$50K",
+									value: "£50K",
 									category: "Financial",
 									icon: DollarSign,
 									gradient: "from-yellow-400 to-orange-500",
 								},
 								{
 									title: "Private Jet Shares",
-									value: "€25K",
+									value: "£25K",
 									category: "Travel",
 									icon: Globe,
 									gradient: "from-blue-500 to-cyan-400",
 								},
 								{
 									title: "Exclusive Wine Club",
-									value: "$15K",
+									value: "£15K",
 									category: "Luxury",
 									icon: Award,
 									gradient: "from-purple-500 to-pink-500",

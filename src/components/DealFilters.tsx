@@ -179,8 +179,8 @@ export const DealFilters = ({
                   className="w-full"
                 />
                 <div className="flex justify-between text-sm text-muted-foreground mt-2">
-                  <span>${filters.priceRange[0]}</span>
-                  <span>${filters.priceRange[1]}</span>
+                  <span>£{filters.priceRange[0]}</span>
+                  <span>£{filters.priceRange[1]}</span>
                 </div>
               </div>
             </div>

@@ -217,7 +217,7 @@ const AdminDashboard = () => {
 		},
 		{
 			label: "Total Revenue",
-			value: `$${totalRevenue.toFixed(2)}`,
+			value: `£${totalRevenue.toFixed(2)}`,
 			icon: DollarSign,
 			color: "text-purple-500 dark:text-purple-400",
 			bgColor: "bg-purple-100 dark:bg-purple-900/20",

@@ -81,7 +81,7 @@ export const mockDeals: Deal[] = [
   {
     id: '4',
     title: 'Costco Shopping Rewards',
-    description: 'Earned $50 in Costco cashback rewards but won\'t use them all. Sharing at 20% discount!',
+    description: 'Earned £50 in Costco cashback rewards but won\'t use them all. Sharing at 20% discount!',
     category: 'reward',
     originalPrice: 50.00,
     sharePrice: 40.00,
